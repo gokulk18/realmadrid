@@ -27,7 +27,7 @@
 
  
             <div>
-                <form action="{% url 'email_otp_verif' %}" method="post">
+                <form id="verify-form" action="{% url 'email_otp_verif' %}" method="post">
                     {% csrf_token %}
                     <div class="flex flex-col space-y-16">
                         <div class="flex flex-row items-center justify-between mx-auto w-full max-w-xs">
@@ -49,18 +49,11 @@
                             </div>
                         </div>
                         <input type="hidden" id="otp" name="otp">
-                        <div id="timer-section" class="flex items-center justify-center text-center text-sm font-medium space-x-1 text-gray-500">
-                          <p>Enter OTP within <span id="timer">60</span> seconds</p>
-                      </div>
                         <div class="flex flex-col space-y-5">
                             <div>
                                 <button id="verify-btn" class="flex flex-row items-center justify-center text-center w-full border rounded-xl outline-none py-5 bg-blue-700 border-none text-white text-sm shadow-sm">
                                     Verify Account
                                 </button>
-                            </div>
-
-                            <div id="resend-section" class="flex flex-row items-center justify-center text-center text-sm font-medium space-x-1 text-gray-500">
-                                <p>Didn't receive code?</p> <a id="resend-link" class="flex flex-row items-center text-blue-600 cursor-pointer" href="#">Resend</a>
                             </div>
                         </div>
                     </div>
@@ -71,29 +64,6 @@
 </div>
 
 <script>
-    // Countdown timer for OTP entry
-    var timeLeft = 60;
-    var countdownTimer;
-
-    function startTimer() {
-        countdownTimer = setInterval(function() {
-            timeLeft--;
-            if (timeLeft <= 0) {
-                clearInterval(countdownTimer);
-                document.getElementById('verify-btn').disabled = true; // Disable verify button
-                document.getElementById('resend-link').classList.remove('opacity-50', 'cursor-not-allowed');
-                document.getElementById('resend-link').addEventListener('click', resendOTP);
-            }
-            updateTimerDisplay();
-        }, 1000);
-    }
-
-    function updateTimerDisplay() {
-        var minutes = Math.floor(timeLeft / 60);
-        var seconds = timeLeft % 60;
-        document.getElementById('timer').innerText = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-    }
-
     function moveFocus(current) {
         if (current < 4) {
             const nextField = document.getElementById('otp' + (current + 1));
@@ -112,23 +82,7 @@
         document.getElementById('otp').value = otp;
     }
 
-    function resendOTP() {
-        // Disable verify button during resend process
-        document.getElementById('verify-btn').disabled = true;
-        
-        // Implement your resend OTP logic here, e.g., send AJAX request to server
-        // In this example, we simulate the resend action with an alert
-        alert('Resending OTP...');
-        // Simulate a new OTP sent
-        timeLeft = 60; // Reset timer
-        updateTimerDisplay();
-        startTimer(); // Start timer again
-    }
-
-    // Start the timer on page load
-    startTimer();
-
-    // Handle form submission (replace with actual form submission logic)
+    // Handle form submission
     document.getElementById('verify-btn').addEventListener('click', function(event) {
         event.preventDefault();  // Prevent form submission
         

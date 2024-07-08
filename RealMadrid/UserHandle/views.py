@@ -116,26 +116,31 @@ def register(request):
 
 def email_otp_verif(request):
     if request.method == 'POST':
-        otp = request.POST.get('otp')
-        session_otp = request.session.get('otp')
-        user_data = request.session.get('user_data')
+        otp1 = request.POST.get('otp1', '')
+        otp2 = request.POST.get('otp2', '')
+        otp3 = request.POST.get('otp3', '')
+        otp4 = request.POST.get('otp4', '')
 
-        if otp == str(session_otp):
+        entered_otp = otp1 + otp2 + otp3 + otp4
+        session_otp = request.session.get('otp')  # Fetch the stored OTP from session
+        user_email = request.session.get('user_email')  # Fetch the user's email from session
+
+        if entered_otp == session_otp:
             try:
                 # Save user to the database
                 user = Users.objects.create(
-                    name=user_data['name'],
-                    email=user_data['email'],
-                    phone=user_data['phone'],
-                    password=user_data['password'],  # Note: This should be hashed already
+                    name=request.session['user_data']['name'],
+                    email=request.session['user_data']['email'],
+                    phone=request.session['user_data']['phone'],
+                    password=request.session['user_data']['password'],  # Note: This should be hashed already
                 )
                 user.save()
-                messages.success(request, "OTP verified. You can now sign in.")
+                messages.success(request, 'OTP verified successfully. You can now log in.')
                 return redirect('login')  # Redirect to login page after successful registration
             except Exception as e:
-                messages.error(request, f"Error creating account: {str(e)}")
+                messages.error(request, f'Error creating account: {str(e)}')
         else:
-            messages.error(request, "Invalid OTP. Please try again.")
+            messages.error(request, 'Invalid OTP. Please try again.')
 
     return render(request, 'email_otp_verif.html')
 
