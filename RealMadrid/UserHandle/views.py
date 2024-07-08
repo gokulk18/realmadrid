@@ -35,6 +35,7 @@ def index(request):
 def generate_otp():
     return random.randint(1000, 9999)
 
+
 def profile(request):
     return render(request,'profile.html')
 
@@ -77,7 +78,6 @@ def login(request):
 
     return render(request, 'login.html')
 
-
 def register(request):
     if request.method == 'POST':
         name = request.POST.get('name')
@@ -95,6 +95,8 @@ def register(request):
                 'phone': phone,
                 'password': make_password(password),  # Hashing the password
             }
+            request.session['user_email'] = email  # Store email for OTP verification page
+            request.session.save()
 
             # Send OTP to user's email
             send_mail(
@@ -104,15 +106,16 @@ def register(request):
                 [email],
                 fail_silently=False,
             )
-            
+
             # Redirect to verify_otp with user_id parameter
             return redirect(reverse('email_otp_verif'))  # Assuming you have a URL named 'email_otp_verif'
-        
+
         except Exception as e:
             messages.error(request, f"Error creating account: {str(e)}")
             return redirect('register')  # Redirect to the same registration page on error
 
     return render(request, 'register.html')
+
 
 def email_otp_verif(request):
     if request.method == 'POST':
@@ -122,17 +125,22 @@ def email_otp_verif(request):
         otp4 = request.POST.get('otp4', '')
 
         entered_otp = otp1 + otp2 + otp3 + otp4
+        entered_otp = int(entered_otp)
         session_otp = request.session.get('otp')  # Fetch the stored OTP from session
         user_email = request.session.get('user_email')  # Fetch the user's email from session
+
+        # For debugging purposes, print the OTP values
+        print(f"Entered OTP: {entered_otp}, Session OTP: {session_otp}")
 
         if entered_otp == session_otp:
             try:
                 # Save user to the database
+                user_data = request.session.get('user_data', {})
                 user = Users.objects.create(
-                    name=request.session['user_data']['name'],
-                    email=request.session['user_data']['email'],
-                    phone=request.session['user_data']['phone'],
-                    password=request.session['user_data']['password'],  # Note: This should be hashed already
+                    name=user_data.get('name'),
+                    email=user_data.get('email'),
+                    phone=user_data.get('phone'),
+                    password=user_data.get('password'),  # Note: This should be hashed already
                 )
                 user.save()
                 messages.success(request, 'OTP verified successfully. You can now log in.')
@@ -140,9 +148,12 @@ def email_otp_verif(request):
             except Exception as e:
                 messages.error(request, f'Error creating account: {str(e)}')
         else:
-            messages.error(request, 'Invalid OTP. Please try again.')
+            print(f"Entered OTP: {entered_otp}, Session OTP: {session_otp}")
 
-    return render(request, 'email_otp_verif.html')
+            messages.error(request, f'Invalid OTP. Entered OTP: {entered_otp}, Session OTP: {session_otp}. Please try again.')
+            return render(request, 'email_otp_verif.html', {'user_email': user_email})
+
+    return render(request, 'email_otp_verif.html', {'user_email': request.session.get('user_email')})
 
 
 @csrf_exempt

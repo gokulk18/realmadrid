@@ -24,10 +24,16 @@
                     <p>We have sent a code to your email {{ user_email }}</p>
                 </div>
             </div>
-
- 
+            {% if messages %}
+                <div class="uk-alert-danger" uk-alert>
+                    <a class="uk-alert-close" uk-close></a>
+                    {% for message in messages %}
+                        <p>{{ message }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
             <div>
-                <form id="verify-form" action="{% url 'email_otp_verif' %}" method="post">
+                <form id="verify-form"  method="post">
                     {% csrf_token %}
                     <div class="flex flex-col space-y-16">
                         <div class="flex flex-row items-center justify-between mx-auto w-full max-w-xs">
