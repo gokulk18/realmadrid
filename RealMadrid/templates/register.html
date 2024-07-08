@@ -1,0 +1,291 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real Madrid FC</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uikit@3.21.6/dist/css/uikit.min.css" />
+
+    <!-- UIkit JS -->
+    <script src="https://cdn.jsdelivr.net/npm/uikit@3.21.6/dist/js/uikit.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/uikit@3.21.6/dist/js/uikit-icons.min.js"></script>
+</head>
+<body class="bg-[#f3f5f8]">
+<!-- component -->
+<script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/zxcvbn/4.4.2/zxcvbn.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.3.js" integrity="sha256-nQLuAZGRRcILA+6dMBOvcRh5Pe310sBpanc6+QBmyVM=" crossorigin="anonymous"></script>
+
+<style>@import url('https://cdnjs.cloudflare.com/ajax/libs/MaterialDesign-Webfont/5.3.45/css/materialdesignicons.min.css')</style>
+
+<div class="min-w-screen min-h-screen bg-gray-900 flex items-center justify-center px-5 py-5">
+    <div class="bg-gray-100 text-gray-500 rounded-3xl shadow-xl w-full overflow-hidden" style="max-width: 600px;">
+        <div class="py-10 px-5 md:px-10">
+            <div class="text-center mb-10">
+                <h1 class="font-bold text-3xl text-gray-900">REGISTER</h1>
+                <p>Enter your information</p>
+            </div>
+            <form id="register-form" action="{% url 'register' %}" method="post">
+                {% csrf_token %}
+                <div>
+                    <div class="flex -mx-3">
+                        <div class="w-full px-3 mb-5">
+                            <label for="name" class="text-xs font-semibold px-1">Name <span class="text-red-600" id="err_name">Name is required</span></label>
+                            <div class="flex">
+                                <div class="w-10 z-10 pl-1 text-center pointer-events-none flex items-center justify-center">
+                                    <i class="mdi mdi-account-outline text-gray-400 text-lg"></i>
+                                </div>
+                                <input name="name" id="name" type="text" class="w-full -ml-10 pl-10 pr-3 py-2 rounded-lg border-2 border-gray-200 outline-none focus:border-indigo-500" placeholder="John">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex -mx-3">
+                        <div class="w-full px-3 mb-5">
+                            <label for="email" class="text-xs font-semibold px-1">Email <span class="text-red-600" id="err_email">Email format is example@gmail.com</span></label>
+                            <div class="flex">
+                                <div class="w-10 z-10 pl-1 text-center pointer-events-none flex items-center justify-center">
+                                    <i class="mdi mdi-email-outline text-gray-400 text-lg"></i>
+                                </div>
+                                <input name="email" id="email" type="email" class="w-full -ml-10 pl-10 pr-3 py-2 rounded-lg border-2 border-gray-200 outline-none focus:border-indigo-500" placeholder="johnsmith@example.com">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex -mx-3">
+                        <div class="w-full px-3 mb-5">
+                            <label for="phone" class="text-xs font-semibold px-1">Phone Number <span class="text-red-600" id="err_phone">Invalid phone number format</span></label>
+                            <div class="flex">
+                                <div class="w-10 z-10 pl-1 text-center pointer-events-none flex items-center justify-center">
+                                    <i class="mdi mdi-phone-outline text-gray-400 text-lg"></i>
+                                </div>
+                                <input name="phone" id="phone" type="text" class="w-full -ml-10 pl-10 pr-3 py-2 rounded-lg border-2 border-gray-200 outline-none focus:border-indigo-500" placeholder="xxxxx xxxxx">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex -mx-3">
+                        <div class="w-full px-3 mb-5">
+                            <label for="password" class="text-xs font-semibold px-1">Password <span class="text-red-600" id="err_password">Password must be at least 6 characters,contain one capital letter, one digit, and one special character</span></label>
+                            <div class="flex">
+                                <div class="w-10 z-10 pl-1 text-center pointer-events-none flex items-center justify-center">
+                                    <i class="mdi mdi-lock-outline text-gray-400 text-lg"></i>
+                                </div>
+                                <input name="password" id="password" type="password" class="w-full -ml-10 pl-10 pr-3 py-2 rounded-lg border-2 border-gray-200 outline-none focus:border-indigo-500" placeholder="************">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex -mx-3">
+                        <div class="w-full px-3 mb-12">
+                            <label for="confirmpassword" class="text-xs font-semibold px-1">Confirm Password <span class="text-red-600" id="err_confirmpassword">Passwords do not match</span></label>
+                            <div class="flex">
+                                <div class="w-10 z-10 pl-1 text-center pointer-events-none flex items-center justify-center">
+                                    <i class="mdi mdi-lock-outline text-gray-400 text-lg"></i>
+                                </div>
+                                <input name="confirmpassword" id="confirmpassword" type="password" class="w-full -ml-10 pl-10 pr-3 py-2 rounded-lg border-2 border-gray-200 outline-none focus:border-indigo-500" placeholder="************">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex -mx-4">
+                        <div class="w-full px-3 mb-5">
+                            <button id="submitBtn" type="submit" class="block w-full max-w-xs mx-auto bg-indigo-500 text-white rounded-lg px-3 py-3 font-semibold disabled:opacity-50 disabled:cursor-not-allowed" disabled>Become a Madridista</button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<dialog id="my_modal_1" class="modal">
+    <div class="modal-box">
+        <h3 class="text-lg font-bold">Please fill in the form</h3>
+        <p class="py-4">Please complete all required fields before submitting.</p>
+        <div class="modal-action">
+            <button class="btn" onclick="my_modal_1.close()">Close</button>
+        </div>
+    </div>
+</dialog>
+
+<script>
+    $(document).ready(function() {
+        // Function to disable error message display
+        function disableErrorMessages() {
+            $('#err_name').text('');
+            $('#err_email').text('');
+            $('#err_phone').text('');
+            $('#err_password').text('');
+            $('#err_confirmpassword').text('');
+        }
+
+        // Function to enable or disable the submit button
+        function toggleSubmitButton() {
+            var isValid = true;
+
+            var name = $('#name').val().trim();
+            var email = $('#email').val().trim();
+            var phone = $('#phone').val().trim();
+            var password = $('#password').val().trim();
+            var confirmPassword = $('#confirmpassword').val().trim();
+
+            if (name.length === 0 || email.length === 0 || phone.length === 0 || password.length === 0 || confirmPassword.length === 0 ||
+                !validateEmail(email) || !validatePhone(phone) || !validatePasswordStrength(password) || confirmPassword !== password) {
+                isValid = false;
+            }
+
+            if (isValid) {
+                $('#submitBtn').prop('disabled', false);
+            } else {
+                $('#submitBtn').prop('disabled', true);
+            }
+        }
+
+        disableErrorMessages(); // Call this to disable error messages initially
+
+        $('#name').keyup(function() {
+            var name = $(this).val().trim();
+            if (name.length === 0) {
+                $('#err_name').text('Name is required');
+            } else {
+                $('#err_name').text('');
+            }
+            toggleSubmitButton();
+        });
+
+        $('#email').keyup(function() {
+            var email = $(this).val().trim();
+            if (email.length === 0) {
+                $('#err_email').text('Email is required');
+            } else if (!validateEmail(email)) {
+                $('#err_email').text('Email format is example@gmail.com');
+            } else {
+                $('#err_email').text('');
+            }
+            toggleSubmitButton();
+        });
+
+        $('#phone').keyup(function() {
+            var phone = $(this).val().trim();
+            if (phone.length === 0) {
+                $('#err_phone').text('Phone number is required');
+            } else if (!validatePhone(phone)) {
+                $('#err_phone').text('Invalid phone number format');
+            } else {
+                $('#err_phone').text('');
+            }
+            toggleSubmitButton();
+        });
+
+        $('#password').keyup(function() {
+            var password = $(this).val().trim();
+            if (password.length === 0) {
+                $('#err_password').text('Password is required');
+            } else if (!validatePasswordStrength(password)) {
+                $('#err_password').text('Password must be at least 6 characters,  contain one capital letter, one digit, and one special character');
+            } else {
+                $('#err_password').text('');
+            }
+            toggleSubmitButton();
+        });
+
+        $('#confirmpassword').keyup(function() {
+            var confirmPassword = $(this).val().trim();
+            var password = $('#password').val().trim();
+            if (confirmPassword !== password) {
+                $('#err_confirmpassword').text('Passwords do not match');
+            } else {
+                $('#err_confirmpassword').text('');
+            }
+            toggleSubmitButton();
+        });
+
+        // Form submission handling
+        $('#register-form').submit(function(event) {
+            event.preventDefault(); // Prevent default form submission
+
+            var isValid = true;
+
+            // Validate name
+            var name = $('#name').val().trim();
+            if (name.length === 0) {
+                isValid = false;
+                $('#err_name').text('Name is required');
+            }
+
+            // Validate email
+            var email = $('#email').val().trim();
+            if (email.length === 0) {
+                isValid = false;
+                $('#err_email').text('Email is required');
+            } else if (!validateEmail(email)) {
+                isValid = false;
+                $('#err_email').text('Email format is example@gmail.com');
+            }
+
+            // Validate phone number
+            var phone = $('#phone').val().trim();
+            if (phone.length === 0) {
+                isValid = false;
+                $('#err_phone').text('Phone number is required');
+            } else if (!validatePhone(phone)) {
+                isValid = false;
+                $('#err_phone').text('Invalid phone number format');
+            }
+
+            // Validate password
+            var password = $('#password').val().trim();
+            if (password.length === 0) {
+                isValid = false;
+                $('#err_password').text('Password is required');
+            } else if (!validatePasswordStrength(password)) {
+                isValid = false;
+                $('#err_password').text('Password must be at least 6 characters,contain one capital letter, one digit, and one special character');
+            }
+
+            // Validate confirm password
+            var confirmPassword = $('#confirmpassword').val().trim();
+            if (confirmPassword !== password) {
+                isValid = false;
+                $('#err_confirmpassword').text('Passwords do not match');
+            }
+
+            // If all validations pass, submit the form
+            if (isValid) {
+                $.ajax({
+                    url: $(this).attr('action'),  // Use form's action attribute
+                    type: 'POST',
+                    data: $(this).serialize(),  // Serialize form data
+                    success: function(response) {
+                        // Assuming the server sends a success response on successful form submission
+                        alert('Form submitted successfully! Check your email for verification.');
+                        window.location.href = '/email_otp_verif';  // Redirect to email_otp_verif page
+                    },
+                    error: function(xhr, status, error) {
+                        alert('Form submission failed: ' + error);
+                    }
+                });
+            }
+        });
+
+        // Email validation function
+        function validateEmail(email) {
+            var re = /\S+@\S+\.\S+/;
+            return re.test(email);
+        }
+
+        // Phone number validation function
+        function validatePhone(phone) {
+            var re = /^\(?(\d{3})\)?[- ]?(\d{3})[- ]?(\d{4})$/;
+            return re.test(phone);
+        }
+
+        function validatePasswordStrength(password) {
+            var passwordPattern = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[a-zA-Z\d!@#$%^&*]{6,}$/;
+            return passwordPattern.test(password);
+        }
+    });
+</script>   
+
+</body>
+</html>

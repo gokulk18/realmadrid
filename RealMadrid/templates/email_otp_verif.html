@@ -1,0 +1,148 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real Madrid FC</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uikit@3.21.6/dist/css/uikit.min.css" />
+
+    <!-- UIkit JS -->
+    <script src="https://cdn.jsdelivr.net/npm/uikit@3.21.6/dist/js/uikit.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/uikit@3.21.6/dist/js/uikit-icons.min.js"></script>
+</head>
+<body class="bg-[#f3f5f8]">
+<div class="relative flex min-h-screen flex-col justify-center overflow-hidden bg-gray-50 py-12">
+    <div class="relative bg-white px-6 pt-10 pb-9 shadow-xl mx-auto w-full max-w-lg rounded-2xl">
+        <div class="mx-auto flex w-full max-w-md flex-col space-y-16">
+            <div class="flex flex-col items-center justify-center text-center space-y-2">
+                <div class="font-semibold text-3xl">
+                    <p>Email Verification</p>
+                </div>
+                <div class="flex flex-row text-sm font-medium text-gray-400">
+                    <p>We have sent a code to your email {{ user_email }}</p>
+                </div>
+            </div>
+
+ 
+            <div>
+                <form action="{% url 'email_otp_verif' %}" method="post">
+                    {% csrf_token %}
+                    <div class="flex flex-col space-y-16">
+                        <div class="flex flex-row items-center justify-between mx-auto w-full max-w-xs">
+                            <div class="w-16 h-16 ">
+                                <input class="w-full h-full flex flex-col items-center justify-center text-center px-5 outline-none rounded-xl border border-gray-200 text-lg bg-white focus:bg-gray-50 focus:ring-1 ring-blue-700"
+                                    type="text" name="otp1" id="otp1" maxlength="1" oninput="moveFocus(1)">
+                            </div>
+                            <div class="w-16 h-16 ">
+                                <input class="w-full h-full flex flex-col items-center justify-center text-center px-5 outline-none rounded-xl border border-gray-200 text-lg bg-white focus:bg-gray-50 focus:ring-1 ring-blue-700"
+                                    type="text" name="otp2" id="otp2" maxlength="1" oninput="moveFocus(2)">
+                            </div>
+                            <div class="w-16 h-16 ">
+                                <input class="w-full h-full flex flex-col items-center justify-center text-center px-5 outline-none rounded-xl border border-gray-200 text-lg bg-white focus:bg-gray-50 focus:ring-1 ring-blue-700"
+                                    type="text" name="otp3" id="otp3" maxlength="1" oninput="moveFocus(3)">
+                            </div>
+                            <div class="w-16 h-16 ">
+                                <input class="w-full h-full flex flex-col items-center justify-center text-center px-5 outline-none rounded-xl border border-gray-200 text-lg bg-white focus:bg-gray-50 focus:ring-1 ring-blue-700"
+                                    type="text" name="otp4" id="otp4" maxlength="1" oninput="moveFocus(4)">
+                            </div>
+                        </div>
+                        <input type="hidden" id="otp" name="otp">
+                        <div id="timer-section" class="flex items-center justify-center text-center text-sm font-medium space-x-1 text-gray-500">
+                          <p>Enter OTP within <span id="timer">60</span> seconds</p>
+                      </div>
+                        <div class="flex flex-col space-y-5">
+                            <div>
+                                <button id="verify-btn" class="flex flex-row items-center justify-center text-center w-full border rounded-xl outline-none py-5 bg-blue-700 border-none text-white text-sm shadow-sm">
+                                    Verify Account
+                                </button>
+                            </div>
+
+                            <div id="resend-section" class="flex flex-row items-center justify-center text-center text-sm font-medium space-x-1 text-gray-500">
+                                <p>Didn't receive code?</p> <a id="resend-link" class="flex flex-row items-center text-blue-600 cursor-pointer" href="#">Resend</a>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Countdown timer for OTP entry
+    var timeLeft = 60;
+    var countdownTimer;
+
+    function startTimer() {
+        countdownTimer = setInterval(function() {
+            timeLeft--;
+            if (timeLeft <= 0) {
+                clearInterval(countdownTimer);
+                document.getElementById('verify-btn').disabled = true; // Disable verify button
+                document.getElementById('resend-link').classList.remove('opacity-50', 'cursor-not-allowed');
+                document.getElementById('resend-link').addEventListener('click', resendOTP);
+            }
+            updateTimerDisplay();
+        }, 1000);
+    }
+
+    function updateTimerDisplay() {
+        var minutes = Math.floor(timeLeft / 60);
+        var seconds = timeLeft % 60;
+        document.getElementById('timer').innerText = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+    }
+
+    function moveFocus(current) {
+        if (current < 4) {
+            const nextField = document.getElementById('otp' + (current + 1));
+            if (nextField.value.length === 1) {
+                nextField.focus();
+            }
+        }
+        updateHiddenOTP();
+    }
+
+    function updateHiddenOTP() {
+        const otp = document.getElementById('otp1').value +
+            document.getElementById('otp2').value +
+            document.getElementById('otp3').value +
+            document.getElementById('otp4').value;
+        document.getElementById('otp').value = otp;
+    }
+
+    function resendOTP() {
+        // Disable verify button during resend process
+        document.getElementById('verify-btn').disabled = true;
+        
+        // Implement your resend OTP logic here, e.g., send AJAX request to server
+        // In this example, we simulate the resend action with an alert
+        alert('Resending OTP...');
+        // Simulate a new OTP sent
+        timeLeft = 60; // Reset timer
+        updateTimerDisplay();
+        startTimer(); // Start timer again
+    }
+
+    // Start the timer on page load
+    startTimer();
+
+    // Handle form submission (replace with actual form submission logic)
+    document.getElementById('verify-btn').addEventListener('click', function(event) {
+        event.preventDefault();  // Prevent form submission
+        
+        // Perform client-side OTP verification here (optional)
+        var otp = document.getElementById('otp').value;
+        if (otp.length !== 4) {
+            alert('Please enter a valid OTP.');
+            return;
+        }
+        
+        // Submit the form
+        this.closest('form').submit();
+    });
+</script>
+
+</body>
+</html>
