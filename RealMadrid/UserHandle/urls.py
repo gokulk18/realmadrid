@@ -12,6 +12,7 @@ urlpatterns = [
     path('password_reset/', views.forgotpassword, name="forgotpassword"),
     path('reset/<uidb64>/<token>/', views.password_reset, name="password_reset"),
     path('accounts/', include('allauth.urls')),
+    path('check_email_availability/', views.check_email_availability, name="check_email_availability"),
 
 
 

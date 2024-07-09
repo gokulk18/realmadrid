@@ -51,6 +51,7 @@
                                 </div>
                                 <input name="email" id="email" type="email" class="w-full -ml-10 pl-10 pr-3 py-2 rounded-lg border-2 border-gray-200 outline-none focus:border-indigo-500" placeholder="johnsmith@example.com">
                             </div>
+                            <span id="email_status" class="text-red-600"></span>
                         </div>
                     </div>
                     <div class="flex -mx-3">
@@ -97,7 +98,6 @@
     </div>
 </div>
 
-
 <dialog id="my_modal_1" class="modal">
     <div class="modal-box">
         <h3 class="text-lg font-bold">Please fill in the form</h3>
@@ -107,9 +107,10 @@
         </div>
     </div>
 </dialog>
-
 <script>
     $(document).ready(function() {
+        var emailAvailable = false;
+
         // Function to disable error message display
         function disableErrorMessages() {
             $('#err_name').text('');
@@ -130,7 +131,8 @@
             var confirmPassword = $('#confirmpassword').val().trim();
 
             if (name.length === 0 || email.length === 0 || phone.length === 0 || password.length === 0 || confirmPassword.length === 0 ||
-                !validateEmail(email) || !validatePhone(phone) || !validatePasswordStrength(password) || confirmPassword !== password) {
+                !validateEmail(email) || !validatePhone(phone) || !validatePasswordStrength(password) || confirmPassword !== password ||
+                !emailAvailable) {
                 isValid = false;
             }
 
@@ -157,13 +159,60 @@
             var email = $(this).val().trim();
             if (email.length === 0) {
                 $('#err_email').text('Email is required');
+                $('#email_status').text('');
+                emailAvailable = false;
             } else if (!validateEmail(email)) {
                 $('#err_email').text('Email format is example@gmail.com');
+                $('#email_status').text('');
+                emailAvailable = false;
             } else {
+                // Check email availability via AJAX
+                $.ajax({
+                    url: '{% url "check_email_availability" %}',
+                    type: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    data: {
+                        'email': email
+                    },
+                    success: function(response) {
+                        if (response.available) {
+                            $('#email_status').text('Email available').css('color', 'green');
+                            emailAvailable = true;
+                        } else {
+                            $('#email_status').text('Email already registered').css('color', 'red');
+                            emailAvailable = false;
+                        }
+                        toggleSubmitButton();  // Update submit button state after receiving response
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error checking email availability:', error);
+                        // Handle error response
+                        $('#email_status').text('Error checking email availability');
+                        emailAvailable = false;
+                        toggleSubmitButton();  // Update submit button state after receiving error response
+                    }
+                });
                 $('#err_email').text('');
             }
-            toggleSubmitButton();
+            toggleSubmitButton();  // Update submit button state after each keystroke
         });
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
 
         $('#phone').keyup(function() {
             var phone = $(this).val().trim();
@@ -182,7 +231,7 @@
             if (password.length === 0) {
                 $('#err_password').text('Password is required');
             } else if (!validatePasswordStrength(password)) {
-                $('#err_password').text('Password must be at least 6 characters,  contain one capital letter, one digit, and one special character');
+                $('#err_password').text('Password must be at least 6 characters, contain one capital letter, one digit, and one special character');
             } else {
                 $('#err_password').text('');
             }
@@ -192,7 +241,9 @@
         $('#confirmpassword').keyup(function() {
             var confirmPassword = $(this).val().trim();
             var password = $('#password').val().trim();
-            if (confirmPassword !== password) {
+            if (confirmPassword.length === 0) {
+                $('#err_confirmpassword').text('Please confirm your password');
+            } else if (confirmPassword !== password) {
                 $('#err_confirmpassword').text('Passwords do not match');
             } else {
                 $('#err_confirmpassword').text('');
@@ -204,88 +255,58 @@
         $('#register-form').submit(function(event) {
             event.preventDefault(); // Prevent default form submission
 
-            var isValid = true;
-
-            // Validate name
             var name = $('#name').val().trim();
-            if (name.length === 0) {
-                isValid = false;
-                $('#err_name').text('Name is required');
-            }
-
-            // Validate email
             var email = $('#email').val().trim();
-            if (email.length === 0) {
-                isValid = false;
-                $('#err_email').text('Email is required');
-            } else if (!validateEmail(email)) {
-                isValid = false;
-                $('#err_email').text('Email format is example@gmail.com');
-            }
-
-            // Validate phone number
             var phone = $('#phone').val().trim();
-            if (phone.length === 0) {
-                isValid = false;
-                $('#err_phone').text('Phone number is required');
-            } else if (!validatePhone(phone)) {
-                isValid = false;
-                $('#err_phone').text('Invalid phone number format');
-            }
-
-            // Validate password
             var password = $('#password').val().trim();
-            if (password.length === 0) {
-                isValid = false;
-                $('#err_password').text('Password is required');
-            } else if (!validatePasswordStrength(password)) {
-                isValid = false;
-                $('#err_password').text('Password must be at least 6 characters,contain one capital letter, one digit, and one special character');
-            }
-
-            // Validate confirm password
             var confirmPassword = $('#confirmpassword').val().trim();
-            if (confirmPassword !== password) {
-                isValid = false;
-                $('#err_confirmpassword').text('Passwords do not match');
+
+            // Perform final validation before submission
+            if (name.length === 0 || email.length === 0 || phone.length === 0 || password.length === 0 || confirmPassword.length === 0 ||
+                !validateEmail(email) || !validatePhone(phone) || !validatePasswordStrength(password) || confirmPassword !== password || 
+                !emailAvailable) {
+                // Display modal or alert indicating form errors
+                UIkit.modal.dialog('<p class="uk-modal-body">Please complete all required fields correctly.</p>');
+                return;
             }
 
-            // If all validations pass, submit the form
-            if (isValid) {
-                $.ajax({
-                    url: $(this).attr('action'),  // Use form's action attribute
-                    type: 'POST',
-                    data: $(this).serialize(),  // Serialize form data
-                    success: function(response) {
-                        // Assuming the server sends a success response on successful form submission
-                        alert('Form submitted successfully! Check your email for verification.');
-                        window.location.href = '/email_otp_verif';  // Redirect to email_otp_verif page
-                    },
-                    error: function(xhr, status, error) {
-                        alert('Form submission failed: ' + error);
-                    }
-                });
-            }
+            // Submit the form via AJAX or perform further processing
+            $.ajax({
+                url: $(this).attr('action'),
+                type: $(this).attr('method'),
+                data: $(this).serialize(),
+                success: function(response) {
+                    // Handle success response
+                    UIkit.modal.alert('<p class="uk-modal-body">Registration successful!</p>');
+                    // Optionally redirect to another page
+                    window.location.href = '/login/';
+                },
+                error: function(xhr, status, error) {
+                    // Handle error response
+                    console.error('Error submitting form:', error);
+                    UIkit.modal.alert('<p class="uk-modal-body">Registration failed. Please try again later.</p>');
+                }
+            });
         });
 
-        // Email validation function
-        function validateEmail(email) {
-            var re = /\S+@\S+\.\S+/;
-            return re.test(email);
-        }
-
-        // Phone number validation function
-        function validatePhone(phone) {
-            var re = /^\(?(\d{3})\)?[- ]?(\d{3})[- ]?(\d{4})$/;
-            return re.test(phone);
-        }
-
-        function validatePasswordStrength(password) {
-            var passwordPattern = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[a-zA-Z\d!@#$%^&*]{6,}$/;
-            return passwordPattern.test(password);
-        }
+        // Validation functions and other JavaScript logic here...
     });
-</script>   
 
+    function validateEmail(email) {
+        var re = /\S+@\S+\.\S+/;
+        return re.test(email);
+    }
+
+    function validatePhone(phone) {
+        var re = /^\d{10}$/;
+        return re.test(phone);
+    }
+
+    function validatePasswordStrength(password) {
+        var re = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).{6,}$/;
+        return re.test(password);
+    }
+
+</script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect, HttpResponse
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.core.mail import send_mail
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
@@ -19,6 +19,7 @@ from django.core.mail import EmailMessage
 from django.conf import settings
 from django.http import JsonResponse
 import logging
+from django.views.decorators.cache import never_cache
 
 
 class CustomTokenGenerator(PasswordResetTokenGenerator):
@@ -28,16 +29,49 @@ class CustomTokenGenerator(PasswordResetTokenGenerator):
 token_generator = CustomTokenGenerator()
 
 
-
+@never_cache
 def index(request):
-    return render(request, 'index.html')
-
+    if 'user_id' in request.session:
+        user_id = request.session['user_id']
+        try:
+            # Retrieve user object from database
+            user = Users.objects.get(id=user_id)
+            context = {
+                'user_name': user.name,  # Assuming 'name' is the field you want to display
+                'user_email': user.email,
+                'user_phone': user.phone,
+            }
+            return render(request, 'index.html', context)
+        except Users.DoesNotExist:
+            # Handle case where user_id in session does not match any user in the database
+            return render(request, 'index.html', {'user_name': None})
+    else:
+        # User is not authenticated, redirect to login page or handle as needed
+        return render(request, 'index.html', {'user_name': None})
+    
 def generate_otp():
     return random.randint(1000, 9999)
 
 
 def profile(request):
-    return render(request,'profile.html')
+    if 'user_id' in request.session:
+        user_id = request.session['user_id']
+        try:
+            # Retrieve user object from database
+            user = Users.objects.get(id=user_id)
+            context = {
+                'user_name': user.name,  # Assuming 'name' is the field you want to display
+                'user_email': user.email,
+                'user_phone': user.phone,
+            }
+            return render(request, 'profile.html', context)
+        except Users.DoesNotExist:
+            # Handle case where user_id in session does not match any user in the database
+            return render(request, 'profile.html', {'user_name': None})
+    else:
+        # User is not authenticated, redirect to login page or handle as needed
+        return render(request, 'profile.html', {'user_name': None})
+    
 
 def logout(request):
     # Clear session variables on logout
@@ -64,8 +98,8 @@ def login(request):
             if check_password(password, user.password):  # Check hashed password
                 # Initialize session variables
                 request.session['user_id'] = user.id
-                request.session['user_email'] = user.email
-                request.session['user_name'] = user.name  # Optionally store user's name
+                 # Optionally store user's name
+# Optionally store user's name
 
                 # Redirect to a different page after successful login
                 return redirect('index')  # Replace 'index' with your desired URL name
@@ -150,10 +184,13 @@ def email_otp_verif(request):
         else:
             print(f"Entered OTP: {entered_otp}, Session OTP: {session_otp}")
 
-            messages.error(request, f'Invalid OTP. Entered OTP: {entered_otp}, Session OTP: {session_otp}. Please try again.')
+            messages.error(request, f'Invalid OTP.Please try again.')
             return render(request, 'email_otp_verif.html', {'user_email': user_email})
 
     return render(request, 'email_otp_verif.html', {'user_email': request.session.get('user_email')})
+
+
+
 
 
 @csrf_exempt
@@ -216,3 +253,25 @@ def password_reset(request, uidb64, token):
         logger.error(f'Error during password reset: {e}')
         messages.error(request, 'Invalid password reset link.')
         return redirect('login')
+
+
+
+
+@csrf_exempt  # Use csrf_exempt decorator to skip CSRF token requirement for this view (for testing purposes)
+def check_email_availability(request):
+    if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        email = request.POST.get('email', None)
+        logger.info(f"Checking availability for email: {email}")
+        if email:
+            try:
+                user = Users.objects.get(email=email)
+                logger.info(f"User found: {user.email}")
+                return JsonResponse({'available': False})
+            except Users.DoesNotExist:
+                logger.info("No user found with this email")
+                return JsonResponse({'available': True})
+            except Exception as e:
+                logger.error(f"Error checking email: {str(e)}")
+                return JsonResponse({'error': str(e)}, status=500)
+    logger.warning("Invalid request received")
+    return JsonResponse({'error': 'Invalid request'}, status=400)
