@@ -28,7 +28,7 @@
                 <h1 class="font-bold text-3xl text-gray-900">REGISTER</h1>
                 <p>Enter your information</p>
             </div>
-            <form id="register-form" action="{% url 'register' %}" method="post">
+            <form id="register-form"  method="post">
                 {% csrf_token %}
                 <div>
                     <div class="flex -mx-3">
@@ -279,7 +279,7 @@
                     // Handle success response
                     UIkit.modal.alert('<p class="uk-modal-body">Registration successful!</p>');
                     // Optionally redirect to another page
-                    window.location.href = '/login/';
+                    window.location.href = '/email_otp_verif';
                 },
                 error: function(xhr, status, error) {
                     // Handle error response

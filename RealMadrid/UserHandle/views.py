@@ -82,6 +82,9 @@ def logout(request):
 def forgotpassword(request):
     return render(request,'forgotpassword.html')
 
+def stadium_structure(request):
+    return render (request,'stadium_structure.html') 
+
 
 
 def password_reset(request):
@@ -89,6 +92,7 @@ def password_reset(request):
 
 
 def login(request):
+   
     if request.method == 'POST':
         email = request.POST.get('email')
         password = request.POST.get('password')
@@ -98,8 +102,8 @@ def login(request):
             if check_password(password, user.password):  # Check hashed password
                 # Initialize session variables
                 request.session['user_id'] = user.id
-                 # Optionally store user's name
-# Optionally store user's name
+                request.session['user_name'] = user.name  # Optionally store user's name
+                request.session.save()
 
                 # Redirect to a different page after successful login
                 return redirect('index')  # Replace 'index' with your desired URL name

@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stadium Booking</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f3f5f8;
+            margin: 0;
+        }
+        .stadium-container {
+            position: relative;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            background-color: #ddd;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .pitch {
+            width: 400px;
+            height: 200px;
+            background-color: #4CAF50;
+            border: 2px solid #fff;
+            border-radius: 20px;
+            position: absolute;
+            z-index: 1;
+        }
+        .seats {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            grid-template-rows: repeat(5, 1fr);
+            gap: 5px;
+            z-index: 0;
+        }
+        .seat {
+            background-color: #ccc;
+            border: 1px solid #888;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+        .seat.selected {
+            background-color: #4CAF50;
+        }
+        .seat.booked {
+            background-color: #f44336;
+            cursor: not-allowed;
+        }
+        .seat:hover:not(.booked) {
+            background-color: #ddd;
+        }
+        .controls {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            text-align: center;
+        }
+        .controls button {
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .controls button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="stadium-container">
+        <div class="pitch"></div>
+        <div class="seats" id="seats">
+            <!-- Seats will be inserted here by JavaScript -->
+        </div>
+        <div class="controls">
+            <button id="book-btn">Book Selected Seats</button>
+        </div>
+    </div>
+
+    <script>
+        const seats = Array.from({ length: 50 }, (_, i) => i + 1); // Adjust number of seats if needed
+        const seatsContainer = document.getElementById('seats');
+
+        // Create seat elements
+        seats.forEach(seat => {
+            const seatElement = document.createElement('div');
+            seatElement.className = 'seat';
+            seatElement.dataset.seatId = seat;
+            seatElement.addEventListener('click', () => {
+                if (!seatElement.classList.contains('booked')) {
+                    seatElement.classList.toggle('selected');
+                }
+            });
+            seatsContainer.appendChild(seatElement);
+        });
+
+        document.getElementById('book-btn').addEventListener('click', () => {
+            const selectedSeats = Array.from(document.querySelectorAll('.seat.selected')).map(seat => seat.dataset.seatId);
+            if (selectedSeats.length > 0) {
+                // Call API to book seats
+                fetch('/api/book-seats', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ seats: selectedSeats }),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert('Seats booked successfully!');
+                    // Update the UI based on response
+                    document.querySelectorAll('.seat.selected').forEach(seat => {
+                        seat.classList.remove('selected');
+                        seat.classList.add('booked');
+                    });
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Booking failed.');
+                });
+            } else {
+                alert('No seats selected.');
+            }
+        });
+    </script>
+</body>
+</html>

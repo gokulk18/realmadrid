@@ -27,8 +27,10 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-
+AUTH_USER_MODEL = 'UserHandle.Users'
 # Application definition
+
+SOCIALACCOUNT_LOGIN_ON_GET=True
 
 INSTALLED_APPS = [
     'django.contrib.admin',
