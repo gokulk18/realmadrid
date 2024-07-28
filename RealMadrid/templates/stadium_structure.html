@@ -3,137 +3,235 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stadium Booking</title>
-    <style>
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-color: #f3f5f8;
-            margin: 0;
-        }
-        .stadium-container {
-            position: relative;
-            width: 600px;
-            height: 600px;
-            border-radius: 50%;
-            background-color: #ddd;
-            overflow: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        .pitch {
-            width: 400px;
-            height: 200px;
-            background-color: #4CAF50;
-            border: 2px solid #fff;
-            border-radius: 20px;
-            position: absolute;
-            z-index: 1;
-        }
-        .seats {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            display: grid;
-            grid-template-columns: repeat(10, 1fr);
-            grid-template-rows: repeat(5, 1fr);
-            gap: 5px;
-            z-index: 0;
-        }
-        .seat {
-            background-color: #ccc;
-            border: 1px solid #888;
-            cursor: pointer;
-            border-radius: 50%;
-        }
-        .seat.selected {
-            background-color: #4CAF50;
-        }
-        .seat.booked {
-            background-color: #f44336;
-            cursor: not-allowed;
-        }
-        .seat:hover:not(.booked) {
-            background-color: #ddd;
-        }
-        .controls {
-            position: absolute;
-            bottom: 20px;
-            width: 100%;
-            text-align: center;
-        }
-        .controls button {
-            padding: 10px 20px;
-            background-color: #007BFF;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        .controls button:hover {
-            background-color: #0056b3;
-        }
-    </style>
+    <title>Football Stadium Booking</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        background-color: #f0f0f0;
+    }
+    
+    .stadium {
+        position: relative;
+        width: 800px;
+        height: 600px;
+        border: 2px solid #000;
+        border-radius: 10px;
+        background-color: #ffffff;
+        overflow: hidden;
+    }
+    
+    .pitch {
+        position: absolute;
+        top: 50px;
+        left: 50px;
+        width: calc(100% - 100px);
+        height: calc(100% - 100px);
+        background-color: #4CAF50; /* Football pitch green */
+        border: 2px solid #000;
+        border-radius: 10px;
+    }
+    
+    .stands {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+    }
+    
+    .stand {
+        position: absolute;
+        background-color: #eeeeee;
+        border: 1px solid #cccccc;
+        text-align: center;
+        overflow: hidden;
+    }
+    
+    .stand.north {
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100px;
+    }
+    
+    .stand.south {
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 100px;
+    }
+    
+    .stand.east {
+        right: 0;
+        top: 100px;
+        width: 100px;
+        height: calc(100% - 200px);
+    }
+    
+    .stand.west {
+        left: 0;
+        top: 100px;
+        width: 100px;
+        height: calc(100% - 200px);
+    }
+    
+    .seat-row {
+        display: flex;
+        justify-content: center;
+        margin: 2px 0;
+    }
+    
+    .seat {
+        width: 30px;
+        height: 30px;
+        border-radius: 5px;
+        margin: 2px;
+        text-align: center;
+        line-height: 30px;
+        font-size: 14px;
+        cursor: pointer;
+    }
+    
+    .seat.available {
+        background-color: #B9DEA0; /* Green for available seats */
+    }
+    
+    .seat.booked {
+        background-color: #E6CAC4; /* Red for booked seats */
+        cursor: not-allowed;
+    }
+    
+    .seat.selected {
+        background-color: #a4d4a7; /* Light green for selected seats */
+    }
+    
+    .seat:hover {
+        background-color: #a4d4a7; /* Hover effect for available seats */
+    }
+    
+    .booking-info {
+        margin-top: 20px;
+        text-align: center;
+    }
+    
+    #selected-seats {
+        margin: 10px 0;
+    }
+</style>    
 <body>
-    <div class="stadium-container">
-        <div class="pitch"></div>
-        <div class="seats" id="seats">
-            <!-- Seats will be inserted here by JavaScript -->
+    <div class="stadium">
+        <div class="pitch">
+            <!-- Pitch visual representation -->
         </div>
-        <div class="controls">
-            <button id="book-btn">Book Selected Seats</button>
+        <div class="stands">
+            <!-- North Stand -->
+            <div class="stand north">
+                <div class="seat-row">
+                    <div class="seat available" data-id="1">1</div>
+                    <div class="seat available" data-id="2">2</div>
+                    <div class="seat booked" data-id="3">3</div>
+                    <div class="seat available" data-id="4">4</div>
+                    <div class="seat available" data-id="5">5</div>
+                </div>
+                <div class="seat-row">
+                    <div class="seat available" data-id="6">6</div>
+                    <div class="seat available" data-id="7">7</div>
+                    <div class="seat available" data-id="8">8</div>
+                    <div class="seat available" data-id="9">9</div>
+                    <div class="seat available" data-id="10">10</div>
+                </div>
+            </div>
+            <!-- South Stand -->
+            <div class="stand south">
+                <div class="seat-row">
+                    <div class="seat available" data-id="11">11</div>
+                    <div class="seat booked" data-id="12">12</div>
+                    <div class="seat available" data-id="13">13</div>
+                    <div class="seat available" data-id="14">14</div>
+                    <div class="seat available" data-id="15">15</div>
+                </div>
+                <div class="seat-row">
+                    <div class="seat available" data-id="16">16</div>
+                    <div class="seat available" data-id="17">17</div>
+                    <div class="seat available" data-id="18">18</div>
+                    <div class="seat available" data-id="19">19</div>
+                    <div class="seat available" data-id="20">20</div>
+                </div>
+            </div>
+            <!-- East Stand -->
+            <div class="stand east">
+                <div class="seat-row">
+                    <div class="seat available" data-id="21">21</div>
+                    <div class="seat available" data-id="22">22</div>
+                </div>
+                <div class="seat-row">
+                    <div class="seat booked" data-id="23">23</div>
+                    <div class="seat available" data-id="24">24</div>
+                </div>
+                <div class="seat-row">
+                    <div class="seat available" data-id="25">25</div>
+                    <div class="seat available" data-id="26">26</div>
+                </div>
+            </div>
+            <!-- West Stand -->
+            <div class="stand west">
+                <div class="seat-row">
+                    <div class="seat available" data-id="27">27</div>
+                    <div class="seat booked" data-id="28">28</div>
+                </div>
+                <div class="seat-row">
+                    <div class="seat available" data-id="29">29</div>
+                    <div class="seat available" data-id="30">30</div>
+                </div>
+                <div class="seat-row">
+                    <div class="seat available" data-id="31">31</div>
+                    <div class="seat available" data-id="32">32</div>
+                </div>
+            </div>
         </div>
     </div>
-
+    <div class="booking-info">
+        <h2>Selected Seats</h2>
+        <div id="selected-seats">None</div>
+        <button id="book-tickets" disabled>Book Tickets</button>
+    </div>
     <script>
-        const seats = Array.from({ length: 50 }, (_, i) => i + 1); // Adjust number of seats if needed
-        const seatsContainer = document.getElementById('seats');
-
-        // Create seat elements
-        seats.forEach(seat => {
-            const seatElement = document.createElement('div');
-            seatElement.className = 'seat';
-            seatElement.dataset.seatId = seat;
-            seatElement.addEventListener('click', () => {
-                if (!seatElement.classList.contains('booked')) {
-                    seatElement.classList.toggle('selected');
-                }
-            });
-            seatsContainer.appendChild(seatElement);
-        });
-
-        document.getElementById('book-btn').addEventListener('click', () => {
-            const selectedSeats = Array.from(document.querySelectorAll('.seat.selected')).map(seat => seat.dataset.seatId);
-            if (selectedSeats.length > 0) {
-                // Call API to book seats
-                fetch('/api/book-seats', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ seats: selectedSeats }),
-                })
-                .then(response => response.json())
-                .then(data => {
-                    alert('Seats booked successfully!');
-                    // Update the UI based on response
-                    document.querySelectorAll('.seat.selected').forEach(seat => {
-                        seat.classList.remove('selected');
-                        seat.classList.add('booked');
-                    });
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Booking failed.');
-                });
-            } else {
-                alert('No seats selected.');
+        document.addEventListener('DOMContentLoaded', function() {
+            const selectedSeats = [];
+            const selectedSeatsDiv = document.getElementById('selected-seats');
+            const bookTicketsButton = document.getElementById('book-tickets');
+        
+            function updateSelectedSeats() {
+                selectedSeatsDiv.textContent = selectedSeats.length > 0 ? selectedSeats.join(', ') : 'None';
+                bookTicketsButton.disabled = selectedSeats.length === 0;
             }
+        
+            document.querySelectorAll('.seat.available').forEach(seat => {
+                seat.addEventListener('click', function() {
+                    if (seat.classList.contains('available')) {
+                        seat.classList.remove('available');
+                        seat.classList.add('selected');
+                        selectedSeats.push(seat.getAttribute('data-id'));
+                    } else if (seat.classList.contains('selected')) {
+                        seat.classList.remove('selected');
+                        seat.classList.add('available');
+                        const seatIndex = selectedSeats.indexOf(seat.getAttribute('data-id'));
+                        if (seatIndex > -1) {
+                            selectedSeats.splice(seatIndex, 1);
+                        }
+                    }
+                    updateSelectedSeats();
+                });
+            });
         });
+        
     </script>
 </body>
 </html>

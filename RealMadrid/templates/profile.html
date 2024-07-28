@@ -5,13 +5,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Real Madrid FC</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uikit@3.21.6/dist/css/uikit.min.css" />
-
-    <!-- UIkit JS -->
     <script src="https://cdn.jsdelivr.net/npm/uikit@3.21.6/dist/js/uikit.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/uikit@3.21.6/dist/js/uikit-icons.min.js"></script>
     <script src="//unpkg.com/alpinejs" defer></script>
@@ -24,7 +22,6 @@
             color: white; /* Default color */
             transition: color 0.3s ease; /* Smooth transition */
         }
-    
         .uk-slider-container .uk-slidenav:hover {
             color: #3b82f6; /* Blue color on hover */
         }
@@ -32,17 +29,30 @@
             border-radius: 1rem; /* Adjust radius as needed */
             overflow: hidden; /* Ensures the image fits within the rounded corners */
         }
-    
         .hover\:scale-105:hover {
             transform: scale(1.05); /* Zoom effect on hover */
         }
-        a{
+        a {
             text-decoration: none !important;
+        }
+        .alert {
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+        }
+        
+        .alert.success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .alert.error {
+            background-color: #f8d7da;
+            color: #721c24;
         }
     </style>
 </head>
 <body class="bg-[#f3f5f8]">
-
 
 <!-- Navbar Section -->
 <section class="bg-white dark:bg-white-900">
@@ -59,7 +69,6 @@
                     <svg x-show="!isOpen" xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4 8h16M4 16h16" />
                     </svg>
-
                     <svg x-show="isOpen" xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                     </svg>
@@ -130,9 +139,24 @@
 </script>
 
 <body class="bg-white">
-<!-- component -->
+    {% if messages %}
+    <div>
+        {% for message in messages %}
+            <div class="alert {{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    </div>
+{% endif %}
+<!-- Profile Update Form -->
 <div class="flex flex-col justify-center items-center h-[100vh]">
     <div class="relative flex flex-col items-center rounded-[20px] w-[900px] max-w-[95%] mx-auto bg-white bg-clip-border shadow-3xl shadow-shadow-500 dark:!bg-navy-800 dark:text-white dark:!shadow-none p-3">
+        <div id="successMessage" class="hidden p-4 mb-4 text-sm text-green-700 bg-green-100 rounded-lg dark:bg-green-900 dark:text-green-400" role="alert">
+            Profile updated successfully!
+        </div>
+
+        <!-- Loading Spinner -->
+        <div id="loadingSpinner" class="hidden absolute inset-0 flex items-center justify-center z-10">
+            <div class="w-8 h-8 border-4 border-blue-500 border-dashed rounded-full animate-spin"></div>
+        </div>
         <div class="mt-2 mb-8 w-full">
             <h4 class="text-4xl font-semibold tracking-wide text-[#0F2145] lg:text">
                 Edit Your Profile
@@ -140,68 +164,106 @@
         </div> 
         <form method="post">
             {% csrf_token %}
-        <div class="grid grid-cols-2 gap-4 px-2 w-full">
-            <div class="flex flex-col items-start justify-center rounded-2xl bg-white bg-clip-border px-3 py-4 shadow-3xl shadow-shadow-500 dark:!bg-navy-700 dark:shadow-none">
-                <label for="username" class="block text-semibold-px1 text-[#0F2145] dark:text-[#0F2145]">Name</label>
-                <input type="text" id="name" name="name" value="{{ user_name }}" placeholder="John Doe" class="block mt-2 w-full placeholder-gray-400/70 dark:placeholder-gray-500 rounded-lg border-2 border-gray-200 px-5 py-2.5 text-gray-700 focus:border-gray-400 focus:outline-none focus:ring focus:ring-gray-300 focus:ring-opacity-40 dark:border-gray-400 dark:text-[#0F2145]-300 dark:focus:border-gray-300" style="background-color: white !important;" />
-                <span class="mt-3 text-xs text-red-400" id="err_name">Name is required</span>
-            </div>
+            <div class="grid grid-cols-2 gap-4 px-2 w-full">
+                <div class="flex flex-col items-start justify-center rounded-2xl bg-white bg-clip-border px-3 py-4 shadow-3xl shadow-shadow-500 dark:!bg-navy-700 dark:shadow-none">
+                    <label for="name" class="block text-semibold-px1 text-[#0F2145] dark:text-[#0F2145]">Name</label><span class="mt-3 text-xs text-red-400 hidden" id="err_name">Name is required.</span>
 
-            <div class="flex flex-col items-start justify-center rounded-2xl bg-white bg-clip-border px-3 py-4 shadow-3xl shadow-shadow-500 dark:!bg-navy-700 dark:shadow-none">
-                <label for="email" class="block text-semibold-px1 text-[#0F2145] dark:text-[#0F2145]">Email</label>
-                <input type="email" id="email" name="email" value="{{ user_email }}" placeholder="example@gmail.com" class="block mt-2 w-full placeholder-gray-400/70 dark:placeholder-gray-500 rounded-lg border-2 border-gray-200 px-5 py-2.5 text-gray-700 focus:border-gray-400 focus:outline-none focus:ring focus:ring-gray-300 focus:ring-opacity-40 dark:border-gray-400 dark:text-[#0F2145]-300 dark:focus:border-gray-300" style="background-color: white !important;" disabled />
-                <span class="mt-3 text-xs text-red-400" id="err_email">Email format is example@gmail.com</span>
-            </div>
+                    <input type="text" id="name" name="name" value="{{ user_name }}" placeholder="John Doe" class="block mt-2 placeholder-gray-400/70 dark:placeholder-gray-500 rounded-lg border-2 border-gray-200 px-5 py-2.5 text-gray-700 focus:border-gray-400 focus:outline-none focus:ring focus:ring-gray-300 focus:ring-opacity-40 dark:border-gray-400 dark:text-[#0F2145]-300 dark:focus:border-gray-300" style="background-color: white !important; width: 300px;" />
+                </div>
+                <div class="flex flex-col items-start justify-center rounded-2xl bg-white bg-clip-border px-3 py-4 shadow-3xl shadow-shadow-500 dark:!bg-navy-700 dark:shadow-none">
+                    <label for="phone" class="block text-semibold-px1 text-[#0F2145] dark:text-[#0F2145]">Phone</label><span class="mt-3 text-xs text-red-400 hidden" id="err_phone">Phone number is required and must be digits only.</span>
 
-            <div class="flex flex-col items-start justify-center rounded-2xl bg-white bg-clip-border px-3 py-4 shadow-3xl shadow-shadow-500 dark:!bg-navy-700 dark:shadow-none">
-                <label for="phone" class="block text-semibold-px1 text-[#0F2145] dark:text-[#0F2145]">Phone</label>
-                <input type="text" id="phone" name="phone" value="{{ user_phone }}" placeholder="xxxxx xxxxx" class="block mt-2 w-full placeholder-gray-400/70 dark:placeholder-gray-500 rounded-lg border-2 border-gray-200 px-5 py-2.5 text-gray-700 focus:border-gray-400 focus:outline-none focus:ring focus:ring-gray-300 focus:ring-opacity-40 dark:border-gray-400 dark:text-[#0F2145]-300 dark:focus:border-gray-300" style="background-color: white !important;" />
-                <span class="mt-3 text-xs text-red-400" id="err_phone">Invalid phone number format</span>
+                    <input type="text" id="phone" name="phone" value="{{ user_phone }}" placeholder="1234567890" class="block mt-2 placeholder-gray-400/70 dark:placeholder-gray-500 rounded-lg border-2 border-gray-200 px-5 py-2.5 text-gray-700 focus:border-gray-400 focus:outline-none focus:ring focus:ring-gray-300 focus:ring-opacity-40 dark:border-gray-400 dark:text-[#0F2145]-300 dark:focus:border-gray-300" style="background-color: white !important; width: 300px;" />
+                </div>
+                <div class="flex flex-col items-start justify-center rounded-2xl bg-white bg-clip-border px-3 py-4 shadow-3xl shadow-shadow-500 dark:!bg-navy-700 dark:shadow-none">
+                    <label for="email" class="block text-semibold-px1 text-[#0F2145] dark:text-[#0F2145]">Email</label>  <span class="mt-3 text-xs text-red-400 hidden" id="err_email">Email format is invalid.</span>
+                    <input type="email" id="email" name="email" value="{{ user_email }}" placeholder="example@gmail.com" class="block mt-2 placeholder-gray-400/70 dark:placeholder-gray-500 rounded-lg border-2 border-gray-200 px-5 py-2.5 text-gray-700 focus:border-gray-400 focus:outline-none focus:ring focus:ring-gray-300 focus:ring-opacity-40 dark:border-gray-400 dark:text-[#0F2145]-300 dark:focus:border-gray-300" style="background-color: white !important; width: 300px;" disabled />
+                  
+                </div>
             </div>
-        </div>
-        <div class="flex w-full px-2 mt-5">
-            <button id="submitBtn" type="submit" class="bg-indigo-500 text-white rounded-lg px-3 py-3 font-semibold disabled:opacity-50 disabled:cursor-not-allowed" disabled>Become a Madridista</button>
-        </div>
-    </form>
+            <button type="submit" id="submitBtn" class="w-full mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 disabled:bg-gray-300 disabled:cursor-not-allowed" disabled>Update Profile</button>
+        </form>
     </div>
 </div>
 
-
-    </body>
-</html>
-
-
 <script>
-    document.getElementById("register-form").addEventListener("submit", function(event) {
+    function validatePhone(phone) {
+        // Regular expression to check if the phone number is exactly 10 digits,
+        // starts with a digit from 6 to 9, and contains only digits
+        var re = /^[6-9]\d{9}$/;
+        return re.test(phone);
+    }
+    
+    function validateForm() {
         let valid = true;
-
+    
         // Validate name
         const name = document.getElementById("name").value.trim();
-        const nameError = document.getElementById("name-error");
+        const nameError = document.getElementById("err_name");
         if (name === "") {
             nameError.textContent = "Name is required.";
+            nameError.classList.remove("hidden");
             valid = false;
         } else {
             nameError.textContent = "";
+            nameError.classList.add("hidden");
         }
-
+    
         // Validate phone
         const phone = document.getElementById("phone").value.trim();
-        const phoneError = document.getElementById("phone-error");
+        const phoneError = document.getElementById("err_phone");
         if (phone === "") {
             phoneError.textContent = "Phone number is required.";
+            phoneError.classList.remove("hidden");
             valid = false;
-        } else if (!/^\d+$/.test(phone)) {
-            phoneError.textContent = "Phone number can only contain digits.";
+        } else if (!validatePhone(phone)) {
+            phoneError.textContent = "Phone number must be exactly 10 digits, starting with a digit from 6 to 9.";
+            phoneError.classList.remove("hidden");
             valid = false;
         } else {
             phoneError.textContent = "";
+            phoneError.classList.add("hidden");
         }
-
-        // If validation fails, prevent form submission
-        if (!valid) {
-            event.preventDefault();
+    
+        // Validate email (if it is enabled in the future or if needed)
+        const email = document.getElementById("email").value.trim();
+        const emailError = document.getElementById("err_email");
+        if (email === "") {
+            emailError.textContent = "Email is required.";
+            emailError.classList.remove("hidden");
+            valid = false;
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            emailError.textContent = "Email format is invalid.";
+            emailError.classList.remove("hidden");
+            valid = false;
+        } else {
+            emailError.textContent = "";
+            emailError.classList.add("hidden");
+        }
+    
+        // Enable or disable the submit button based on validation
+        document.getElementById("submitBtn").disabled = !valid;
+    
+        // Return validity status
+        return valid;
+    }
+    
+    // Attach event listeners to input fields to validate in real-time
+    document.getElementById("name").addEventListener("input", validateForm);
+    document.getElementById("phone").addEventListener("input", validateForm);
+    document.getElementById("email").addEventListener("input", validateForm);
+    
+    // Attach the form submit event handler
+    document.querySelector("form").addEventListener("submit", function(event) {
+        if (!validateForm()) {
+            event.preventDefault(); // Prevent form submission if validation fails
         }
     });
+    
+    // Initial validation check on page load
+    validateForm();
+    
 </script>
 
+</body>
+</html>

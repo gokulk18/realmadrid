@@ -22,6 +22,10 @@ import logging
 from django.views.decorators.cache import never_cache
 
 
+logger = logging.getLogger(__name__)
+
+
+
 class CustomTokenGenerator(PasswordResetTokenGenerator):
     def _make_hash_value(self, user, timestamp):
         return str(user.pk) + str(timestamp)
@@ -30,6 +34,7 @@ token_generator = CustomTokenGenerator()
 
 
 @never_cache
+@login_required
 def index(request):
     if 'user_id' in request.session:
         user_id = request.session['user_id']
@@ -52,26 +57,43 @@ def index(request):
 def generate_otp():
     return random.randint(1000, 9999)
 
-
+@never_cache
+@login_required
 def profile(request):
-    if 'user_id' in request.session:
-        user_id = request.session['user_id']
+    if request.method == 'POST':
+        name = request.POST.get('name', '').strip()
+        phone = request.POST.get('phone', '').strip()
+        
+        user_id = request.session.get('user_id')
         try:
-            # Retrieve user object from database
             user = Users.objects.get(id=user_id)
+            user.name = name
+            user.phone = phone
+            user.save()
+            messages.success(request, 'Profile updated successfully.')
+            # Render the profile page with the success message
             context = {
-                'user_name': user.name,  # Assuming 'name' is the field you want to display
+                'user_name': user.name,
                 'user_email': user.email,
                 'user_phone': user.phone,
             }
             return render(request, 'profile.html', context)
         except Users.DoesNotExist:
-            # Handle case where user_id in session does not match any user in the database
-            return render(request, 'profile.html', {'user_name': None})
+            messages.error(request, 'User not found.')
+            return render(request, 'profile.html')
     else:
-        # User is not authenticated, redirect to login page or handle as needed
-        return render(request, 'profile.html', {'user_name': None})
-    
+        user_id = request.session.get('user_id')
+        try:
+            user = Users.objects.get(id=user_id)
+            context = {
+                'user_name': user.name,
+                'user_email': user.email,
+                'user_phone': user.phone,
+            }
+            return render(request, 'profile.html', context)
+        except Users.DoesNotExist:
+            messages.error(request, 'User not found.')
+            return render(request, 'profile.html')
 
 def logout(request):
     # Clear session variables on logout
