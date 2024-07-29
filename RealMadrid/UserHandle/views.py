@@ -33,8 +33,14 @@ class CustomTokenGenerator(PasswordResetTokenGenerator):
 token_generator = CustomTokenGenerator()
 
 
+
+def admin_dashboard(request):
+    return render (request,'admin_dashboard.html')
+
+def admin_squad_list(request):
+    return render(request,'admin_squad_list.html')
+
 @never_cache
-@login_required
 def index(request):
     if 'user_id' in request.session:
         user_id = request.session['user_id']
