@@ -1,0 +1,531 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="canonical" href="index.html">
+    <meta name="description" content="Awesome responsive dashboard build with Tailwind CSS &amp; AlpineJS.">
+    
+    <title>Madrid Admin</title>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+
+    <link rel="icon" type="image/svg+xml" href="assets/images/logo.svg">
+
+    <script defer src="{% static 'js/main.js' %}"></script>
+</head>
+<style>
+.tabs {
+  display: flex;
+  border-bottom: 2px solid #ccc;
+}
+.tab {
+    font-family: RMNeue, Arial, Helvetica; /* Font family */
+
+  font-size: 1rem;
+  font-weight: 500;
+  color: #5E6A83;
+  padding: 10px 20px;
+  cursor: pointer;
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  transition: color 0.3s, border-bottom-color 0.3s;
+}
+.tab:hover {
+  color: #000;
+}
+.tab.active {
+  color: #3b82f6;
+  border-bottom-color: #3b82f6;
+}
+.tab-content {
+  display: none;
+  padding: 20px;
+}
+.tab-content.active {
+  display: block;
+}
+.alert {
+    padding: 15px;
+    color: #fff;
+    background-color: #4caf50; /* Green (or use dynamic color based on message type) */
+    border-radius: 5px;
+    position: relative;
+    transition: opacity 1s ease-out;
+    opacity: 1; /* Start fully visible */
+    display: block; /* Ensure it's initially displayed */
+}
+
+.alert.hide {
+    opacity: 0; /* Fade out */
+}
+
+.alert-container {
+    position: relative;
+}
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Select all alerts
+        const alerts = document.querySelectorAll('.alert');
+
+        alerts.forEach(alert => {
+            // Show each alert for 3 seconds
+            setTimeout(() => {
+                // Add 'hide' class to fade out
+                alert.classList.add('hide');
+                
+                // Remove the alert from the DOM after fade-out
+                setTimeout(() => {
+                    alert.style.display = 'none';
+                }, 1000); // Time to wait after fade-out (should match CSS transition duration)
+            }, 3000); // Time to show the alert
+        });
+    });
+
+</script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    var navLinks = document.querySelectorAll('.navbar-nav .nav-link');
+  
+    navLinks.forEach(function(link) {
+        link.addEventListener('click', function() {
+            navLinks.forEach(function(navLink) {
+                navLink.classList.remove('active');
+            });
+            this.classList.add('active');
+        });
+    });
+  });
+  
+
+  </script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      var tabs = document.querySelectorAll('.tab');
+      
+      tabs.forEach(function (tab) {
+        tab.addEventListener('click', function (e) {
+          e.preventDefault(); // Prevent the default anchor behavior
+          
+          var url = tab.getAttribute('href');
+          if (url && url !== '#') {
+            window.location.href = url; // Redirect to the specified URL
+          }
+        });
+      });
+      
+      // Set the "Show Squad" tab as default and selected
+      var defaultTab = document.getElementById('showSquadTab');
+      if (defaultTab) {
+        defaultTab.classList.add('active'); // Ensure it's visually active
+      }
+    });
+  </script>
+  <body class="overflow-hidden">
+    <div x-data="{ sidebarOpen: false }" class="relative flex h-screen text-gray-800 bg-white font-roboto">
+        <div x-cloak :class="sidebarOpen ? 'block' : 'hidden'" @click="sidebarOpen = false" class="fixed inset-0 z-20 transition-opacity bg-black opacity-50 lg:hidden"></div>
+
+<div x-cloak :class="sidebarOpen ? 'translate-x-0 ease-in' : '-translate-x-full ease-out'" class="fixed inset-y-0 left-0 z-30 w-64 px-4 overflow-y-auto transition duration-200 transform bg-white border-r border-gray-100 lg:translate-x-0 lg:relative lg:inset-0 ">
+  <div class="flex items-center mt-8">
+    <!-- Logo Image -->
+    <img class="w-auto h-12" src="{% static 'madrid_images/real-madrid-logo.png' %}" alt="Real Madrid Logo">
+    
+    <!-- Text next to the Logo -->
+    <span class="ml-3 font-medium capitalize text-lg flex items-center" style="margin-top: 10px;margin-left: 11px;">Real Madrid FC</span>
+</div>
+
+    <hr class="my-6 border-gray-100">
+
+    <nav class="space-y-8">
+        <div class="space-y-4">    
+            <a class="flex items-center px-4 py-2 text-gray-600 transition-colors duration-200 transform bg-gray-200 rounded-lg bg-opacity-40" href="{% url 'admin_dashboard' %}">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+    
+                <span class="mx-3 font-m capitalize">Dashboard</span>
+            </a>
+    
+            <a class="flex items-center px-4 py-2 text-gray-500 transition-colors duration-300 transform rounded-lg hover:text-gray-600 hover:bg-gray-100 bg-opacity-40" href="{% url 'admin_squad_list' %}">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+                </svg>
+    
+                <span class="mx-3 font-medium capitalize active">Squad</span>
+            </a>        
+        </div>
+    </nav>
+</div>
+        <div class="flex flex-col flex-1 overflow-hidden bg-gray-100">
+            <header class="bg-white border-b border-gray-100">
+    <div class="flex items-center justify-between px-4 py-4 sm:px-6">
+        <div class="flex items-center">
+            <button @click="sidebarOpen = !sidebarOpen" class="text-gray-500 lg:hidden focus:outline-none">
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4 6H20M4 12H20M4 18H11" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+            </button>
+    
+            <div class="relative" x-data="{ search: '' }" @click.away="search = ''">
+    <div class="relative mx-4 lg:mx-0">
+        <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+            <svg class="w-5 h-5 text-gray-400" viewBox="0 0 24 24" fill="none">
+                <path d="M21 21L15 15M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
+        </span>
+    
+        <input x-model="search" type="text" class="w-32 h-10 py-2 pl-10 pr-4 text-gray-700 placeholder-gray-400 transition-all duration-150 bg-white border border-gray-200 rounded-md focus:w-44 sm:w-64 sm:focus:w-80 focus:border-indigo-400 focus:outline-none focus:ring focus:ring-indigo-300 focus:ring-opacity-40" placeholder="Find anything...">
+    </div>
+
+    <div class="absolute right-0 z-20 w-full py-2 mt-2 space-y-4 overflow-hidden bg-white rounded-md shadow-xl"
+        x-show="search.length > 0" 
+        x-cloak 
+        x-transition:enter="transition ease-out duration-100 transform"
+        x-transition:enter-start="opacity-0 scale-95" 
+        x-transition:enter-end="opacity-100 scale-100"
+        x-transition:leave="transition ease-in duration-75 transform"
+        x-transition:leave-start="opacity-100 scale-100" 
+        x-transition:leave-end="opacity-0 scale-95"
+    >
+    </div>
+</div>        </div>
+    
+        <div class="flex items-center">
+           
+    
+            <div x-data="{ dropdownOpen: false }" class="relative inline-block">
+                <button @click="dropdownOpen = ! dropdownOpen" class="relative z-10 flex items-center flex-shrink-0 text-sm text-gray-600 focus:outline-none">
+                    <img class="flex  w-8 h-8 " src="{% static 'madrid_images/real-madrid-logo.png' %}" alt="Real Madrid Logo">
+                </button>
+    
+                <div class="absolute right-0 z-20 w-56 py-2 mt-2 overflow-hidden bg-white rounded-md shadow-xl rtl:right-auto rtl:left-0"
+                    x-show="dropdownOpen" 
+                    x-cloak 
+                    x-transition:enter="transition ease-out duration-100 transform"
+                    x-transition:enter-start="opacity-0 scale-95" 
+                    x-transition:enter-end="opacity-100 scale-100"
+                    x-transition:leave="transition ease-in duration-75 transform"
+                    x-transition:leave-start="opacity-100 scale-100" 
+                    x-transition:leave-end="opacity-0 scale-95"
+                    @click.away="dropdownOpen = false"
+                >
+                    <a href="profile.html" class="flex items-center p-3 -mt-2 text-sm text-gray-600 transition-colors duration-200 transform hover:bg-gray-100">
+                        <img class="flex mx-1 full w-9 h-9" src="{% static 'madrid_images/real-madrid-logo.png' %}" alt="Real Madrid Logo" >
+                        <div class="mx-1">
+                            {% comment %} <h1 class="text-sm font-semibold text-gray-700">John Doe</h1>
+                            <p class="text-sm text-gray-500">johndoe@example.com</p> {% endcomment %}
+                        </div>
+                    </a>
+    
+                    <hr class="border-gray-200 ">
+                    
+                    {% comment %} <a href="profile.html" class="block px-4 py-2 text-sm text-gray-600 capitalize transition-colors duration-200 transform hover:bg-gray-100">
+                        Profile
+                    </a>
+                    
+                    <a href="profile.html" class="block px-4 py-2 text-sm text-gray-600 capitalize transition-colors duration-200 transform hover:bg-gray-100">
+                        Settings
+                    </a> {% endcomment %}
+    
+                    <a href="{% url 'logout' %}" class="block px-4 py-2 text-sm text-gray-600 capitalize transition-colors duration-200 transform hover:bg-gray-100">
+                        Sign Out
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+            <main class="flex-1 overflow-y-auto">
+                <div class="px-4  sm:px-6">
+                    <div>
+                        <h1 class="text-2xl font-low text-gray-700 sm:text-1xl">    Dashboard
+</h1>
+
+                        <div class="hidden  overflow-y-auto text-sm lg:items-center lg:flex whitespace-nowrap">
+                            <a href="index.html#" class="text-gray-600 hover:underline">
+                                Pages
+                            </a>
+
+                            <span class="mx-1 text-gray-500">
+                                /
+                            </span>
+
+                            <a href="index.html#" class="text-indigo-600 hover:underline">
+                                    Add Member
+                            </a>
+                        </div>
+                    </div>
+                    <br>
+
+                    <body>
+    
+    
+
+
+                      <div class="tabs">
+                        <a href="#" class="tab active" id="addMemberTab">Update Player</a>
+                        <a href="{% url 'admin_squad_list' %}" class="tab" id="">Show Squad</a>
+                    </div>
+                    
+                      <br>
+                      <br>
+                      <div class="container text-center">
+                        <div class="row">
+                            <div class="col-sm-8">
+                                <h1 class="text-2xl font-semibold text-center text-[#0F2145] capitalize lg:text-3xl dark:text-[#0F2145]">Update Player Details</h1>
+                                <br>
+                            
+                                <section class="max-w-4xl p-6 mx-auto bg-white rounded-md shadow-md dark:bg-gray-800">
+                                    <br>
+                                    <form id="add-player-form" action="{% url 'admin_update_player' player.id %}" method="post" enctype="multipart/form-data">
+                                        {% csrf_token %}
+                                        <div class="max-w-xs space-y-6 mt-4 mx-auto">
+                                            <div class="flex flex-col">
+                                                <label class="text-gray-700 dark:text-gray-200 mb-1" for="jersey_num" style="text-align: left;">Player Jersey Number:
+                                                    <span id="err_jersey_num" class="text-red-600"></span>
+                                                </label>
+                                                <input id="jersey_num" name="jersey_num" type="text" placeholder="enter player jersey number" class="input input-bordered input-primary w-full rounded-lg" value="{{ player.jersey_num }}" />
+                                            </div>
+                                    
+                                            <div class="flex flex-col">
+                                                <label class="text-gray-700 dark:text-gray-200 mb-1" for="player_name" style="text-align: left;">Player Name:
+                                                    <span id="err_player_name" class="text-red-600"></span>
+                                                </label>
+                                                <input id="player_name" name="player_name" type="text" placeholder="enter player name" class="input input-bordered input-primary w-full rounded-lg" value="{{ player.player_name }}" />
+                                            </div>
+                                    
+                                            <div class="flex flex-col">
+                                                <label class="text-gray-700 dark:text-gray-200 mb-1" for="player_country" style="text-align: left;">Player Country:
+                                                    <span id="err_player_country" class="text-red-600"></span>
+                                                </label>
+                                                <input id="player_country" name="player_country" type="text" placeholder="enter player country" class="input input-bordered input-primary w-full rounded-lg" value="{{ player.player_country }}" />
+                                            </div>
+                                    
+                                            <div class="flex flex-col">
+                                                <label class="text-gray-700 dark:text-gray-200 mb-1" for="player_position" style="text-align: left;">
+                                                    Player Position:
+                                                    <span id="err_player_position" class="text-red-600"></span>
+                                                </label>
+                                                <select id="player_position" name="player_position" class="input input-bordered input-primary w-full rounded-lg">
+                                                    <option value="" disabled>Choose...</option>
+                                                    {% for position in position_list %}
+                                                        <option value="{{ position.id }}" {% if position.id == player.player_position.id %}selected{% endif %}>{{ position.position }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                    
+                                            <div class="flex flex-col">
+                                                <label class="text-gray-700 dark:text-gray-200 mb-1" for="player_role" style="text-align: left;">Player Role:
+                                                    <span id="err_player_role" class="text-red-600"></span>
+                                                </label>
+                                                <input id="player_role" name="player_role" type="text" placeholder="enter player role" class="input input-bordered input-primary w-full rounded-lg" value="{{ player.player_role }}" />
+                                            </div>
+                                    
+                                            <div class="flex flex-col">
+                                                <label for="player_image" class="form-label" style="text-align: left;">Player Image:
+                                                    <span id="err_player_image" class="text-red-600"></span>
+                                                </label>
+                                                <div class="mb-2">
+                                                    {% if player.player_image %}
+                                                        <img src="{{ player.player_image.url }}" alt="Player Image" style="max-width: 200px; max-height: 200px; object-fit: cover;">
+                                                    {% else %}
+                                                        <p>No image available</p>
+                                                    {% endif %}
+                                                </div>
+                                                <input class="form-control" name="player_image" type="file" id="player_image">
+                                            </div>
+                                    
+                                            <div class="flex justify-center mt-6">
+                                                <input type="submit" id="submitBtn" name="submit1" value="Update Player" class="btn btn-primary" />
+                                            </div>
+                                        </div>
+                                    </form>
+                                </section>
+                            </div>
+                            <script>
+                                $(document).ready(function() {
+                                    // Function to disable error messages
+                                    function disableErrorMessages() {
+                                        $('#err_jersey_num').text('');
+                                        $('#err_player_name').text('');
+                                        $('#err_player_country').text('');
+                                        $('#err_player_position').text('');
+                                        $('#err_player_role').text('');
+                                        $('#err_player_image').text('');
+                                    }
+                                
+                                    // Function to enable or disable the submit button
+                                    function toggleSubmitButton() {
+                                        var isValid = true;
+                                
+                                        var jerseyNum = $('#jersey_num').val().trim();
+                                        var playerName = $('#player_name').val().trim();
+                                        var playerCountry = $('#player_country').val().trim();
+                                        var playerPosition = $('#player_position').val();
+                                        var playerRole = $('#player_role').val().trim();
+                                        var playerImage = $('#player_image').val();
+                                
+                                        // Validate inputs
+                                        if (jerseyNum.length === 0 || playerName.length === 0 || playerCountry.length === 0 || playerPosition === "" || playerRole.length === 0) {
+                                            isValid = false;
+                                        } else if (!validateJerseyNum(jerseyNum) || !validateAlpha(playerName) || !validateAlpha(playerCountry) || !validateAlpha(playerRole)) {
+                                            isValid = false;
+                                        }
+                                
+                                        // Validate image only if a new file is selected
+                                        if (playerImage && !validateImage(playerImage)) {
+                                            isValid = false;
+                                            $('#err_player_image').text('Invalid image file. Allowed formats: jpg, jpeg, png');
+                                        } else {
+                                            $('#err_player_image').text('');
+                                        }
+                                
+                                        // Disable or enable the submit button based on validation
+                                        $('#submitBtn').prop('disabled', !isValid);
+                                    }
+                                
+                                    // Initially enable the submit button
+                                    $('#submitBtn').prop('disabled', false);
+                                
+                                    // Event handlers for input fields
+                                    $('#jersey_num').keyup(function() {
+                                        var jerseyNum = $(this).val().trim();
+                                        if (jerseyNum.length === 0) {
+                                            $('#err_jersey_num').text('Jersey number is required');
+                                        } else if (!validateJerseyNum(jerseyNum)) {
+                                            $('#err_jersey_num').text('Jersey number must contain only numbers');
+                                        } else {
+                                            $('#err_jersey_num').text('');
+                                        }
+                                        toggleSubmitButton();
+                                    });
+                                
+                                    $('#player_name').keyup(function() {
+                                        var playerName = $(this).val().trim();
+                                        if (playerName.length === 0) {
+                                            $('#err_player_name').text('Player name is required');
+                                        } else if (!validateAlpha(playerName)) {
+                                            $('#err_player_name').text('Player name must contain only alphabets');
+                                        } else {
+                                            $('#err_player_name').text('');
+                                        }
+                                        toggleSubmitButton();
+                                    });
+                                
+                                    $('#player_country').keyup(function() {
+                                        var playerCountry = $(this).val().trim();
+                                        if (playerCountry.length === 0) {
+                                            $('#err_player_country').text('Player country is required');
+                                        } else if (!validateAlpha(playerCountry)) {
+                                            $('#err_player_country').text('Player country must contain only alphabets');
+                                        } else {
+                                            $('#err_player_country').text('');
+                                        }
+                                        toggleSubmitButton();
+                                    });
+                                
+                                    $('#player_position').change(function() {
+                                        var playerPosition = $(this).val();
+                                        if (playerPosition === "") {
+                                            $('#err_player_position').text('Player position is required');
+                                        } else {
+                                            $('#err_player_position').text('');
+                                        }
+                                        toggleSubmitButton();
+                                    });
+                                
+                                    $('#player_role').keyup(function() {
+                                        var playerRole = $(this).val().trim();
+                                        if (playerRole.length === 0) {
+                                            $('#err_player_role').text('Player role is required');
+                                        } else if (!validateAlpha(playerRole)) {
+                                            $('#err_player_role').text('Player role must contain only alphabets');
+                                        } else {
+                                            $('#err_player_role').text('');
+                                        }
+                                        toggleSubmitButton();
+                                    });
+                                
+                                    $('#player_image').change(function() {
+                                        var playerImage = $(this).val();
+                                        // If a new image file is selected, validate it
+                                        if (playerImage) {
+                                            if (!validateImage(playerImage)) {
+                                                $('#err_player_image').text('Invalid image file. Allowed formats: jpg, jpeg, png');
+                                            } else {
+                                                $('#err_player_image').text('');
+                                            }
+                                        } else {
+                                            $('#err_player_image').text(''); // Clear error if no new image is selected
+                                        }
+                                        toggleSubmitButton();
+                                    });
+                                
+                                    // Form submission handling
+                                    $('#add-player-form').submit(function(event) {
+                                        event.preventDefault(); // Prevent default form submission
+                                
+                                        var jerseyNum = $('#jersey_num').val().trim();
+                                        var playerName = $('#player_name').val().trim();
+                                        var playerCountry = $('#player_country').val().trim();
+                                        var playerPosition = $('#player_position').val();
+                                        var playerRole = $('#player_role').val().trim();
+                                        var playerImage = $('#player_image').val();
+                                
+                                        // Perform final validation before submission
+                                        if (jerseyNum.length === 0 || playerName.length === 0 || playerCountry.length === 0 || playerPosition === "" || playerRole.length === 0 || (playerImage && !validateImage(playerImage)) ||
+                                            !validateJerseyNum(jerseyNum) || !validateAlpha(playerName) || !validateAlpha(playerCountry) || !validateAlpha(playerRole)) {
+                                            alert('Please complete all required fields correctly.');
+                                            return;
+                                        }
+                                
+                                        // Submit the form via AJAX or perform further processing
+                                        $.ajax({
+                                            url: $(this).attr('action'),
+                                            type: $(this).attr('method'),
+                                            data: new FormData(this), // Include file data
+                                            contentType: false,
+                                            processData: false,
+                                            success: function(response) {
+                                                // Handle success response
+                                                alert('Player updated successfully!');
+                                                // Redirect to another page
+                                                window.location.href = '{% url "admin_squad_list" %}'; // Update with actual redirect URL
+                                            },
+                                            error: function(xhr, status, error) {
+                                                // Handle error response
+                                                console.error('Error submitting form:', error);
+                                                alert('Failed to update player. Please try again later.');
+                                            }
+                                        });
+                                    });
+                                
+                                    // Validation functions
+                                    function validateJerseyNum(num) {
+                                        var re = /^\d+$/; // Only numeric values
+                                        return re.test(num);
+                                    }
+                                
+                                    function validateAlpha(str) {
+                                        var re = /^[a-zA-Z]+$/; // Only alphabets
+                                        return re.test(str);
+                                    }
+                                
+                                    function validateImage(file) {
+                                        var allowedExtensions = ['jpg', 'jpeg', 'png'];
+                                        var fileExtension = file.split('.').pop().toLowerCase();
+                                        return allowedExtensions.includes(fileExtension);
+                                    }
+                                });
+                                </script>
+                                

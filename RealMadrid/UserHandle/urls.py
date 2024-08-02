@@ -1,6 +1,8 @@
 from django.contrib import admin
 from django.urls import path, include
 from . import views
+from django.conf.urls.static import static  # Import static
+from django.conf import settings
 
 urlpatterns = [
     path('', views.index, name="index"),
@@ -16,6 +18,14 @@ urlpatterns = [
     path('check_email_availability/', views.check_email_availability, name="check_email_availability"),
     path('admin_dashboard/',views.admin_dashboard,name="admin_dashboard"),
     path('admin_squad_list/',views.admin_squad_list,name="admin_squad_list"),
+    path('admin_add_player/',views.admin_add_player,name="admin_add_player"),
+    path('add_position/', views.add_position, name='add_position'),
+    path('add_player/', views.add_player, name='add_player'),
+    path('admin_update_player/<int:player_id>/', views.admin_update_player, name='admin_update_player'),
+
+
+
+
 
     
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

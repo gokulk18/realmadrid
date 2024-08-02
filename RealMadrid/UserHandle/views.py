@@ -20,6 +20,9 @@ from django.conf import settings
 from django.http import JsonResponse
 import logging
 from django.views.decorators.cache import never_cache
+from .models import Position
+from .models import Player
+
 
 
 logger = logging.getLogger(__name__)
@@ -32,13 +35,94 @@ class CustomTokenGenerator(PasswordResetTokenGenerator):
 
 token_generator = CustomTokenGenerator()
 
+def add_position(request):
+    if request.method == 'POST':
+        position_name = request.POST.get('position')
+        if position_name:
+            Position.objects.create(position=position_name)
+            messages.success(request, 'Position added successfully!')
+            return redirect('admin_add_player')  # Redirect to the page where you want to show the message
+    return render(request, 'admin_add_player.html')
 
+def add_player(request):
+    if request.method == 'POST':
+        jersey_num = request.POST.get('jersey_num').strip()
+        player_name = request.POST.get('player_name').strip()
+        player_country = request.POST.get('player_country').strip()
+        player_position = request.POST.get('player_position')
+        player_role = request.POST.get('player_role').strip()
+        player_image = request.FILES.get('player_image')
 
+        # Remove validation logic as it's handled on the front end
+
+        # Save the player to the database
+        player = Player(
+            jersey_num=jersey_num,
+            player_name=player_name,
+            player_country=player_country,
+            player_position_id=player_position,  # Assuming position is the ID of the related Position object
+            player_role=player_role,
+        )
+
+        if player_image:
+            player.player_image = player_image
+
+        player.save()
+
+        # Add a success message
+        messages.success(request, 'Player added successfully!')
+        return redirect('admin_add_player')  # Redirect to the page where you want to show the message
+
+    return render(request, 'add_player.html')
+
+def admin_update_player(request, player_id):
+    player = get_object_or_404(Player, id=player_id)
+    position_list = Position.objects.all()
+
+    if request.method == 'POST':
+        player.jersey_num = request.POST.get('jersey_num')
+        player.player_name = request.POST.get('player_name')
+        player.player_country = request.POST.get('player_country')
+        player.player_position_id = request.POST.get('player_position')
+        player.player_role = request.POST.get('player_role')
+
+        if 'player_image' in request.FILES:
+            player.player_image = request.FILES['player_image']
+        
+        player.save()
+        messages.success(request, 'Player information updated successfully.')
+        return redirect('admin_squad_list')  # Redirect to admin_squad_list page after update
+
+    context = {
+        'player': player,
+        'position_list': position_list,
+    }
+    return render(request, 'admin_update_player.html', context)
+
+@never_cache
 def admin_dashboard(request):
     return render (request,'admin_dashboard.html')
 
+@never_cache
+def admin_add_player(request):
+    positions = Position.objects.all()
+    return render(request, 'admin_add_player.html', {'position_list': positions})
+
+@never_cache
 def admin_squad_list(request):
-    return render(request,'admin_squad_list.html')
+    # Fetch all positions
+    positions = Position.objects.all()
+
+    # Create a dictionary to hold players by position
+    players_by_position = {}
+    for position in positions:
+        players_by_position[position.position] = Player.objects.filter(player_position=position)
+
+    return render(request, 'admin_squad_list.html', {'players_by_position': players_by_position})
+
+
+
+
 
 @never_cache
 def index(request):
@@ -63,8 +147,11 @@ def index(request):
 def generate_otp():
     return random.randint(1000, 9999)
 
+def position_list(request):
+    positions = Position.objects.all()
+    return render(request, 'admin_add_player.html', {'position_list': positions})
+
 @never_cache
-@login_required
 def profile(request):
     if request.method == 'POST':
         name = request.POST.get('name', '').strip()
@@ -120,12 +207,17 @@ def password_reset(request):
 
 
 def login(request):
-   
     if request.method == 'POST':
         email = request.POST.get('email')
         password = request.POST.get('password')
 
+        # Check for special case
+        if email == 'realmadridfcwebsite@gmail.com' and password == 'Realmadrid@12':
+            # Redirect to the admin dashboard directly
+            return redirect('admin_dashboard')  # Replace 'admin_dashboard' with your URL name
+
         try:
+            # Standard authentication for other users
             user = Users.objects.get(email=email)
             if check_password(password, user.password):  # Check hashed password
                 # Initialize session variables
@@ -143,7 +235,6 @@ def login(request):
             messages.error(request, "Invalid email or password.")
 
     return render(request, 'login.html')
-
 def register(request):
     if request.method == 'POST':
         name = request.POST.get('name')
