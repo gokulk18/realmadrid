@@ -22,6 +22,10 @@ urlpatterns = [
     path('add_position/', views.add_position, name='add_position'),
     path('add_player/', views.add_player, name='add_player'),
     path('admin_update_player/<int:player_id>/', views.admin_update_player, name='admin_update_player'),
+    path('admin_show_news/', views.admin_show_news, name='admin_show_news'),
+    path('admin_add_news/', views.admin_add_news, name='admin_add_news'),
+    path('add_news/', views.add_news, name='add_news'),
+
 
 
 

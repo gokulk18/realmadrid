@@ -16,6 +16,51 @@
     <script defer src="{% static 'js/main.js' %}"></script>
 </head>
 <style>
+    .relative {
+        position: relative; /* Establishes a positioning context for the badge */
+    }
+    
+    .absolute {
+        position: absolute; /* Positions the badge absolutely within the relative container */
+    }
+    
+    .top-2 {
+        top: 11rem; /* Distance from the top of the container */
+    }
+    
+    .right-2 {
+        right: 8.5rem; /* Distance from the right of the container */
+    }
+    
+    .bg-green-500 {
+        background-color: red; /* Set badge color to green */
+    }
+    
+    .text-white {
+        color: #ffffff; /* Set text color to white */
+    }
+    
+    .text-xs {
+        font-size: 0.75rem; /* Small text size for the badge */
+    }
+    
+    .px-2 {
+        padding-left: 0.5rem; /* Padding on the left */
+        padding-right: 0.5rem; /* Padding on the right */
+    }
+    
+    .py-1 {
+        padding-top: 0.25rem; /* Padding on the top */
+        padding-bottom: 0.25rem; /* Padding on the bottom */
+    }
+    
+    .rounded-full {
+        border-radius: 9999px; /* Fully rounded corners for the badge */
+    }
+    
+    .font-semibold {
+        font-weight: 600; /* Semi-bold text */
+    }
 .tabs {
   display: flex;
   border-bottom: 2px solid #ccc;
@@ -84,7 +129,7 @@
 
     <nav class="space-y-8">
         <div class="space-y-4">    
-            <a class="flex items-center px-4 py-2 text-gray-600 transition-colors duration-200 transform bg-gray-200 rounded-lg bg-opacity-50" href="{% url 'admin_dashboard' %}">
+            <a class="flex items-center px-4 py-2 text-gray-600 transition-colors duration-200 transform rounded-lg hover:text-gray-600 hover:bg-gray-100 bg-opacity-40" href="{% url 'admin_dashboard' %}">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                 </svg>
@@ -99,7 +144,7 @@
     
                 <span class="mx-3 font-medium capitalize active">Squad</span>
             </a>        
-            <a class="flex items-center px-4 py-2 text-gray-500 transition-colors duration-300 transform rounded-lg hover:text-gray-600 hover:bg-gray-100 bg-opacity-40" href="{% url 'admin_show_news' %}">
+            <a class="flex items-center px-4 py-2 text-gray-500 transition-colors duration-300 transform bg-gray-200 rounded-lg bg-opacity-50" href="{% url 'admin_show_news' %}">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
                 </svg>
@@ -205,7 +250,90 @@
                             </span>
 
                             <a href="index.html#" class="text-indigo-600 hover:underline">
-                                    Dashboard
+                                    Active News
                             </a>
                         </div>
                     </div>
+                    <br>
+
+                    <body>
+
+    
+
+                      <div class="tabs">
+                        <a href="{% url 'admin_add_news' %}" class="tab" id="addMemberTab">Add News</a>
+                        <a href="{% url 'admin_show_news' %}" class="tab active" id="showSquadTab">Active News</a>
+                    </div>
+                    
+                      <br>
+                      <br>
+                      <br>
+                      <h4 class="text-[#0F2145] mb-5 relative" 
+                      style="text-align: left !important; margin-bottom: 20px !important; font-size: 2rem !important; font-weight: 700 !important;">
+                      Active News
+                  </h4>
+
+<!-- component -->
+<div class="container text-center">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for news in news_items %}
+        <div class="relative flex items-start justify-center bg-gradient-to-br from-red-100 via-red-300 to-blue-500">
+            <!-- Badge for latest news -->
+            {% if news.id == latest_news.id %}
+            <span class="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full font-semibold">
+                Main
+            </span>
+            {% endif %}
+            <div class="p-4 w-full max-w-sm rounded-xl bg-white bg-opacity-50 shadow-xl group hover:rounded-2xl">
+                <img style="width: auto; height: 12rem !important;" class="mx-auto object-cover rounded-lg" alt="art cover" loading="lazy" src="{{ news.news_image.url }}" />
+                <div class="p-5">
+                    <div class="space-y-2">
+                        <div class="space-y-4">
+                            <h4 class="text-md font-semibold text-cyan-900 text-justify break-words">
+                                {{ news.title }}
+                            </h4>
+                        </div>
+                        <div class="flex items-center space-x-4 justify-between">
+                            <div class="text-grey-500 flex flex-row space-x-1 my-4">
+                                <svg stroke="currentColor" fill="none" stroke-width="0" viewBox="0 0 24 24" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <p class="text-xs">{{ news.date_created|date:"F j, Y, g:i a" }}</p>
+                            </div>
+                            <div class="flex flex-row space-x-1">
+                                <div class="py-1 rounded-xl flex space-x-2 flex-row">
+                                    <button style="background-color: #38a169 !important; color: white; border-radius: 0.5rem; padding: 0.5rem 1.5rem; font-weight: 500; letter-spacing: 0.025em; text-transform: capitalize; transition: background-color 0.3s ease; box-shadow: 0 0 0 2px rgba(56, 161, 105, 0.3) !important; margin-top: 1rem;" class="hover:bg-green-500 focus:outline-none focus:ring-green-300 focus:ring-opacity-80">
+                                        {% if news.id in latest_news_ids %}
+                                        Active
+                                        {% else %}
+                                        Inactive
+                                        {% endif %}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    <!-- Pagination Controls -->
+    <div class="flex justify-center mt-4">
+        <!-- Page Number Links -->
+        {% for page_num in paginator.page_range %}
+        {% if news_items.number == page_num %}
+        <a href="?page={{ page_num }}" class="px-4 py-2 mx-1 transition-colors duration-300 transform bg-white rounded-md dark:bg-gray-800 dark:text-gray-200 bg-blue-500 text-black text-lg font-semibold">
+            {{ page_num }}
+        </a>
+        {% else %}
+        <a href="?page={{ page_num }}" class="px-4 py-2 mx-1 text-black-700 transition-colors duration-300 transform bg-white rounded-md dark:bg-gray-800 dark:text-gray-200 hover:bg-blue-500 dark:hover:bg-blue-500 hover:text-black dark:hover:text-black-200">
+            {{ page_num }}
+        </a>
+        {% endif %}
+        {% endfor %}
+    </div>
+    
+    
+    
+

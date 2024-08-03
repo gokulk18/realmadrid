@@ -22,6 +22,8 @@ import logging
 from django.views.decorators.cache import never_cache
 from .models import Position
 from .models import Player
+from .models import News
+from django.core.paginator import Paginator
 
 
 
@@ -43,6 +45,32 @@ def add_position(request):
             messages.success(request, 'Position added successfully!')
             return redirect('admin_add_player')  # Redirect to the page where you want to show the message
     return render(request, 'admin_add_player.html')
+
+def add_news(request):
+    if request.method == 'POST':
+        title = request.POST.get('title').strip()
+        description = request.POST.get('description').strip()
+        news_image = request.FILES.get('news_image')
+
+        # Create a new News object
+        news = News(
+            title=title,
+            description=description,
+        )
+
+        if news_image:
+            news.news_image = news_image
+
+        # Save the news to the database
+        news.save()
+
+        # Add a success message
+        messages.success(request, 'News added successfully!')
+
+        # Render the same page again with a success message
+        return render(request, 'admin_add_news.html')
+
+    return render(request, 'admin_add_news.html')
 
 def add_player(request):
     if request.method == 'POST':
@@ -150,6 +178,34 @@ def generate_otp():
 def position_list(request):
     positions = Position.objects.all()
     return render(request, 'admin_add_player.html', {'position_list': positions})
+
+
+def admin_show_news(request):
+        # Fetch all news items
+    all_news = News.objects.all().order_by('-date_created')
+    
+    # Set up pagination
+    paginator = Paginator(all_news, 4)  # Show 8 news items per page
+    page_number = request.GET.get('page')  # Get the current page number from the request
+    news_items = paginator.get_page(page_number)
+
+    # Determine the latest 8 news items
+    latest_news_ids = [news.id for news in all_news[:8]]
+
+    # Determine the latest news item
+    latest_news = all_news.first() if all_news.exists() else None
+
+    context = {
+        'news_items': news_items,
+        'latest_news': latest_news,
+        'latest_news_ids': latest_news_ids,  # Pass this to the template
+        'paginator': paginator,
+    }
+    return render(request, 'admin_show_news.html', context)
+
+
+def admin_add_news(request):
+    return render(request,'admin_add_news.html')
 
 @never_cache
 def profile(request):

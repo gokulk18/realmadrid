@@ -29,5 +29,16 @@ class Player(models.Model):
     def __str__(self):
         return self.player_name
     
+class News(models.Model):
+    title = models.CharField(max_length=255)  # Title with a maximum length of 255 characters
+    description = models.TextField()  # For long paragraphs
+    news_image = models.ImageField(upload_to='news_images/')  # File upload for images
+    date_created = models.DateTimeField(auto_now_add=True)  # Automatically set when created
+    
+    def __str__(self):
+        return self.title
+
+
+    
 
     

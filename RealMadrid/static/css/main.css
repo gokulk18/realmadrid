@@ -787,9 +787,6 @@ select {
     display: inline-flex
 }
 
-.table {
-    display: table
-}
 
 .flow-root {
     display: flow-root
@@ -815,9 +812,6 @@ select {
     height: 1.5rem
 }
 
-.h-32 {
-    height: 8rem
-}
 
 .h-8 {
     height: 2rem
@@ -875,9 +869,7 @@ select {
     min-height: 100vh
 }
 
-.w-32 {
-    width: 8rem
-}
+
 
 .w-6 {
     width: 1.5rem
