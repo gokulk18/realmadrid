@@ -138,99 +138,27 @@
             lastScrollTop = scrollTop;
         });
     </script>
-    <body class="bg-white">
-        <!-- Latest News Section -->
-        <div class="bg-white text-[#0f2145]">
-            <div class="flex justify-center py-10">
-                <div class="bg-[#f3f5f8] shadow-lg rounded-lg p-10 space-y-10 lg:space-y-0 lg:flex lg:space-x-10 lg:items-center max-w-screen-lg mx-4 hover-zoom" style="max-width: 1200px; height: 600px; margin-top: 75px;">
-                    <div class="w-full lg:w-1/2">
-                        <div class="lg:max-w-lg">
-                            <h1 class="text-4xl font-semibold tracking-wide text-[#0F2145] lg:text-5xl">
-                                {% if latest_news %}
-                                <a href="{% url 'user_view_news' latest_news.id %}" class="text-[#0F2145] hover:text-blue-500">
-                                    {{ latest_news.title }}
-                                </a>
-                                {% else %}
-                                No latest news available
-                                {% endif %}
-                            </h1>
-                        </div>
-                    </div>
-                    <div class="flex items-center justify-center w-full h-full lg:w-1/2">
-                        {% if latest_news %}
-                        <a href="{% url 'user_view_news' latest_news.id %}">
-                            <img class="object-cover w-full h-full mx-auto rounded-md lg:max-w-2xl" src="{{ latest_news.news_image.url }}" alt="Latest news image">
-                        </a>
-                        {% else %}
-                        <p>No latest news available</p>
-                        {% endif %}
-                    </div>
-                </div>
+    <div class="max-w-screen-lg mx-auto">
+
+        <!-- main section -->
+        <main class="mt-30" style="margin-top: 7em;">
+      
+         <div class="mb-4 md:mb-0 w-full mx-auto relative">
+            <div class="px-4 lg:px-0">
+                <h2 class="text-4xl font-bold text-gray-800 leading-tight">
+                    {{ news.title }}
+                </h2>
+                <h1 href="#" class="py-2 text-gray-700 inline-flex items-center justify-center mb-2">
+                    {{ news.date_created|date:"F j, Y, g:i a" }}
+                </h1>
+            </div>
+            <img src="{{ news.news_image.url }}" class="w-full object-cover lg:rounded" style="height: 35em; border-radius: 1.25rem !important" />
+        </div>
+
+        <!-- News Description -->
+        <div class="flex flex-col lg:flex-row lg:space-x-12">
+            <div class="px-4 lg:px-0 mt-12 text-gray-700 text-lg leading-relaxed w-full lg:w-4/4">
+                <p class="pb-6">{{ news.description|safe }}</p>
             </div>
         </div>
-        
-        <!-- Top Row with 3 Columns -->
-        <section class="text-gray-400 bg-white body-font">
-            <div class="container mx-auto px-5 py-10">
-                <div class="flex flex-wrap -m-4">
-                    {% for news in top_news %}
-                    <div class="w-full p-4 md:w-1/3">
-                        <div class="rounded-lg h-64 overflow-hidden">
-                            <a href="{% url 'user_view_news' news.id %}">
-                                <img alt="content" class="object-cover object-center h-full w-full hover-zoom" src="{{ news.news_image.url }}">
-                            </a>
-                        </div>
-                        <div class="mt-4">
-                            <a href="{% url 'user_view_news' news.id %}" class="text-2xl font-semibold tracking-wide text-[#0F2145] lg:text-2xl hover:text-blue-500">
-                                {{ news.title }}
-                            </a>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-        </section>
-        
-        <!-- Bottom Row with 4 Columns -->
-        <div class="bg-white">
-            <section class="min-h-scn body-font text-gray-600">
-                <div class="container mx-auto px-5 py-10">
-                    <div class="-m-4 flex flex-wrap">
-                        {% for news in bottom_news %}
-                        <div class="w-full p-4 md:w-1/2 lg:w-1/4">
-                            <a href="{% url 'user_view_news' news.id %}">
-                                <img alt="ecommerce" class="block w-full object-cover object-center cursor-pointer rounded-lg" style="max-height: 200px;" src="{{ news.news_image.url }}" />
-                            </a>
-                            <div class="mt-4 mb-2">
-                                <a href="{% url 'user_view_news' news.id %}" class="text-2xl font-semibold tracking-wide text-[#0F2145] lg:text-2xl hover:text-blue-500">
-                                    {{ news.title }}
-                                </a>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-            </section>
-        </div>
-    </body>
-    
-<br>
-<br>
-<br>
-<br>
-<br>
-
-
-
-
-
-
-
-
-  
-
-
-    
-    
-</body>
-</html>
+      

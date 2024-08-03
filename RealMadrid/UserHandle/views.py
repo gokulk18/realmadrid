@@ -157,20 +157,40 @@ def index(request):
     if 'user_id' in request.session:
         user_id = request.session['user_id']
         try:
-            # Retrieve user object from database
             user = Users.objects.get(id=user_id)
+
+            # Fetch all news and sort them by date
+            all_news = News.objects.all().order_by('-date_created')
+            
+            # Get the latest news
+            latest_news = all_news.first() if all_news.exists() else None
+            
+            # Get the top 3 news items
+            top_news = all_news[1:4]  # Exclude the latest news and get the next 3
+            
+            # Get the next 4 news items
+            bottom_news = all_news[4:8]  # Skip the first 4 items (latest + top 3) and take the next 4
+            
             context = {
-                'user_name': user.name,  # Assuming 'name' is the field you want to display
+                'user_name': user.name,
                 'user_email': user.email,
                 'user_phone': user.phone,
+                'latest_news': latest_news,
+                'top_news': top_news,
+                'bottom_news': bottom_news,
             }
             return render(request, 'index.html', context)
         except Users.DoesNotExist:
-            # Handle case where user_id in session does not match any user in the database
-            return render(request, 'index.html', {'user_name': None})
+            return redirect('login')
     else:
-        # User is not authenticated, redirect to login page or handle as needed
-        return render(request, 'index.html', {'user_name': None})
+        return redirect('login')
+    
+def user_view_news(request, id):
+    news_item = get_object_or_404(News, id=id)
+    context = {
+        'news': news_item
+    }
+    return render(request, 'user_view_news.html', context)
     
 def generate_otp():
     return random.randint(1000, 9999)
@@ -285,12 +305,15 @@ def login(request):
                 return redirect('index')  # Replace 'index' with your desired URL name
 
             else:
-                messages.error(request, "Invalid email or password.")
-
+                # Unique error message for incorrect credentials
+                messages.error(request, "Invalid email or password.", extra_tags='login_error')
+                
         except Users.DoesNotExist:
-            messages.error(request, "Invalid email or password.")
+            # Unique error message for non-existent user
+            messages.error(request, "Invalid email or password.", extra_tags='login_error')
 
     return render(request, 'login.html')
+
 def register(request):
     if request.method == 'POST':
         name = request.POST.get('name')
