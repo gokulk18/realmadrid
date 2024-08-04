@@ -24,6 +24,8 @@ from .models import Position
 from .models import Player
 from .models import News
 from django.core.paginator import Paginator
+from .models import Category
+from .models import SubCategory
 
 
 
@@ -131,10 +133,56 @@ def admin_update_player(request, player_id):
 def admin_dashboard(request):
     return render (request,'admin_dashboard.html')
 
+def admin_add_category(request):
+    if request.method == 'POST':
+        category_name = request.POST.get('category').strip()  # Strip leading/trailing whitespace
+        if category_name and all(char.isalpha() or char.isspace() for char in category_name):
+            if Category.objects.filter(category_name=category_name).exists():
+                messages.error(request, 'Category already exists.', extra_tags='admin_add_category')
+            else:
+                Category.objects.create(category_name=category_name)
+                messages.success(request, 'Category added successfully!', extra_tags='admin_add_category')
+            return redirect('admin_add_category')
+        else:
+            messages.error(request, 'Category must contain only alphabets and spaces, and cannot be empty', extra_tags='admin_add_category')
+
+    # Fetch all categories from the database
+    categories = Category.objects.all()
+
+    return render(request, 'admin_add_category.html', {'category_list': categories})
+
+
+def admin_add_subcategory(request):
+    if request.method == 'POST':
+        category_id = request.POST.get('category')
+        sub_category_name = request.POST.get('subcategory').strip()
+
+        if not category_id:
+            messages.error(request, 'Product category must be selected.', extra_tags='admin_add_subcategory')
+        elif not sub_category_name or not all(char.isalpha() or char.isspace() for char in sub_category_name):
+            messages.error(request, 'Subcategory must contain only alphabets and cannot be empty.', extra_tags='admin_add_subcategory')
+        else:
+            # Check if the subcategory already exists in the selected category
+            if SubCategory.objects.filter(sub_category_name=sub_category_name, category_id=category_id).exists():
+                messages.error(request, 'Subcategory already exists in the selected category.', extra_tags='admin_add_subcategory')
+            else:
+                # Create the new subcategory
+                SubCategory.objects.create(sub_category_name=sub_category_name, category_id=category_id)
+                messages.success(request, 'Subcategory added successfully!', extra_tags='admin_add_subcategory')
+                return redirect('admin_add_subcategory')  # Redirect to the same page to show the success message
+
+    # Fetch all categories and their associated subcategories
+    categories = Category.objects.all().prefetch_related('subcategory_set')
+
+    return render(request, 'admin_add_subcategory.html', {'category_list': categories})
+
 @never_cache
 def admin_add_player(request):
     positions = Position.objects.all()
     return render(request, 'admin_add_player.html', {'position_list': positions})
+
+def admin_view_store(request):
+    return render(request,'admin_view_store.html')
 
 @never_cache
 def admin_squad_list(request):

@@ -26,6 +26,10 @@ urlpatterns = [
     path('admin_add_news/', views.admin_add_news, name='admin_add_news'),
     path('add_news/', views.add_news, name='add_news'),
     path('news/<int:id>/', views.user_view_news, name='user_view_news'),
+    path('admin_view_store/', views.admin_view_store, name='admin_view_store'),
+    path('admin_add_category/', views.admin_add_category, name='admin_add_category'),
+    path('admin_add_subcategory/', views.admin_add_subcategory, name='admin_add_subcategory'),
+
 
 
 

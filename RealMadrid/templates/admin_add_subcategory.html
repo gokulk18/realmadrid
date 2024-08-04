@@ -1,0 +1,403 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="canonical" href="index.html">
+    <meta name="description" content="Awesome responsive dashboard build with Tailwind CSS &amp; AlpineJS.">
+    
+    <title>Admin Dashboard</title>
+
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+
+    <link rel="icon" type="image/svg+xml" href="assets/images/logo.svg">
+
+    <script defer src="{% static 'js/main.js' %}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+</head>
+<style>
+.tabs {
+  display: flex;
+  border-bottom: 2px solid #ccc;
+}
+.tab {
+    font-family: RMNeue, Arial, Helvetica; /* Font family */
+
+  font-size: 1rem;
+  font-weight: 500;
+  color: #5E6A83;
+  padding: 10px 20px;
+  cursor: pointer;
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  transition: color 0.3s, border-bottom-color 0.3s;
+}
+.tab:hover {
+  color: #000;
+}
+.tab.active {
+  color: #3b82f6;
+  border-bottom-color: #3b82f6;
+}
+.tab-content {
+  display: none;
+  padding: 20px;
+}
+.tab-content.active {
+  display: block;
+}
+a{
+    text-decoration: none !important;
+}
+.messages {
+    list-style-type: none;
+    padding: 0;
+}
+.messages li {
+    margin: 10px 0;
+    padding: 10px;
+    border-radius: 5px;
+}
+.admin_add_subcategory {
+    background-color: #d4edda;
+    color: #155724;
+}
+.admin_add_subcategory.error {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+.admin_add_subcategory.success {
+    background-color: #d4edda;
+    color: #155724;
+}
+</style>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var navLinks = document.querySelectorAll('.navbar-nav .nav-link');
+        
+        navLinks.forEach(function(link) {
+            link.addEventListener('click', function() {
+                navLinks.forEach(function(navLink) {
+                    navLink.classList.remove('active');
+                });
+                this.classList.add('active');
+            });
+        });
+    });
+    
+  
+
+  </script>
+
+
+  <body class="overflow-hidden">
+    <div x-data="{ sidebarOpen: false }" class="relative flex h-screen text-gray-800 bg-white font-roboto">
+        <div x-cloak :class="sidebarOpen ? 'block' : 'hidden'" @click="sidebarOpen = false" class="fixed inset-0 z-20 transition-opacity bg-black opacity-50 lg:hidden"></div>
+
+<div x-cloak :class="sidebarOpen ? 'translate-x-0 ease-in' : '-translate-x-full ease-out'" class="fixed inset-y-0 left-0 z-30 w-64 px-4 overflow-y-auto transition duration-200 transform bg-white border-r border-gray-100 lg:translate-x-0 lg:relative lg:inset-0 ">
+  <div class="flex items-center mt-8">
+    <!-- Logo Image -->
+    <img class="w-auto h-12" src="{% static 'madrid_images/real-madrid-logo.png' %}" alt="Real Madrid Logo">
+    
+    <!-- Text next to the Logo -->
+    <span class="ml-3 font-medium capitalize text-lg flex items-center" style="margin-top: 10px;margin-left: 11px;">Real Madrid FC</span>
+</div>
+
+    <hr class="my-6 border-gray-100">
+
+    <nav class="space-y-8">
+        <div class="space-y-4">    
+            <a class="flex items-center px-4 py-2 text-gray-600 transition-colors duration-200 transform rounded-lg hover:text-gray-600 hover:bg-gray-100 bg-opacity-40 " href="{% url 'admin_dashboard' %}">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+    
+                <span class="mx-3 font-m capitalize">Dashboard</span>
+            </a>
+    
+            <a class="flex items-center px-4 py-2 text-gray-500 transition-colors duration-300 transform rounded-lg hover:text-gray-600 hover:bg-gray-100 bg-opacity-40" href="{% url 'admin_squad_list' %}">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+                </svg>
+    
+                <span class="mx-3 font-medium capitalize active">Squad</span>
+            </a>        
+            <a class="flex items-center px-4 py-2 text-gray-500 transition-colors duration-300 transform rounded-lg hover:text-gray-600 hover:bg-gray-100 bg-opacity-40" href="{% url 'admin_show_news' %}">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+                </svg>
+    
+                <span class="mx-3 font-medium capitalize active">News</span>
+            </a>   
+            <a class="flex items-center px-4 py-2 text-gray-500 transition-colors duration-300 transform bg-gray-200 rounded-lg bg-opacity-50 " href="{% url 'admin_view_store' %}">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+                </svg>
+    
+                <span class="mx-3 font-medium capitalize active">Store</span>
+            </a>  
+        </div>
+    </nav>
+</div>
+        <div class="flex flex-col flex-1 overflow-hidden bg-gray-100">
+            <header class="bg-white border-b border-gray-100">
+    <div class="flex items-center justify-between px-4 py-4 sm:px-6">
+        <div class="flex items-center">
+            <button @click="sidebarOpen = !sidebarOpen" class="text-gray-500 lg:hidden focus:outline-none">
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4 6H20M4 12H20M4 18H11" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+            </button>
+    
+            <div class="relative" x-data="{ search: '' }" @click.away="search = ''">
+    <div class="relative mx-4 lg:mx-0">
+        <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+            <svg class="w-5 h-5 text-gray-400" viewBox="0 0 24 24" fill="none">
+                <path d="M21 21L15 15M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
+        </span>
+    
+        <input x-model="search" type="text" class="w-32 h-10 py-2 pl-10 pr-4 text-gray-700 placeholder-gray-400 transition-all duration-150 bg-white border border-gray-200 rounded-md focus:w-44 sm:w-64 sm:focus:w-80 focus:border-indigo-400 focus:outline-none focus:ring focus:ring-indigo-300 focus:ring-opacity-40" placeholder="Find anything...">
+    </div>
+
+    <div class="absolute right-0 z-20 w-full py-2 mt-2 space-y-4 overflow-hidden bg-white rounded-md shadow-xl"
+        x-show="search.length > 0" 
+        x-cloak 
+        x-transition:enter="transition ease-out duration-100 transform"
+        x-transition:enter-start="opacity-0 scale-95" 
+        x-transition:enter-end="opacity-100 scale-100"
+        x-transition:leave="transition ease-in duration-75 transform"
+        x-transition:leave-start="opacity-100 scale-100" 
+        x-transition:leave-end="opacity-0 scale-95"
+    >
+    </div>
+</div>        </div>
+    
+        <div class="flex items-center">
+           
+    
+            <div x-data="{ dropdownOpen: false }" class="relative inline-block">
+                <button @click="dropdownOpen = ! dropdownOpen" class="relative z-10 flex items-center flex-shrink-0 text-sm text-gray-600 focus:outline-none">
+                    <img class="flex  w-8 h-8 " src="{% static 'madrid_images/real-madrid-logo.png' %}" alt="Real Madrid Logo">
+                </button>
+    
+                <div class="absolute right-0 z-20 w-56 py-2 mt-2 overflow-hidden bg-white rounded-md shadow-xl rtl:right-auto rtl:left-0"
+                    x-show="dropdownOpen" 
+                    x-cloak 
+                    x-transition:enter="transition ease-out duration-100 transform"
+                    x-transition:enter-start="opacity-0 scale-95" 
+                    x-transition:enter-end="opacity-100 scale-100"
+                    x-transition:leave="transition ease-in duration-75 transform"
+                    x-transition:leave-start="opacity-100 scale-100" 
+                    x-transition:leave-end="opacity-0 scale-95"
+                    @click.away="dropdownOpen = false"
+                >
+                    <a href="profile.html" class="flex items-center p-3 -mt-2 text-sm text-gray-600 transition-colors duration-200 transform hover:bg-gray-100">
+                        <img class="flex mx-1 full w-9 h-9" src="{% static 'madrid_images/real-madrid-logo.png' %}" alt="Real Madrid Logo" >
+                        <div class="mx-1">
+                            {% comment %} <h1 class="text-sm font-semibold text-gray-700">John Doe</h1>
+                            <p class="text-sm text-gray-500">johndoe@example.com</p> {% endcomment %}
+                        </div>
+                    </a>
+    
+                    <hr class="border-gray-200 ">
+                    
+                    {% comment %} <a href="profile.html" class="block px-4 py-2 text-sm text-gray-600 capitalize transition-colors duration-200 transform hover:bg-gray-100">
+                        Profile
+                    </a>
+                    
+                    <a href="profile.html" class="block px-4 py-2 text-sm text-gray-600 capitalize transition-colors duration-200 transform hover:bg-gray-100">
+                        Settings
+                    </a> {% endcomment %}
+    
+                    <a href="{% url 'logout' %}" class="block px-4 py-2 text-sm text-gray-600 capitalize transition-colors duration-200 transform hover:bg-gray-100">
+                        Sign Out
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+            <main class="flex-1 overflow-y-auto">
+                <div class="px-4  sm:px-6">
+                    <div>
+                        <h1 class="text-2xl font-low text-gray-700 sm:text-1xl">    Dashboard
+</h1>
+
+                        <div class="hidden  overflow-y-auto text-sm lg:items-center lg:flex whitespace-nowrap">
+                            <a href="index.html#" class="text-gray-600 hover:underline">
+                                Pages
+                            </a>
+
+                            <span class="mx-1 text-gray-500">
+                                /
+                            </span>
+
+                            <a href="index.html#" class="text-indigo-600 hover:underline">
+                                    Store
+                            </a>
+                        </div>
+                    </div>
+                    <div class="tabs">
+                        <a href="{% url 'admin_add_category' %}" class="tab" id="addMemberTab">Add Category</a>
+                        <a href="{% url 'admin_add_subcategory' %}" class="tab active" id="showSquadTab">Add Sub Category</a>
+                    </div>
+                    <br>
+                      <br>
+                 
+                      {% if messages %}
+                      <ul class="messages">
+                          {% for message in messages %}
+                              {% if 'admin_add_subcategory' in message.tags %}
+                                  <li class="admin_add_subcategory {{ message.tags }}">{{ message }}</li>
+                              {% endif %}
+                          {% endfor %}
+                      </ul>
+                  {% endif %}
+                        <!-- Display messages -->
+                        
+                      <div class="container text-center">
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <h1 class="text-2xl font-semibold text-left text-[#0F2145] capitalize lg:text-3xl dark:text-[#0F2145]">Add Product Category</h1>
+                                <br>
+                                <section class="max-w-4xl p-6 mx-auto bg-white rounded-md shadow-md dark:bg-gray-800">
+                                    <br>
+                                    <form method="post" action="{% url 'admin_add_subcategory' %}">
+                                        {% csrf_token %}
+                                        <div class="max-w-xs space-y-6 mt-4 mx-auto">
+                                            <div class="flex flex-col">
+                                                <label class="text-gray-700 dark:text-gray-200 mb-1" for="category" style="text-align: left;">
+                                                    Product Category:
+                                                    <span id="err_category" class="text-red-600"></span>
+                                                </label>
+                                                <select id="category" name="category" class="input input-bordered input-primary w-full rounded-lg">
+                                                    <option value="" disabled selected>Choose...</option>
+                                                    {% if category_list %}
+                                                    {% for category in category_list %}
+                                                        <option value="{{ category.id }}">{{ category.category_name }}</option>
+                                                    {% endfor %}
+                                                    {% endif %}
+                                                </select>
+                                            </div>
+                                    
+                                            <div class="flex flex-col">
+                                                <label class="text-gray-700 dark:text-gray-200 mb-1 text-align:left" for="subcategory" style="text-align: left;">
+                                                    Add Sub Category: <span class="text-red-600" id="err_subcategory">Subcategory must be in alphabets and cannot be empty</span>
+                                                </label>
+                                                <input id="subcategory" name="subcategory" type="text" placeholder="Enter product subcategory" class="input input-bordered input-primary w-full rounded-lg" />
+                                            </div>
+                                            <div class="flex justify-center mt-6">
+                                                <input type="submit" id="submitBtn2" name="submit2" value="Add Subcategory" class="btn btn-primary" disabled />
+                                            </div>
+                                        </div>
+                                    </form>
+                                    
+    
+                                </section>
+                            </div>
+
+
+                            <div class="col-sm-6">
+                                <h1 class="text-2xl font-semibold text-left text-[#0F2145] capitalize lg:text-3xl dark:text-[#0F2145]">Product Category</h1>
+                                <br>
+                                <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+                                    <div class="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
+                                        <div class="overflow-hidden border border-gray-200 dark:border-gray-700 md:rounded-lg">
+                        
+                                            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                                <thead class="bg-gray-50 dark:bg-gray-800">
+                                                    <tr>
+                                                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                                            Category
+                                                        </th>
+                                                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                                            Subcategory
+                                                        </th>
+                                                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                                            Action
+                                                        </th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody class="bg-white dark:bg-gray-900">
+                                                    {% if category_list %}
+                                                        {% for category in category_list %}
+                                                            {% if category.subcategory_set.exists %}
+                                                                {% for subcategory in category.subcategory_set.all %}
+                                                                    <tr>
+                                                                        <td class="px-4 py-4 text-sm font-medium whitespace-nowrap">
+                                                                            {{ category.category_name }}
+                                                                        </td>
+                                                                        <td class="px-4 py-4 text-sm font-medium whitespace-nowrap">
+                                                                            {{ subcategory.sub_category_name }}
+                                                                        </td>
+                                                                        <td class="px-4 py-4 text-sm font-medium whitespace-nowrap">
+                                                                            <div class="inline px-3 py-1 text-sm font-normal rounded-full text-emerald-500 gap-x-2 bg-emerald-100/60 dark:bg-gray-800">
+                                                                                <input type="button" class="btn btn-danger" value="Edit">
+                                                                            </div>
+                                                                        </td>
+                                                                    </tr>
+                                                                {% endfor %}
+                                                            {% else %}
+                                                                <!-- This will show only if a category has no subcategories -->
+                                                                <tr>
+                                                                    <td class="px-4 py-4 text-sm font-medium text-center" colspan="3">
+                                                                        {{ category.category_name }} - No subcategories available
+                                                                    </td>
+                                                                </tr>
+                                                            {% endif %}
+                                                        {% endfor %}
+                                                    {% else %}
+                                                        <tr>
+                                                            <td class="px-4 py-4 text-sm font-medium text-center" colspan="3">No categories available</td>
+                                                        </tr>
+                                                    {% endif %}
+                                                </tbody>
+                                            </table>
+                                            
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <script>
+                        $(document).ready(function() {
+                            // Function to enable or disable the submit button
+                            function toggleSubmitButton() {
+                                var category = $('#category').val();
+                                var subcategory = $('#subcategory').val().trim();
+                                // Check if subcategory contains only alphabets and spaces, but must not be empty
+                                var isValidSubcategory = /^[a-zA-Z\s]+$/.test(subcategory) && subcategory.length > 0;
+                    
+                                if (category && isValidSubcategory) {
+                                    $('#submitBtn2').prop('disabled', false);
+                                    $('#err_subcategory').hide(); // Hide error message if valid
+                                } else {
+                                    $('#submitBtn2').prop('disabled', true);
+                                    if (subcategory.length > 0) { // Show error message only if there's input
+                                        $('#err_subcategory').show();
+                                    } else {
+                                        $('#err_subcategory').hide(); // Hide error message if input is empty
+                                    }
+                                }
+                            }
+                    
+                            // Initial call to hide error messages and set button state
+                            $('#err_subcategory').hide();
+                    
+                            // Event listener for category and subcategory inputs
+                            $('#category, #subcategory').on('input change', function() {
+                                toggleSubmitButton();
+                            });
+                            setTimeout(function() {
+                                $('.alert').fadeOut(1000); // Fade out over 1 second
+                            }, 3000);
+                        });
+                    </script>

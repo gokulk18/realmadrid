@@ -14,6 +14,10 @@
     <link rel="icon" type="image/svg+xml" href="assets/images/logo.svg">
 
     <script defer src="{% static 'js/main.js' %}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
 </head>
 <style>
 .tabs {
@@ -46,7 +50,28 @@
 .tab-content.active {
   display: block;
 }
+a{
+    text-decoration: none !important;
+}
+.alert-container {
+    margin: 1em 0;
+}
 
+.alert {
+    padding: 1em;
+    border-radius: 0.5em;
+    margin-bottom: 1em;
+}
+
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.alert-error {
+    background-color: #f8d7da;
+    color: #721c24;
+}
 </style>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -84,7 +109,7 @@
 
     <nav class="space-y-8">
         <div class="space-y-4">    
-            <a class="flex items-center px-4 py-2 text-gray-600 transition-colors duration-200 transform bg-gray-200 rounded-lg bg-opacity-50" href="{% url 'admin_dashboard' %}">
+            <a class="flex items-center px-4 py-2 text-gray-600 transition-colors duration-200 transform rounded-lg hover:text-gray-600 hover:bg-gray-100 bg-opacity-40 " href="{% url 'admin_dashboard' %}">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                 </svg>
@@ -106,7 +131,7 @@
     
                 <span class="mx-3 font-medium capitalize active">News</span>
             </a>   
-            <a class="flex items-center px-4 py-2 text-gray-500 transition-colors duration-300 transform rounded-lg hover:text-gray-600 hover:bg-gray-100 bg-opacity-40" href="{% url 'admin_view_store' %}">
+            <a class="flex items-center px-4 py-2 text-gray-500 transition-colors duration-300 transform bg-gray-200 rounded-lg bg-opacity-50 " href="{% url 'admin_view_store' %}">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
                 </svg>
@@ -212,7 +237,135 @@
                             </span>
 
                             <a href="index.html#" class="text-indigo-600 hover:underline">
-                                    Dashboard
+                                    Store
                             </a>
                         </div>
                     </div>
+                    <div class="tabs">
+                        <a href="{% url 'admin_add_category' %}" class="tab active" id="addMemberTab">Add Category</a>
+                        <a href="{% url 'admin_add_subcategory' %}" class="tab " id="showSquadTab">Add Sub Category</a>
+                    </div>
+                    <br>
+                      <br>
+                      <div class="container">
+                        <!-- Display messages -->
+                        {% if messages %}
+                            <div class="alert-container">
+                                {% for message in messages %}
+                                    {% if 'admin_add_category' in message.tags %}
+                                        <div class="alert {% if message.tags == 'admin_add_category success' %}alert-success{% elif message.tags == 'admin_add_category error' %}alert-error{% endif %}">
+                                            {{ message }}
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                      <div class="container text-center">
+                        <div class="row">
+                            <div class="col-sm-8">
+                                <h1 class="text-2xl font-semibold text-left text-[#0F2145] capitalize lg:text-3xl dark:text-[#0F2145]">Add Product Category</h1>
+                                <br>
+                                <section class="max-w-4xl p-6 mx-auto bg-white rounded-md shadow-md dark:bg-gray-800">
+                                    <br>
+                                    <form method="post" action="{% url 'admin_add_category' %}">
+                                        {% csrf_token %}
+                                        <div class="max-w-xs space-y-6 mt-4 mx-auto">
+                                            <div class="flex flex-col">
+                                                <label class="text-gray-700 dark:text-gray-200 mb-1 text-align:left" for="category" style="text-align: left;">
+                                                    Add Category: <span class="text-red-600" id="err_category">Category must be in alphabets and cannot be empty</span>
+                                                </label>
+                                                <input id="category" name="category" type="text" placeholder="Enter product category" class="input input-bordered input-primary w-full rounded-lg" />
+                                            </div>
+                                            <div class="flex justify-center mt-6">
+                                                <input type="submit" id="submitBtn2" name="submit2" value="Add Category" class="btn btn-primary" disabled />
+                                            </div>
+                                        </div>
+                                    </form>
+                                    
+    
+                                </section>
+                            </div>
+
+
+                            <div class="col-sm-4">
+                                <h1 class="text-2xl font-semibold text-left text-[#0F2145] capitalize lg:text-3xl dark:text-[#0F2145]">Product Category</h1>
+                                <br>
+                                <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+                                    <div class="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
+                                        <div class="overflow-hidden border border-gray-200 dark:border-gray-700 md:rounded-lg">
+                        
+                                            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                                <thead class="bg-gray-50 dark:bg-gray-800">
+                                                    <tr>
+                                                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                                            Category
+                                                        </th>
+                                                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                                            Action
+                                                        </th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody class="bg-white dark:bg-gray-900">
+                                                    {% if category_list %}
+                                                        {% for category in category_list %}
+                                                            <tr>
+                                                                <td class="px-4 py-4 text-sm font-medium whitespace-nowrap">
+                                                                    {{ category.category_name }}
+                                                                </td>
+                                                                <td class="px-4 py-4 text-sm font-medium whitespace-nowrap">
+                                                                    <div class="inline px-3 py-1 text-sm font-normal rounded-full text-emerald-500 gap-x-2 bg-emerald-100/60 dark:bg-gray-800">
+                                                                        <input type="button" class="btn btn-danger" value="Edit">
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        {% endfor %}
+                                                    {% else %}
+                                                        <tr>
+                                                            <td class="px-4 py-4 text-sm font-medium text-center" colspan="2">No categories available</td>
+                                                        </tr>
+                                                    {% endif %}
+                                                </tbody>
+                                            </table>
+                                            
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <script>
+                        $(document).ready(function() {
+                            // Function to enable or disable the submit button
+                            function toggleSubmitButton() {
+                                var category = $('#category').val().trim();
+                                // Check if category contains only alphabets and spaces, but must not be empty
+                                var isValid = /^[a-zA-Z\s]+$/.test(category) && category.length > 0;
+                    
+                                if (isValid) {
+                                    $('#submitBtn2').prop('disabled', false);
+                                    $('#err_category').hide(); // Hide error message if valid
+                                } else {
+                                    $('#submitBtn2').prop('disabled', true);
+                                    if (category.length > 0) { // Show error message only if there's input
+                                        $('#err_category').show();
+                                    } else {
+                                        $('#err_category').hide(); // Hide error message if input is empty
+                                    }
+                                }
+                            }
+                    
+                            // Initial call to hide error messages and set button state
+                            $('#err_category').hide();
+                    
+                            // Event listener for category input
+                            $('#category').on('input', function() {
+                                toggleSubmitButton();
+                            });
+                    
+                            // Fade out alert messages after 3 seconds
+                            setTimeout(function() {
+                                $('.alert').fadeOut(1000); // Fade out over 1 second
+                            }, 3000); // 3 seconds delay
+                        });
+                    </script>

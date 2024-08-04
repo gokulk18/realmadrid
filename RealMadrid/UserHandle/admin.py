@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Users, Position, Player ,News
+from .models import Users, Position, Player ,News,Category,SubCategory
 
 class UsersAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'email', 'phone', 'password', 'username')
@@ -17,10 +17,26 @@ class PlayerAdmin(admin.ModelAdmin):
 class NewsAdmin(admin.ModelAdmin):
     list_display = ('title', 'description', 'news_image','date_created')
     search_fields = ('title', 'description')
+    
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ('id', 'category_name')
+    search_fields = ('category_name',)
+
+class SubCategoryAdmin(admin.ModelAdmin):
+    list_display = ('id', 'category_name', 'sub_category_name')
+    search_fields = ('category__category_name', 'sub_category_name',)
+
+    def category_name(self, obj):
+        return obj.category.category_name
+    category_name.admin_order_field = 'category'  # Allows column sorting
+    category_name.short_description = 'Category Name'  # Column header name
+    
 
 # Register the models with the admin site
 admin.site.register(Users, UsersAdmin)
 admin.site.register(Position, PositionAdmin)
 admin.site.register(Player, PlayerAdmin)
 admin.site.register(News,NewsAdmin)
+admin.site.register(Category,CategoryAdmin)
+admin.site.register(SubCategory,SubCategoryAdmin)
 
