@@ -51,6 +51,19 @@ class SubCategory(models.Model):
     def __str__(self):
         return self.sub_category_name
 
+class Item(models.Model):
+    name = models.CharField(max_length=100)
+    category = models.ForeignKey(Category, related_name='items', on_delete=models.CASCADE)
+    subcategory = models.ForeignKey(SubCategory, related_name='items', on_delete=models.CASCADE, null=True, blank=True)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    description = models.TextField(blank=True)
+    image = models.ImageField(upload_to='items/', null=True, blank=True)
+    size = models.CharField(max_length=50, null=True, blank=True)  # New field for size
+    quantity = models.PositiveIntegerField(null=True, blank=True)  # New field for quantity
+
+    def __str__(self):
+        return self.name
+
 
     
 

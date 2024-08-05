@@ -198,8 +198,6 @@ def admin_squad_list(request):
 
 
 
-
-
 @never_cache
 def index(request):
     if 'user_id' in request.session:
