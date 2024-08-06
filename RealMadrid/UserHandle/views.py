@@ -25,7 +25,9 @@ from .models import Player
 from .models import News
 from django.core.paginator import Paginator
 from .models import Category
-from .models import SubCategory
+from .models import SubCategory,ItemImage,Item,ItemSize
+from django.core.files.uploadedfile import InMemoryUploadedFile
+from django.db import transaction
 
 
 
@@ -104,6 +106,55 @@ def add_player(request):
         return redirect('admin_add_player')  # Redirect to the page where you want to show the message
 
     return render(request, 'add_player.html')
+
+def admin_add_item(request):
+    if request.method == 'POST':
+        with transaction.atomic():
+            try:
+                # Create the main Item
+                item = Item.objects.create(
+                    category_id=request.POST.get('category'),
+                    subcategory_id=request.POST.get('subcategory'),
+                    name=request.POST.get('name'),
+                    price=request.POST.get('price'),
+                    description=request.POST.get('description'),
+                    main_image=request.FILES.get('main_image')
+                )
+
+                # Handle sizes and quantities
+                sizes = request.POST.getlist('sizes[]')
+                quantities = request.POST.getlist('quantities[]')
+                for size, quantity in zip(sizes, quantities):
+                    if size and quantity:
+                        ItemSize.objects.create(
+                            item=item,
+                            size=size,
+                            quantity=int(quantity)
+                        )
+
+                # Handle additional images
+                for image in request.FILES.getlist('additional_images'):
+                    ItemImage.objects.create(item=item, image=image)
+
+                messages.success(request, 'Item added successfully!')
+                return redirect('admin_add_item')
+
+            except Exception as e:
+                messages.error(request, f'Error adding item: {str(e)}')
+
+    # GET request handling remains the same
+    categories = Category.objects.all()
+    context = {
+        'categories': categories,
+    }
+    return render(request, 'admin_add_item.html', context)
+
+
+def get_subcategories(request, category_id):
+    subcategories = SubCategory.objects.filter(category_id=category_id).values('id', 'sub_category_name')
+    return JsonResponse(list(subcategories), safe=False)
+
+
 
 def admin_update_player(request, player_id):
     player = get_object_or_404(Player, id=player_id)

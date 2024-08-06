@@ -57,12 +57,28 @@ class Item(models.Model):
     subcategory = models.ForeignKey(SubCategory, related_name='items', on_delete=models.CASCADE, null=True, blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     description = models.TextField(blank=True)
-    image = models.ImageField(upload_to='items/', null=True, blank=True)
-    size = models.CharField(max_length=50, null=True, blank=True)  # New field for size
-    quantity = models.PositiveIntegerField(null=True, blank=True)  # New field for quantity
+    main_image = models.ImageField(upload_to='items/main/', null=True, blank=True)
 
     def __str__(self):
         return self.name
+
+class ItemSize(models.Model):
+    item = models.ForeignKey(Item, related_name='sizes', on_delete=models.CASCADE)
+    size = models.CharField(max_length=50)
+    quantity = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        unique_together = ('item', 'size')
+
+    def __str__(self):
+        return f"{self.item.name} - {self.size}"
+
+class ItemImage(models.Model):
+    item = models.ForeignKey(Item, related_name='additional_images', on_delete=models.CASCADE)
+    image = models.ImageField(upload_to='items/additional/')
+
+    def __str__(self):
+        return f"Image for {self.item.name}"
 
 
     

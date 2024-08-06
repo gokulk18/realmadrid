@@ -29,6 +29,9 @@ urlpatterns = [
     path('admin_view_store/', views.admin_view_store, name='admin_view_store'),
     path('admin_add_category/', views.admin_add_category, name='admin_add_category'),
     path('admin_add_subcategory/', views.admin_add_subcategory, name='admin_add_subcategory'),
+    path('admin_add_item/', views.admin_add_item, name='admin_add_item'),
+    path('get_subcategories/<int:category_id>/', views.get_subcategories, name='get_subcategories'),
+
 
 
 
