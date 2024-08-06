@@ -41,12 +41,9 @@ class ItemSizeInline(admin.TabularInline):
     model = ItemSize
     extra = 1
 
-class ItemImageInline(admin.TabularInline):
-    model = ItemImage
-    extra = 1
-
 class ItemAdmin(admin.ModelAdmin):
-    list_display = ('id','name', 'category', 'subcategory', 'price', 'total_quantity')
+    list_display = ('id', 'name', 'category', 'subcategory', 'price', 'total_quantity')
+    fields = ('name', 'category', 'subcategory', 'price', 'description', 'main_image')  # Add fields here
     inlines = [ItemSizeInline, ItemImageInline]
 
     def total_quantity(self, obj):

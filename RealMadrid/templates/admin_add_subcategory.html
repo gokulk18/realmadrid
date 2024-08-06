@@ -92,7 +92,7 @@ a{
   
 
   </script>
-
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
 
   <body class="overflow-hidden">
     <div x-data="{ sidebarOpen: false }" class="relative flex h-screen text-gray-800 bg-white font-roboto">
@@ -120,23 +120,24 @@ a{
             </a>
     
             <a class="flex items-center px-4 py-2 text-gray-500 transition-colors duration-300 transform rounded-lg hover:text-gray-600 hover:bg-gray-100 bg-opacity-40" href="{% url 'admin_squad_list' %}">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
-                </svg>
+                <span class="material-symbols-outlined">
+                    groups
+                    </span>
     
                 <span class="mx-3 font-medium capitalize active">Squad</span>
             </a>        
             <a class="flex items-center px-4 py-2 text-gray-500 transition-colors duration-300 transform rounded-lg hover:text-gray-600 hover:bg-gray-100 bg-opacity-40" href="{% url 'admin_show_news' %}">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <span class="material-symbols-outlined">
+                    newspaper
+                    </span>                    
                     <path stroke-linecap="round" stroke-linejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
-                </svg>
     
                 <span class="mx-3 font-medium capitalize active">News</span>
             </a>   
             <a class="flex items-center px-4 py-2 text-gray-500 transition-colors duration-300 transform bg-gray-200 rounded-lg bg-opacity-50 " href="{% url 'admin_view_store' %}">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
-                </svg>
+                <span class="material-symbols-outlined">
+                    shopping_bag
+                    </span>
     
                 <span class="mx-3 font-medium capitalize active">Store</span>
             </a>  
@@ -247,6 +248,7 @@ a{
                         <a href="{% url 'admin_add_category' %}" class="tab" id="addMemberTab">Add Category</a>
                         <a href="{% url 'admin_add_subcategory' %}" class="tab active" id="showSquadTab">Add Sub Category</a>
                         <a href="{% url 'admin_add_item' %}" class="tab " id="showSquadTab">Add Item</a>
+                        <a href=""{% url 'admin_view_store' %}"" class="tab " id="showSquadTab">Store Items</a>
 
                     </div>
                     <br>

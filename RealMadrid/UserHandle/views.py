@@ -233,7 +233,28 @@ def admin_add_player(request):
     return render(request, 'admin_add_player.html', {'position_list': positions})
 
 def admin_view_store(request):
-    return render(request,'admin_view_store.html')
+    # Fetch all categories
+    categories = Category.objects.all()
+
+    # Initialize an empty dictionary to hold category-wise items
+    category_items = {}
+
+    for category in categories:
+        # Fetch items related to the category
+        items = Item.objects.filter(category=category)
+
+        # Organize items by their subcategory
+        subcategory_items = {}
+        for item in items:
+            subcategory = item.subcategory if item.subcategory else 'No subcategory'
+            if subcategory not in subcategory_items:
+                subcategory_items[subcategory] = []
+            subcategory_items[subcategory].append(item)
+
+        category_items[category] = subcategory_items
+
+    return render(request, 'admin_view_store.html', {'category_items': category_items})
+
 
 @never_cache
 def admin_squad_list(request):
