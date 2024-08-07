@@ -16,6 +16,8 @@ urlpatterns = [
     path('reset/<uidb64>/<token>/', views.password_reset, name="password_reset"),
     path('accounts/', include('allauth.urls')),
     path('check_email_availability/', views.check_email_availability, name="check_email_availability"),
+    path('store/', views.store, name="store"),
+
     path('admin_dashboard/',views.admin_dashboard,name="admin_dashboard"),
     path('admin_squad_list/',views.admin_squad_list,name="admin_squad_list"),
     path('admin_add_player/',views.admin_add_player,name="admin_add_player"),

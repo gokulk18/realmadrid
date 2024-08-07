@@ -28,10 +28,11 @@ from .models import Category
 from .models import SubCategory,ItemImage,Item,ItemSize
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.db import transaction
-
+from allauth.socialaccount.models import SocialAccount
 
 
 logger = logging.getLogger(__name__)
+
 
 
 
@@ -268,40 +269,71 @@ def admin_squad_list(request):
 
     return render(request, 'admin_squad_list.html', {'players_by_position': players_by_position})
 
-
+def store(request):
+    categories = Category.objects.all()
+    subcategories = SubCategory.objects.all()  # Fetch all subcategories
+    return render(request, 'store.html', {
+        'categories': categories,
+        'subcategories': subcategories
+    })
 
 @never_cache
 def index(request):
-    if 'user_id' in request.session:
-        user_id = request.session['user_id']
-        try:
-            user = Users.objects.get(id=user_id)
+    # Fetch all news and sort them by date
+    all_news = News.objects.all().order_by('-date_created')
+    
+    # Get the latest news
+    latest_news = all_news.first() if all_news.exists() else None
+    
+    # Get the top 3 news items
+    top_news = all_news[1:4]  # Exclude the latest news and get the next 3
+    
+    # Get the next 4 news items
+    bottom_news = all_news[4:8]  # Skip the first 4 items (latest + top 3) and take the next 4
 
-            # Fetch all news and sort them by date
-            all_news = News.objects.all().order_by('-date_created')
-            
-            # Get the latest news
-            latest_news = all_news.first() if all_news.exists() else None
-            
-            # Get the top 3 news items
-            top_news = all_news[1:4]  # Exclude the latest news and get the next 3
-            
-            # Get the next 4 news items
-            bottom_news = all_news[4:8]  # Skip the first 4 items (latest + top 3) and take the next 4
-            
-            context = {
+    # Initialize context with default user data
+    context = {
+        'user_name': None,
+        'user_email': None,
+        'user_phone': None,
+        'latest_news': latest_news,
+        'top_news': top_news,
+        'bottom_news': bottom_news,
+    }
+
+    # Check if the user is authenticated by session or social account
+    if request.user.is_authenticated:
+        user = request.user
+        context.update({
+            'user_name': user.username,
+            'user_email': user.email,
+            'user_phone': getattr(user, 'phone', None),  # Optional: if you have a phone field in the User model
+        })
+    elif 'user_id' in request.session:
+        try:
+            user = Users.objects.get(id=request.session['user_id'])
+            context.update({
                 'user_name': user.name,
                 'user_email': user.email,
-                'user_phone': user.phone,
-                'latest_news': latest_news,
-                'top_news': top_news,
-                'bottom_news': bottom_news,
-            }
-            return render(request, 'index.html', context)
+                'user_phone': user.phone,  # Add other user-specific details if needed
+            })
         except Users.DoesNotExist:
-            return redirect('login')
-    else:
-        return redirect('login')
+            # Handle the case where the user is not found in the database
+            pass
+    elif request.user.is_authenticated:
+        try:
+            # Fetch user info from social account
+            social_account = SocialAccount.objects.get(user=request.user)
+            context.update({
+                'user_name': social_account.extra_data.get('name', None),
+                'user_email': social_account.extra_data.get('email', None),
+            })
+        except SocialAccount.DoesNotExist:
+            # Handle case where social account is not found
+            pass
+
+    return render(request, 'index.html', context)
+
     
 def user_view_news(request, id):
     news_item = get_object_or_404(News, id=id)
@@ -351,14 +383,23 @@ def profile(request):
         name = request.POST.get('name', '').strip()
         phone = request.POST.get('phone', '').strip()
         
-        user_id = request.session.get('user_id')
+        if request.user.is_authenticated:
+            if request.user.is_superuser:
+                # For admin users, handle normally if needed
+                user_id = request.session.get('user_id')
+            else:
+                # For normal and social users
+                user_id = request.user.id
+        else:
+            user_id = request.session.get('user_id')
+
         try:
             user = Users.objects.get(id=user_id)
             user.name = name
             user.phone = phone
             user.save()
             messages.success(request, 'Profile updated successfully.')
-            # Render the profile page with the success message
+
             context = {
                 'user_name': user.name,
                 'user_email': user.email,
@@ -367,9 +408,13 @@ def profile(request):
             return render(request, 'profile.html', context)
         except Users.DoesNotExist:
             messages.error(request, 'User not found.')
-            return render(request, 'profile.html')
+            return redirect('login')  # Redirect to login if user not found
     else:
-        user_id = request.session.get('user_id')
+        if request.user.is_authenticated:
+            user_id = request.user.id
+        else:
+            user_id = request.session.get('user_id')
+
         try:
             user = Users.objects.get(id=user_id)
             context = {
@@ -380,7 +425,7 @@ def profile(request):
             return render(request, 'profile.html', context)
         except Users.DoesNotExist:
             messages.error(request, 'User not found.')
-            return render(request, 'profile.html')
+            return redirect('login')  # Redirect to login if user not found
 
 def logout(request):
     # Clear session variables on logout
@@ -408,7 +453,7 @@ def login(request):
         # Check for special case
         if email == 'realmadridfcwebsite@gmail.com' and password == 'Realmadrid@12':
             # Redirect to the admin dashboard directly
-            return redirect('admin_dashboard')  # Replace 'admin_dashboard' with your URL name
+            return redirect('admin_dashboard')
 
         try:
             # Standard authentication for other users
@@ -420,7 +465,7 @@ def login(request):
                 request.session.save()
 
                 # Redirect to a different page after successful login
-                return redirect('index')  # Replace 'index' with your desired URL name
+                return redirect('index')  # Redirect to 'index' page
 
             else:
                 # Unique error message for incorrect credentials
@@ -431,6 +476,7 @@ def login(request):
             messages.error(request, "Invalid email or password.", extra_tags='login_error')
 
     return render(request, 'login.html')
+
 
 def register(request):
     if request.method == 'POST':

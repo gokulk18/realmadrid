@@ -67,7 +67,7 @@ SOCIALACCOUNT_PROVIDERS = {
             'prompt': 'select_account',
             'access_type': 'online',
         },
-        'LOGIN_REDIRECT_URL': 'index.html',  # Redirect URL after Google login
+        'LOGIN_REDIRECT_URL': '/',  # Redirect URL after Google login
         'OAUTH2_REDIRECT_URI': 'http://localhost:8000/accounts/google/login/callback/',
     }
 }
