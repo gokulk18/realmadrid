@@ -7,6 +7,59 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
         <style>
+            nav {
+                background-color: #333;
+                color: #fff;
+                display: flex;
+                justify-content: center;
+                padding: 10px 0;
+              }
+              
+              nav ul {
+                display: flex;
+                list-style-type: none;
+                margin: 0;
+                padding: 0;
+              }
+              
+              nav ul li {
+                position: relative;
+                margin-right: 20px;
+              }
+              
+              nav ul li a {
+                color: #fff;
+                text-decoration: none;
+                padding: 10px;
+              }
+              
+              nav ul li:hover > ul {
+                display: block;
+              }
+              
+              nav ul li ul {
+                display: none;
+                position: absolute;
+                background-color: #333;
+                width: 300px; /* Increased width of subcategory background */
+                padding: 10px; /* Added padding to create larger background */
+                z-index: 1;
+              }
+              
+              nav ul li ul li {
+                margin-right: 0;
+                width: 100%;
+              }
+              
+              nav ul li ul li a {
+                display: block;
+                padding: 10px;
+              }
+              
+              nav ul li ul li a:hover {
+                background-color: #444;
+              }
+
             body {
                 font-family: 'Roboto', sans-serif;
                 margin: 0;
@@ -77,11 +130,7 @@
                 font-size: 20px;
             }
         
-            nav {
-                background-color: #f8f9fa;
-                padding: 10px 0;
-            }
-        
+
             .main-menu {
                 list-style-type: none;
                 padding: 0;
@@ -123,14 +172,59 @@
         </div>
     </header>
     <nav>
-        <ul class="main-menu">
-            <li><a href="#">Equipment</a></li>
-            <li><a href="#">Buy by Player</a></li>
-            <li><a href="#">Training</a></li>
-            <li><a href="#">Fashion</a></li>
-            <li><a href="#">Accessories</a></li>
-            <li><a href="#">Summer Trend</a></li>
+        <ul>
+          <li><a href="#">Equipment</a>
+            <ul>
+              <li><a href="#">Chandal</a></li>
+              <li><a href="#">Sweatshirts</a></li>
+              <li><a href="#">Jackets</a></li>
+              <li><a href="#">T-shirts</a></li>
+              <li><a href="#">Pants</a></li>
+              <li><a href="#">See all</a></li>
+            </ul>
+          </li>
+          <li><a href="#">Buy by Player</a>
+            <ul>
+              <li><a href="#">Chandal</a></li>
+              <li><a href="#">Sweatshirts</a></li>
+              <li><a href="#">Jackets</a></li>
+              <li><a href="#">T-shirts</a></li>
+              <li><a href="#">Pants</a></li>
+              <li><a href="#">See all</a></li>
+            </ul>
+          </li>
+          <li><a href="#">Training</a>
+            <ul>
+              <li><a href="#">Chandal</a></li>
+              <li><a href="#">Sweatshirts</a></li>
+              <li><a href="#">Jackets</a></li>
+              <li><a href="#">T-shirts</a></li>
+              <li><a href="#">Pants</a></li>
+              <li><a href="#">See all</a></li>
+            </ul>
+          </li>
+          <li><a href="#">Fashion</a>
+            <ul>
+              <li><a href="#">Chandal</a></li>
+              <li><a href="#">Sweatshirts</a></li>
+              <li><a href="#">Jackets</a></li>
+              <li><a href="#">T-shirts</a></li>
+              <li><a href="#">Pants</a></li>
+              <li><a href="#">See all</a></li>
+            </ul>
+          </li>
+          <li><a href="#">Accessories</a>
+            <ul>
+              <li><a href="#">Chandal</a></li>
+              <li><a href="#">Sweatshirts</a></li>
+              <li><a href="#">Jackets</a></li>
+              <li><a href="#">T-shirts</a></li>
+              <li><a href="#">Pants</a></li>
+              <li><a href="#">See all</a></li>
+            </ul>
+          </li>
+          <li><a href="#">Summer Trend</a></li>
         </ul>
-    </nav>
+      </nav>
 </body>
 </html>

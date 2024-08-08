@@ -17,6 +17,8 @@ urlpatterns = [
     path('accounts/', include('allauth.urls')),
     path('check_email_availability/', views.check_email_availability, name="check_email_availability"),
     path('store/', views.store, name="store"),
+    path('product/<int:category_id>/<int:item_id>/', views.product_details, name='product_details'),
+
 
     path('admin_dashboard/',views.admin_dashboard,name="admin_dashboard"),
     path('admin_squad_list/',views.admin_squad_list,name="admin_squad_list"),

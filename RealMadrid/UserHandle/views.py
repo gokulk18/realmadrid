@@ -29,6 +29,7 @@ from .models import SubCategory,ItemImage,Item,ItemSize
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.db import transaction
 from allauth.socialaccount.models import SocialAccount
+from django.http import Http404
 
 
 logger = logging.getLogger(__name__)
@@ -269,13 +270,66 @@ def admin_squad_list(request):
 
     return render(request, 'admin_squad_list.html', {'players_by_position': players_by_position})
 
+
 def store(request):
+    # Fetch all categories
     categories = Category.objects.all()
-    subcategories = SubCategory.objects.all()  # Fetch all subcategories
+
+    # Get the current category from the request, default to the first category if none specified
+    current_category_id = request.GET.get('category')
+    if current_category_id:
+        current_category = get_object_or_404(Category, id=current_category_id)
+    else:
+        current_category = categories.first()  # Set to the first category if none is selected
+
+    # Get the index of the current category to find the next category
+    current_index = list(categories).index(current_category) if current_category else 0
+    next_category = categories[current_index + 1] if current_index + 1 < len(categories) else None
+
+    # Fetch subcategories for the current category
+    subcategories = SubCategory.objects.filter(category=current_category) if current_category else []
+
+    # Get the selected subcategory from the request
+    selected_subcategory_id = request.GET.get('subcategory')
+    if selected_subcategory_id:
+        # Fetch items based on the selected subcategory
+        items = Item.objects.filter(subcategory_id=selected_subcategory_id)
+    else:
+        # Default to items based on the current category if no subcategory is selected
+        items = Item.objects.filter(category=current_category) if current_category else []
+
+    # Fetch items for the next category
+    next_category_items = Item.objects.filter(category=next_category) if next_category else []
+
+    # Prepare data for all categories
+    all_category_items = {}
+    for category in categories:
+        all_category_items[category] = Item.objects.filter(category=category)
+
     return render(request, 'store.html', {
         'categories': categories,
-        'subcategories': subcategories
+        'current_category': current_category,
+        'next_category': next_category,
+        'subcategories': subcategories,
+        'items': items,
+        'next_category_items': next_category_items,
+        'selected_subcategory_id': selected_subcategory_id,
+        'all_category_items': all_category_items,
     })
+    
+    
+def product_details(request, category_id, item_id):
+    item = Item.objects.filter(id=item_id, category_id=category_id).first()
+    
+    if not item:
+        return HttpResponseNotFound("Product not found")
+    
+    return render(request, 'product_details.html', {
+        'item': item,
+    })
+
+
+
 
 @never_cache
 def index(request):

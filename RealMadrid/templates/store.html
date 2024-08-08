@@ -9,218 +9,237 @@
     <script src="https://cdn.tailwindcss.com"></script>
 
     <style>
-        body {
-            font-family: 'Roboto', sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f8f9fa;
-        }
+       a{
+        text-decoration:none !important;
+       }
+       .search-container {
+        display: flex;
+        justify-content: center;
+        width: 100%;
+    }
 
-        header {
-            background-color: white;
-            padding: 10px 20px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
+    .relative {
+        position: relative;
+    }
 
-        .header-content {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
+    .search-bar {
+        border: 2px solid #d1d5db; /* Set a visible border color */
+        background: white;
+        height: 40px;
+        padding: 0 16px;
+        border-radius: 8px;
+        font-size: 14px;
+        width: 300px; /* Adjust the width as needed */
+        position: relative;
+        outline: none; /* Remove default outline on focus */
+    }
 
-        .header-content img {
-            height: 40px;
-        }
+    .search-bar:focus {
+        border-color: #a1a1a1; /* Optional: Change border color on focus */
+    }
 
-        .header-content span {
-            margin-left: 10px;
-            font-weight: bold;
-        }
+    .search-bar::placeholder {
+        color: #9ca3af; /* Placeholder text color */
+    }
 
-        .pt-2 {
-            padding-top: 0.5rem;
-        }
+    .search-container button {
+        position: absolute;
+        top: 50%;
+        left: 0;
+        transform: translateY(-50%);
+        height: 100%;
+        border: none;
+        background: transparent;
+        cursor: pointer;
+    }
 
-        .relative {
-            position: relative;
-        }
-
-        .mx-auto {
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .text-gray-600 {
-            color: #4a5568;
-        }
-
-        .border-2 {
-            border-width: 2px;
-        }
-
-        .border-gray-300 {
-            border-color: #e2e8f0;
-        }
-
-        .bg-white {
-            background-color: white;
-        }
-
-        .h-10 {
-            height: 2.5rem;
-        }
-
-        .px-5 {
-            padding-left: 1.25rem;
-            padding-right: 1.25rem;
-        }
-
-        .pr-16 {
-            padding-right: 4rem;
-        }
-
-        .rounded-lg {
-            border-radius: 0.5rem;
-        }
-
-        .text-sm {
-            font-size: 0.875rem;
-        }
-
-        .focus\:outline-none:focus {
-            outline: 0;
-        }
-
-        .absolute {
-            position: absolute;
-        }
-
-        .right-0 {
-            right: 0;
-        }
-
-        .top-0 {
-            top: 0;
-        }
-
-        .mt-5 {
-            margin-top: 1.25rem;
-        }
-
-        .mr-4 {
-            margin-right: 1rem;
-        }
-
-        .header-actions a {
-            text-decoration: none;
-            font-size: 20px;
-            color: #333;
-            margin-left: 15px;
-        }
-
-        .main-menu {
-            list-style-type: none;
-            padding: 0;
-            margin: 0;
-            display: flex;
-            justify-content: center;
-        }
-
-        .main-menu li {
-            margin: 0 15px;
-        }
-
-        .main-menu a {
-            text-decoration: none;
-            color: #333;
-            font-weight: bold;
-        }
-        .dropdown {
-            position: relative;
-            display: inline-block;
-        }
-
-        .dropdown-content {
-            display: none;
-            position: absolute;
-            background-color: #f9f9f9;
-            min-width: 160px;
-            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-            z-index: 1;
-            list-style-type: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        .dropdown-content li {
-            padding: 8px 16px;
-        }
-
-        .dropdown-content li a {
-            text-decoration: none;
-            color: #333;
-            display: block;
-        }
-
-        .dropdown-content li a:hover {
-            background-color: #f1f1f1;
-        }
-
-        .dropdown:hover .dropdown-content {
-            display: block;
-        }
-
-        .dropdown:hover .dropbtn {
-            background-color: #3e8e41;
-        }
+    .search-container .material-symbols-outlined {
+        font-size: 24px; /* Adjust icon size as needed */
+    }
     </style>
 </head>
-<body>
-    {% comment %} <div class="promo-banner">
-        Register for free as a Madrid player and get a 5% discount on your first purchase →
-    </div> {% endcomment %}
+<script>
+    let lastScrollTop = 0;
+    const navbar = document.getElementById('navbar');
+
+    window.addEventListener('scroll', () => {
+        let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+        if (scrollTop > lastScrollTop) {
+            // Scroll down
+            navbar.style.transform = 'translateY(-100%)';
+        } else {
+            // Scroll up
+            navbar.style.transform = 'translateY(0)';
+        }
+        lastScrollTop = scrollTop;
+    });
+</script>
+
+
+
+<!-- component -->
+<script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
+
+<div x-data="{ cartOpen: false , isOpen: false }" class="bg-white">
     <header>
-        <div class="header-content">
-            <img class="w-auto h-6 sm:h-7" src="{% static 'madrid_images/real-madrid-logo.png' %}" alt="Real Madrid Logo">
-            <span class="ml-2 lg:ml-6 hover:text-blue-500">REAL MADRID STORE</span>
-            <div class="pt-2 relative mx-auto text-gray-600">
-                <input class="border-2 border-gray-300 bg-white h-10 px-5 pr-16 rounded-lg text-sm focus:outline-none"
-                  type="search" name="search" placeholder="Search">
-                <button type="submit" class="absolute right-0 top-0 mt-5 mr-4">
-                  <svg class="text-gray-600 h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg"
-                    xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Capa_1" x="0px" y="0px"
-                    viewBox="0 0 56.966 56.966" style="enable-background:new 0 0 56.966 56.966;" xml:space="preserve"
-                    width="512px" height="512px">
-                    <path
-                      d="M55.146,51.887L41.588,37.786c3.486-4.144,5.396-9.358,5.396-14.786c0-12.682-10.318-23-23-23s-23,10.318-23,23  s10.318,23,23,23c4.761,0,9.298-1.436,13.177-4.162l13.661,14.208c0.571,0.593,1.339,0.92,2.162,0.92  c0.779,0,1.518-0.297,2.079-0.837C56.255,54.982,56.293,53.08,55.146,51.887z M23.984,6c9.374,0,17,7.626,17,17s-7.626,17-17,17  s-17-7.626-17-17S14.61,6,23.984,6z" />
-                  </svg>
-                </button>
-              </div>
-            <div class="header-actions">
-                <a href="#" class="account-icon">👤</a>
-                <a href="#" class="cart-icon">🛒</a>
+        <div class="container mx-auto px-6 py-3">
+            <div class="flex items-center justify-between">
+                <div class="hidden w-full text-gray-600 md:flex md:items-center">
+                    <a href="#" class="flex items-center">
+                        <img class="w-auto h-6 sm:h-7" src="{% static 'madrid_images/real-madrid-logo.png' %}" alt="Real Madrid Logo">
+                        <span class="ml-2 lg:ml-6 hover:text-blue-500">REAL MADRID FC</span>
+                    </a>
+                </div>
+                <div class="ml-2 lg:ml-6 hover:text-blue-500 font-semibold whitespace-nowrap">
+                    Official Store
+                </div>
+                
+                <div class="flex items-center justify-end w-full">
+                    <button @click="cartOpen = !cartOpen" class="text-gray-600 focus:outline-none mx-4 sm:mx-0">
+                        <svg class="h-5 w-5" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" stroke="currentColor">
+                            <path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                        </svg>
+                    </button>
+
+                    <div class="flex sm:hidden">
+                        <button @click="isOpen = !isOpen" type="button" class="text-gray-600 hover:text-gray-500 focus:outline-none focus:text-gray-500" aria-label="toggle menu">
+                            <svg viewBox="0 0 24 24" class="h-6 w-6 fill-current">
+                                <path fill-rule="evenodd" d="M4 5h16a1 1 0 0 1 0 2H4a1 1 0 1 1 0-2zm0 6h16a1 1 0 0 1 0 2H4a1 1 0 0 1 0-2zm0 6h16a1 1 0 0 1 0 2H4a1 1 0 0 1 0-2z"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
             </div>
+
+            <div class="relative mt-6 max-w-lg mx-auto">
+            <span class="absolute inset-y-0 left-0 pl-3 flex items-center">
+                <svg class="h-5 w-5 text-gray-500" viewBox="0 0 24 24" fill="none">
+                    <path d="M21 21L15 15M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </span>
+
+                <input class="w-full border rounded-md pl-10 pr-4 py-2 focus:border-blue-500 focus:outline-none focus:shadow-outline" type="text" placeholder="Search">
+            </div>
+            <nav :class="isOpen ? '' : 'hidden'" class="sm:flex sm:justify-center sm:items-center mt-4">
+                <div class="flex flex-col sm:flex-row">
+                    <!-- Home Link -->
+                  
+                    
+                    <!-- Categories from Model -->
+                    {% for category in categories %}
+                    <a class="mt-3 text-[#43526E] hover:text-blue-500 sm:mx-12 sm:mt-0" href="#">{{ category.category_name }}</a>
+                    {% endfor %}
+                    
+                    <!-- Static Links -->
+                 
+                </div>
+            </nav>
         </div>
-        <br>
-        <nav>
-            <ul class="main-menu">
-                <!-- Dynamically populate categories with subcategories -->
-                {% for category in categories %}
-                    <li class="dropdown">
-                        <a href="#">{{ category.category_name }}</a>
-                        <ul class="dropdown-content">
-                            {% for subcategory in subcategories %}
-                                {% if subcategory.category == category %}
-                                    <li><a href="#">{{ subcategory.sub_category_name }}</a></li>
-                                {% endif %}
-                            {% endfor %}
-                        </ul>
-                    </li>
-                {% endfor %}
-            </ul>
-        </nav>
     </header>
-</body>
-</html>
+    <div  class="fixed right-0 top-0 max-w-xs w-full h-full px-6 py-4 ">
+        <div class="flex items-center justify-between">
+            <button @click="cartOpen = !cartOpen" class="text-gray-600 focus:outline-none">
+                <svg class="h-5 w-5" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" stroke="currentColor"></svg>
+            </button>
+        </div>
+    </div>
+    <div class="relative isolate overflow-hidden" style="padding-top: 0 !important; padding-bottom: 0 !important;z-index:1 !important">
+        <img src="{% static 'madrid_images/hero_banner_desktop__11_.png' %}">
+    </div>
+    <section class="bg-white dark:bg-gray-900" style="background: white;">
+        <div class="container px-6 py-10 mx-auto">
+    
+            <!-- Display Current Category and Subcategories -->
+            {% if current_category %}
+                <div class="text-center mb-6">
+                    <h1 class="text-3xl font-semibold text-gray-800 dark:text-[#43526E]">{{ current_category.category_name }}</h1>
+                </div>
+    
+                <!-- Display Subcategories for Current Category -->
+                <div class="flex items-center justify-center mb-6">
+                    <div class="flex items-center p-1 border border-blue-600 dark:border-blue-400 rounded-xl">
+                        {% for subcategory in subcategories %}
+                            <a href="?category={{ current_category.id }}&subcategory={{ subcategory.id }}"
+                               class="px-4 py-2 mx-2 text-sm font-medium
+                                      {% if selected_subcategory_id|stringformat:'s' == subcategory.id|stringformat:'s' %}
+                                          text-[#43526E] bg-blue-600
+                                      {% else %}
+                                          text-[#43526E] bg-transparent
+                                      {% endif %}
+                                      capitalize transition-colors duration-300 rounded-xl md:px-12 hover:bg-blue-600 hover:text-white">
+                                {{ subcategory.sub_category_name }}
+                            </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+    
+            <!-- Display Products for Selected Subcategory or Category -->
+            <div class="grid grid-cols-1 gap-8 mt-8 xl:mt-16 md:grid-cols-2 xl:grid-cols-3">
+                {% for item in items %}
+                    <div class="bg-white dark:bg-gray-800 border border-gray-600 dark:border-gray-400 rounded-xl shadow-lg overflow-hidden flex flex-col">
+                        <a href="{% url 'product_details' category_id=current_category.id item_id=item.id %}">
+                            <img class="object-fill w-full h-66" src="{{ item.main_image.url }}" alt="{{ item.name }}">
+                        </a>
+                        <div class="p-4 text-center flex-grow" style="background: white;">
+                            <h3 class="text-2xl font-semibold text-black capitalize dark:text-black">{{ item.name }}</h3>
+                            <p class="mt-2 text-black capitalize dark:text-black">{{ item.price }}</p>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="text-center text-gray-500 dark:text-gray-300 col-span-full">
+                        No products available.
+                    </div>
+                {% endfor %}
+            </div>
+    
+            <!-- Display All Categories and their Products -->
+            <div class="mt-16">
+                {% for category, items in all_category_items.items %}
+                    {% if category != current_category %}
+                        <div class="mb-12">
+                            <div class="text-center mb-6">
+                                <h2 class="text-3xl font-semibold text-gray-800 dark:text-[#43526E]">{{ category.category_name }}</h2>
+                            </div>
+                            <!-- Display Subcategories for Each Category -->
+                            <div class="flex items-center justify-center mb-6">
+                                <div class="flex items-center p-1 border border-blue-600 dark:border-blue-400 rounded-xl">
+                                    {% for subcategory in category.subcategory_set.all %}
+                                        <a href="?category={{ category.id }}&subcategory={{ subcategory.id }}"
+                                           class="px-4 py-2 mx-2 text-sm font-medium
+                                                  {% if selected_subcategory_id|stringformat:'s' == subcategory.id|stringformat:'s' %}
+                                                      text-[#43526E] bg-blue-600
+                                                  {% else %}
+                                                      text-[#43526E] bg-transparent
+                                                  {% endif %}
+                                                  capitalize transition-colors duration-300 rounded-xl md:px-12 hover:bg-blue-600 hover:text-white">
+                                            {{ subcategory.sub_category_name }}
+                                        </a>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 gap-8 mt-8 xl:mt-16 md:grid-cols-2 xl:grid-cols-3">
+                                {% for item in items %}
+                                    <div class="bg-white dark:bg-gray-800 border border-gray-600 dark:border-gray-400 rounded-xl shadow-lg overflow-hidden flex flex-col">
+                                        <a href="{% url 'product_details' category_id=category.id item_id=item.id %}">
+                                            <img class="object-fill w-full h-66" src="{{ item.main_image.url }}" alt="{{ item.name }}">
+                                        </a>
+                                        <div class="p-4 text-center flex-grow" style="background: white;">
+                                            <h3 class="text-2xl font-semibold text-black capitalize dark:text-black">{{ item.name }}</h3>
+                                            <p class="mt-2 text-black capitalize dark:text-black">{{ item.price }}</p>
+                                        </div>
+                                    </div>
+                                {% empty %}
+                                    <div class="text-center text-gray-500 dark:text-gray-300 col-span-full">
+                                        No products available.
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+    
+        </div>
+    </section>
