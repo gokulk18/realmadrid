@@ -56,6 +56,269 @@
     .search-container .material-symbols-outlined {
         font-size: 24px; /* Adjust icon size as needed */
     }
+    Components /
+    Banner
+    
+    Theme: 
+    default
+    Info page
+    Compatible with: 
+    Any CSS framework
+    Copy:
+    
+    HTML
+    
+    CSS
+    View code
+    
+    Download
+    default
+    --invert
+    
+    
+    
+    
+    
+    
+    /* -------------------------------- 
+    
+    File#: _1_banner
+    Title: Banner
+    Descr: A CTA banner containing text + media
+    Usage: codyhouse.co/license
+    
+    -------------------------------- */
+    
+    /* reset */
+    *, *::after, *::before {
+      box-sizing: border-box;
+    }
+    
+    * {
+      font: inherit;
+      margin: 0;
+      padding: 0;
+      border: 0;
+    }
+    
+    html {
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    
+    body {
+      background-color: hsl(0, 0%, 100%);
+      font-family: system-ui, sans-serif;
+      color: hsl(230, 7%, 23%);
+      font-size: 1.125rem; /* 18px */
+      line-height: 1.4;
+    }
+    
+    h1, h2, h3, h4 {
+      line-height: 1.2;
+      color: hsl(230, 13%, 9%);
+      font-weight: 700;
+    }
+    
+    h1 {
+      font-size: 2.5rem; /* 40px */
+    }
+    
+    h2 {
+      font-size: 2.125rem; /* 34px */
+    }
+    
+    h3 {
+      font-size: 1.75rem; /* 28px */
+    }
+    
+    h4 {
+      font-size: 1.375rem; /* 22px */
+    }
+    
+    ol, ul, menu {
+      list-style: none;
+    }
+    
+    button, input, textarea, select {
+      background-color: transparent;
+      border-radius: 0;
+      color: inherit;
+      line-height: inherit;
+      -webkit-appearance: none;
+              appearance: none;
+    }
+    
+    textarea {
+      resize: vertical;
+      overflow: auto;
+      vertical-align: top;
+    }
+    
+    a {
+      color: hsl(250, 84%, 54%);
+    }
+    
+    table {
+      border-collapse: collapse;
+      border-spacing: 0;
+    }
+    
+    img, video, svg {
+      display: block;
+      max-width: 100%;
+    }
+    
+    /* -------------------------------- 
+    
+    Component 
+    
+    -------------------------------- */
+    
+    .banner {
+      display: block;
+      text-decoration: none;
+      color: inherit;
+      overflow: hidden;
+      background-color: hsl(0, 0%, 100%);
+      box-shadow: 0 0 0 1px hsla(230, 13%, 9%, 0.05),
+                  0 0.3px 0.4px hsla(230, 13%, 9%, 0.02),
+                  0 0.9px 1.5px hsla(230, 13%, 9%, 0.045),
+                  0 3.5px 6px hsla(230, 13%, 9%, 0.09);
+      border-radius: 0.375em;
+      transition: 0.3s;
+    }
+    
+    .banner__grid {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .banner__grid > * {
+      min-width: 0;
+    }
+    
+    .banner__link {
+      position: relative;
+      text-decoration: none;
+      color: hsl(250, 84%, 54%);
+      display: inline-block;
+      transition: 0.3s cubic-bezier(0.215, 0.61, 0.355, 1);
+      transform-origin: left bottom;
+    }
+    
+    .banner__link i { /* label */
+      position: relative;
+      z-index: 2;
+      display: inline-block;
+      transition: 0.3s cubic-bezier(0.215, 0.61, 0.355, 1);
+    }
+    
+    .banner__link::after { /* animated border */
+      content: "";
+      background-color: currentColor;
+      height: 2px;
+      width: 100%;
+      position: absolute;
+      z-index: 1;
+      bottom: 0;
+      left: 0;
+      -webkit-clip-path: inset(0% round 0.1875em);
+              clip-path: inset(0% round 0.1875em);
+      opacity: 0.15;
+      transition: 0.3s cubic-bezier(0.215, 0.61, 0.355, 1);
+    }
+    
+    .banner__figure {
+      height: 0;
+      width: 100%;
+      padding-bottom: 50%;
+      transition: 0.3s cubic-bezier(0.215, 0.61, 0.355, 1);
+      background-position: center center;
+      background-repeat: no-repeat;
+      background-size: cover;
+    }
+    
+    .banner__text {
+      padding: 1.5rem;
+    }
+    
+    .banner__link-wrapper {
+      margin-top: 1rem;
+    }
+    
+    .banner:hover {
+      box-shadow: 0 0 0 1px hsla(230, 13%, 9%, 0.05),
+                  0 0.9px 1.25px hsla(230, 13%, 9%, 0.025),
+                  0 3px 5px hsla(230, 13%, 9%, 0.05),
+                  0 12px 20px hsla(230, 13%, 9%, 0.09);
+    }
+    
+    .banner:hover .banner__link {
+      transform: scale(1.3);
+    }
+    
+    .banner:hover .banner__link i { /* reverse parent transformation */
+      transform: scale(0.7);
+    }
+    
+    .banner:hover .banner__link::after {
+      height: 100%;
+    }
+    
+    .banner:hover .banner__figure {
+      transform: scale(1.05);
+    }
+    
+    @media (min-width: 64rem) {
+      .banner__grid {
+        flex-direction: row-reverse;
+      }
+    
+      .banner__grid > * {
+        width: 50%;
+      }
+    
+      .banner__figure {
+        height: 100%;
+        padding-bottom: 0;
+        -webkit-clip-path: polygon(100px 0%, 100% 0%, 100% 100%, 50px 100%);
+                clip-path: polygon(100px 0%, 100% 0%, 100% 100%, 50px 100%);
+      }
+    
+      .banner__text {
+        padding: 3rem;
+      }
+    
+      .banner__link-wrapper {
+        margin-top: 2rem;
+      }
+    
+      .banner--invert .banner__grid {
+        flex-direction: row;
+      }
+    
+      .banner--invert .banner__figure {
+        -webkit-clip-path: polygon(0% 0%, calc(100% - 100px) 0%, calc(100% - 50px) 100%, 0% 100%);
+                clip-path: polygon(0% 0%, calc(100% - 100px) 0%, calc(100% - 50px) 100%, 0% 100%);
+      }
+    
+      .banner--invert .banner__text {
+        text-align: right;
+      }
+    
+      .banner--invert .banner__link {
+        transform-origin: right bottom;
+      }
+    
+      .banner:hover .banner__figure {
+        -webkit-clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%);
+                clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%);
+      }
+    }
+    
+    Copy CSS
+
     </style>
 </head>
 <script>
@@ -81,7 +344,7 @@
 <!-- component -->
 <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
 
-<div class="bg-white" id="navbar">
+<div x-data="{ cartOpen: false , isOpen: false }" class="bg-white">
     <header>
         <div class="container mx-auto px-6 py-3">
             <div class="flex items-center justify-between">
@@ -113,105 +376,74 @@
             </div>
 
             <div class="relative mt-6 max-w-lg mx-auto">
-                <span class="absolute inset-y-0 left-0 pl-3 flex items-center">
-                    <svg class="h-5 w-5 text-gray-500" viewBox="0 0 24 24" fill="none">
-                        <path d="M21 21L15 15M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                </span>
+            <span class="absolute inset-y-0 left-0 pl-3 flex items-center">
+                <svg class="h-5 w-5 text-gray-500" viewBox="0 0 24 24" fill="none">
+                    <path d="M21 21L15 15M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </span>
 
                 <input class="w-full border rounded-md pl-10 pr-4 py-2 focus:border-blue-500 focus:outline-none focus:shadow-outline" type="text" placeholder="Search">
             </div>
             <nav :class="isOpen ? '' : 'hidden'" class="sm:flex sm:justify-center sm:items-center mt-4">
                 <div class="flex flex-col sm:flex-row">
                     <!-- Home Link -->
+                  
+                    
                     <!-- Categories from Model -->
                     {% for category in categories %}
-                    <a class="mt-3 text-[#43526E] hover:text-blue-500 sm:mx-12 sm:mt-0" href="{% url 'view_more_category' category_id=current_category.id %}">{{ category.category_name }}</a>
-                    {% endfor %}
+                    <a class="mt-3 text-[#43526E] hover:text-blue-500 sm:mx-12 sm:mt-0" href="{% url 'view_more_category' category_id=category.id %}">
+                        {{ category.category_name }}
+                    </a>
+                {% endfor %}
+
+                    
                     <!-- Static Links -->
+                 
                 </div>
             </nav>
         </div>
     </header>
-    <div  class="">
-        <div class="flex items-center justify-between">
-            <button @click="cartOpen = !cartOpen" class="text-gray-600 focus:outline-none">
-                <svg class="h-5 w-5" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" stroke="currentColor"></svg>
-            </button>
-        </div>
-    </div>
-    <div class="relative isolate overflow-hidden" style="padding-top: 0 !important; padding-bottom: 0 !important;z-index:1 !important">
-        <img src="{% static 'madrid_images/hero_banner_desktop__11_.png' %}">
-    </div>
+    
+
+
+
+
     <section class="bg-white dark:bg-gray-900" style="background: white;">
         <div class="container px-6 py-10 mx-auto">
-    
             <!-- Display Current Category and Subcategories -->
-            {% if current_category %}
             <div class="flex items-center justify-between mb-6">
                 <div class="text-center flex-grow">
                     <h1 class="text-3xl font-semibold text-gray-800 dark:text-[#43526E]">{{ current_category.category_name }}</h1>
                 </div>
-                <a href="{% url 'view_more_category' category_id=current_category.id %}" class="text-blue-600">
-                    View More
-                </a>                
+              
             </div>
     
-                <!-- Display Subcategories for Current Category -->
-                <div class="flex items-center justify-center mb-6">
-                    <div class="flex items-center p-1 border border-blue-600 dark:border-blue-400 rounded-xl">
-                        {% for subcategory in subcategories %}
-                            <a href="?category={{ current_category.id }}&subcategory={{ subcategory.id }}"
-                               class="px-4 py-2 mx-2 text-sm font-medium
-                                      {% if selected_subcategory_id|stringformat:'s' == subcategory.id|stringformat:'s' %}
-                                          text-[#43526E] bg-blue-600
-                                      {% else %}
-                                          text-[#43526E] bg-transparent
-                                      {% endif %}
-                                      capitalize transition-colors duration-300 rounded-xl md:px-12 hover:bg-blue-600 hover:text-white">
-                                {{ subcategory.sub_category_name }}
-                            </a>
-                        {% endfor %}
-                    </div>
+            <!-- Display Subcategories for Current Category -->
+            <div class="flex items-center justify-center mb-6">
+                <div class="flex items-center p-1 border border-blue-600 dark:border-blue-400 rounded-xl">
+                    {% for subcategory in subcategories %}
+                        <a href="?category={{ current_category.id }}&subcategory={{ subcategory.id }}"
+                           class="px-4 py-2 mx-2 text-sm font-medium
+                                  {% if selected_subcategory_id|stringformat:'s' == subcategory.id|stringformat:'s' %}
+                                      text-[#43526E] bg-blue-600
+                                  {% else %}
+                                      text-[#43526E] bg-transparent
+                                  {% endif %}
+                                  capitalize transition-colors duration-300 rounded-xl md:px-12 hover:bg-blue-600 hover:text-white">
+                            {{ subcategory.sub_category_name }}
+                        </a>
+                    {% endfor %}
                 </div>
-            {% endif %}
+            </div>
     
             <!-- Display Products for Selected Subcategory or Category -->
             <div class="grid grid-cols-1 gap-8 mt-8 xl:mt-16 md:grid-cols-2 xl:grid-cols-3">
                 {% for item in items %}
                     <div class="bg-white dark:bg-gray-800 border border-gray-600 dark:border-gray-400 rounded-xl shadow-lg overflow-hidden flex flex-col">
-                        <a href="{% url 'product_single_view' category_id=item.category.id item_id=item.id %}">
+                        <a href="{% url 'product_details' category_id=current_category.id item_id=item.id %}">
                             <img class="object-fill w-full h-66" src="{{ item.main_image.url }}" alt="{{ item.name }}">
                         </a>
                         <div class="p-4 text-center flex-grow" style="background: white;">
-                            {% if current_category.category_name == 'Accessories' %}
-                                <!-- Display quantity available for Accessories -->
-                                {% if item.sizes.all %}
-                                    <p class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Available Quantity:</p>
-                                    <div class="flex justify-center flex-wrap mb-2">
-                                        {% for size in item.sizes.all %}
-                                            <span class="px-3 py-1 mx-1 text-sm font-medium bg-white-200 dark:bg-white-700 rounded-md">{{ size.size }}: {{ size.quantity }}</span>
-                                        {% endfor %}
-                                    </div>
-                                {% else %}
-                                    <p class="mb-2 text-sm font-medium text-gray-700 dark:text-white-300">No quantity available.</p>
-                                {% endif %}
-                            {% else %}
-                                <!-- Display sizes for other categories -->
-                                {% if item.sizes.all %}
-                                    <p class="mb-2 text-sm font-medium text-[#43526E] dark:text-[#43526E]">Available Sizes:</p>
-                                    <div class="flex justify-center flex-wrap mb-2">
-                                        {% for size in item.sizes.all %}
-                                        <span class="px-3 py-1 mx-1 text-sm font-medium bg-white dark:bg-white rounded-full border border-blue-600 dark:border-blue-400"
-                                        style="border-radius: -33%%; border-color: #43526E;">
-                                      {{ size.size }}
-                                  </span>
-                                                                          {% endfor %}
-                                    </div>
-                                {% else %}
-                                    <p class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">No sizes available.</p>
-                                {% endif %}
-                            {% endif %}
                             <h3 class="text-2xl font-semibold text-black capitalize dark:text-black">{{ item.name }}</h3>
                             <p class="mt-2 text-black capitalize dark:text-black">{{ item.price }}</p>
                         </div>
@@ -225,17 +457,14 @@
     
             <!-- Display All Categories and their Products -->
             <div class="mt-16">
-                {% for category, items in all_category_items.items %}
+                {% for category in all_categories %}
                     {% if category != current_category %}
                         <div class="mb-12">
                             <div class="flex items-center justify-between mb-6">
                                 <div class="text-center flex-grow">
-                                    <!-- Use category.category_name instead of current_category.category_name -->
                                     <h1 class="text-3xl font-semibold text-gray-800 dark:text-[#43526E]">{{ category.category_name }}</h1>
                                 </div>
-                                <a href="{% url 'view_more_category' category_id=category.id %}" class="text-blue-600">
-                                    View More
-                                </a>
+                              
                             </div>
                             <!-- Display Subcategories for Each Category -->
                             <div class="flex items-center justify-center mb-6">
@@ -255,13 +484,13 @@
                                 </div>
                             </div>
                             <div class="grid grid-cols-1 gap-8 mt-8 xl:mt-16 md:grid-cols-2 xl:grid-cols-3">
-                                {% for item in items %}
+                                {% for item in category.items.all %}
                                     <div class="bg-white dark:bg-gray-800 border border-gray-600 dark:border-gray-400 rounded-xl shadow-lg overflow-hidden flex flex-col">
-                                        <a href="{% url 'product_single_view' category_id=category.id item_id=item.id %}">
+                                        <a href="{% url 'product_details' category_id=category.id item_id=item.id %}">
                                             <img class="object-fill w-full h-66" src="{{ item.main_image.url }}" alt="{{ item.name }}">
                                         </a>
                                         <div class="p-4 text-center flex-grow" style="background: white;">
-                                            {% if category.category_name == 'Accessories' %}
+                                            {% if current_category.category_name == 'Accessories' %}
                                                 <!-- Display quantity available for Accessories -->
                                                 {% if item.sizes.all %}
                                                     <p class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Available Quantity:</p>
@@ -276,16 +505,20 @@
                                             {% else %}
                                                 <!-- Display sizes for other categories -->
                                                 {% if item.sizes.all %}
-                                                    <p class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Available Sizes:</p>
+                                                    <p class="mb-2 text-sm font-medium text-[#43526E] dark:text-[#43526E]">Available Sizes:</p>
                                                     <div class="flex justify-center flex-wrap mb-2">
                                                         {% for size in item.sizes.all %}
-                                                            <span class="px-3 py-1 mx-1 text-sm font-medium bg-gray-200 dark:bg-white-700 rounded-md" style="border-radius:50px;">{{ size.size }}</span>
+                                                            <span class="px-3 py-1 mx-1 text-sm font-medium bg-gray-200 dark:bg-[#43526E] rounded-md" style="border-radius:50px important;">{{ size.size }}</span>
                                                         {% endfor %}
                                                     </div>
                                                 {% else %}
                                                     <p class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">No sizes available.</p>
                                                 {% endif %}
                                             {% endif %}
+                                            <h3 class="text-2xl font-semibold text-black capitalize dark:text-black">{{ item.name }}</h3>
+                                            <p class="mt-2 text-black capitalize dark:text-black">{{ item.price }}</p>
+                                        </div>
+                                        <div class="p-4 text-center flex-grow" style="background: white;">
                                             <h3 class="text-2xl font-semibold text-black capitalize dark:text-black">{{ item.name }}</h3>
                                             <p class="mt-2 text-black capitalize dark:text-black">{{ item.price }}</p>
                                         </div>

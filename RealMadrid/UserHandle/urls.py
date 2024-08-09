@@ -18,6 +18,8 @@ urlpatterns = [
     path('check_email_availability/', views.check_email_availability, name="check_email_availability"),
     path('store/', views.store, name="store"),
     path('product/<int:category_id>/<int:item_id>/', views.product_details, name='product_details'),
+    path('view-more-category/<int:category_id>/', views.view_more_category, name='view_more_category'),
+    path('category/<int:category_id>/product/<int:item_id>/', views.product_single_view, name='product_single_view'),
 
 
     path('admin_dashboard/',views.admin_dashboard,name="admin_dashboard"),

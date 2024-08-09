@@ -1,0 +1,198 @@
+{% load static%}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real Madrid Official Store</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <style>
+       a{
+        text-decoration:none !important;
+       }
+       .search-container {
+        display: flex;
+        justify-content: center;
+        width: 100%;
+    }
+
+    .relative {
+        position: relative;
+    }
+
+    .search-bar {
+        border: 2px solid #d1d5db; /* Set a visible border color */
+        background: white;
+        height: 40px;
+        padding: 0 16px;
+        border-radius: 8px;
+        font-size: 14px;
+        width: 300px; /* Adjust the width as needed */
+        position: relative;
+        outline: none; /* Remove default outline on focus */
+    }
+
+    .search-bar:focus {
+        border-color: #a1a1a1; /* Optional: Change border color on focus */
+    }
+
+    .search-bar::placeholder {
+        color: #9ca3af; /* Placeholder text color */
+    }
+
+    .search-container button {
+        position: absolute;
+        top: 50%;
+        left: 0;
+        transform: translateY(-50%);
+        height: 100%;
+        border: none;
+        background: transparent;
+        cursor: pointer;
+    }
+
+    .search-container .material-symbols-outlined {
+        font-size: 24px; /* Adjust icon size as needed */
+    }
+    </style>
+</head>
+<script>
+    let lastScrollTop = 0;
+    const navbar = document.getElementById('navbar');
+
+    window.addEventListener('scroll', () => {
+        let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+        if (scrollTop > lastScrollTop) {
+            // Scroll down
+            navbar.style.transform = 'translateY(-100%)';
+        } else {
+            // Scroll up
+            navbar.style.transform = 'translateY(0)';
+        }
+        lastScrollTop = scrollTop;
+    });
+</script>
+
+
+
+<!-- component -->
+<script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
+
+<div class="bg-white" id="navbar">
+    <header>
+        <div class="container mx-auto px-6 py-3">
+            <div class="flex items-center justify-between">
+                <div class="hidden w-full text-gray-600 md:flex md:items-center">
+                    <a href="#" class="flex items-center">
+                        <img class="w-auto h-6 sm:h-7" src="{% static 'madrid_images/real-madrid-logo.png' %}" alt="Real Madrid Logo">
+                        <span class="ml-2 lg:ml-6 hover:text-blue-500">REAL MADRID FC</span>
+                    </a>
+                </div>
+                <div class="ml-2 lg:ml-6 hover:text-blue-500 font-semibold whitespace-nowrap">
+                    Official Store
+                </div>
+                
+                <div class="flex items-center justify-end w-full">
+                    <button @click="cartOpen = !cartOpen" class="text-gray-600 focus:outline-none mx-4 sm:mx-0">
+                        <svg class="h-5 w-5" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" stroke="currentColor">
+                            <path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                        </svg>
+                    </button>
+
+                    <div class="flex sm:hidden">
+                        <button @click="isOpen = !isOpen" type="button" class="text-gray-600 hover:text-gray-500 focus:outline-none focus:text-gray-500" aria-label="toggle menu">
+                            <svg viewBox="0 0 24 24" class="h-6 w-6 fill-current">
+                                <path fill-rule="evenodd" d="M4 5h16a1 1 0 0 1 0 2H4a1 1 0 1 1 0-2zm0 6h16a1 1 0 0 1 0 2H4a1 1 0 0 1 0-2zm0 6h16a1 1 0 0 1 0 2H4a1 1 0 0 1 0-2z"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="relative mt-6 max-w-lg mx-auto">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center">
+                    <svg class="h-5 w-5 text-gray-500" viewBox="0 0 24 24" fill="none">
+                        <path d="M21 21L15 15M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </span>
+
+                <input class="w-full border rounded-md pl-10 pr-4 py-2 focus:border-blue-500 focus:outline-none focus:shadow-outline" type="text" placeholder="Search">
+            </div>
+            <nav :class="isOpen ? '' : 'hidden'" class="sm:flex sm:justify-center sm:items-center mt-4">
+                <div class="flex flex-col sm:flex-row">
+                    <!-- Home Link -->
+                    <!-- Categories from Model -->
+                    {% for category in categories %}
+                    <a class="mt-3 text-[#43526E] hover:text-blue-500 sm:mx-12 sm:mt-0" href="{% url 'view_more_category' category_id=current_category.id %}">{{ category.category_name }}</a>
+                    {% endfor %}
+                    <!-- Static Links -->
+                </div>
+            </nav>
+        </div>
+    </header>
+</div>
+<body class="bg-gray-100 font-sans">
+    <div class="container mx-auto px-4 py-8">
+        <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+            <div class="md:flex">
+                <div class="md:flex-shrink-0">
+                    <img class="h-96 w-full object-cover md:w-96" src="{{ item.main_image.url }}" alt="{{ item.name }}">
+                </div>
+                <div class="p-8">
+                    <div class="uppercase tracking-wide text-sm text-indigo-500 font-semibold">{{ category.category_name }}</div>
+                    <h1 class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl">{{ item.name }}</h1>
+                    <p class="mt-4 text-xl text-gray-500">€{{ item.price }}</p>
+                    
+                    <div class="mt-6">
+                        <h2 class="text-lg font-medium text-gray-900">Description</h2>
+                        <p class="mt-2 text-gray-600">{{ item.description }}</p>
+                    </div>
+
+                    {% if category.category_name != 'Accessories' %}
+                        <div class="mt-6">
+                            <h2 class="text-lg font-medium text-gray-900">Available Sizes</h2>
+                            <div class="mt-2 flex flex-wrap gap-2">
+                                {% for size in item.sizes.all %}
+                                    <span class="px-3 py-1 text-sm font-medium bg-gray-200 rounded-full">{{ size.size }}</span>
+                                {% empty %}
+                                    <p>No sizes available.</p>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="mt-6">
+                            <h2 class="text-lg font-medium text-gray-900">Available Quantity</h2>
+                            <div class="mt-2">
+                                {% for size in item.sizes.all %}
+                                    <p>{{ size.size }}: {{ size.quantity }}</p>
+                                {% empty %}
+                                    <p>No quantity information available.</p>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <div class="mt-8">
+                        <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                            Add to Cart
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if item.additional_images.all %}
+            <div class="mt-8">
+                <h2 class="text-2xl font-bold text-gray-900 mb-4">Additional Images</h2>
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {% for image in item.additional_images.all %}
+                        <img class="h-48 w-full object-cover rounded-lg" src="{{ image.image.url }}" alt="{{ item.name }} - Additional Image">
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</body>

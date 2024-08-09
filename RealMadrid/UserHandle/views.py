@@ -316,7 +316,31 @@ def store(request):
         'selected_subcategory_id': selected_subcategory_id,
         'all_category_items': all_category_items,
     })
+
+def product_single_view(request, category_id, item_id):
+    category = get_object_or_404(Category, id=category_id)
+    item = get_object_or_404(Item, id=item_id, category=category)
+    return render(request, 'product_single_view.html', {'category': category, 'item': item})
+
     
+def view_more_category(request, category_id):
+    category = get_object_or_404(Category, id=category_id)
+    subcategories = category.subcategory_set.all()
+    
+    selected_subcategory_id = request.GET.get('subcategory')
+    if selected_subcategory_id:
+        subcategory = get_object_or_404(SubCategory, id=selected_subcategory_id)
+        items = subcategory.items.all()
+    else:
+        items = category.items.all()
+    
+    context = {
+        'current_category': category,
+        'subcategories': subcategories,
+        'items': items,
+        'selected_subcategory_id': selected_subcategory_id,
+    }
+    return render(request, 'view_more_category.html', context)
     
 def product_details(request, category_id, item_id):
     item = Item.objects.filter(id=item_id, category_id=category_id).first()
