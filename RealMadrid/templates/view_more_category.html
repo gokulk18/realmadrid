@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
     <style>
        a{
         text-decoration:none !important;
@@ -56,295 +57,85 @@
     .search-container .material-symbols-outlined {
         font-size: 24px; /* Adjust icon size as needed */
     }
-    Components /
-    Banner
-    
-    Theme: 
-    default
-    Info page
-    Compatible with: 
-    Any CSS framework
-    Copy:
-    
-    HTML
-    
-    CSS
-    View code
-    
-    Download
-    default
-    --invert
-    
-    
-    
-    
-    
-    
-    /* -------------------------------- 
-    
-    File#: _1_banner
-    Title: Banner
-    Descr: A CTA banner containing text + media
-    Usage: codyhouse.co/license
-    
-    -------------------------------- */
-    
-    /* reset */
-    *, *::after, *::before {
-      box-sizing: border-box;
-    }
-    
-    * {
-      font: inherit;
-      margin: 0;
-      padding: 0;
-      border: 0;
-    }
-    
-    html {
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-    }
-    
-    body {
-      background-color: hsl(0, 0%, 100%);
-      font-family: system-ui, sans-serif;
-      color: hsl(230, 7%, 23%);
-      font-size: 1.125rem; /* 18px */
-      line-height: 1.4;
-    }
-    
-    h1, h2, h3, h4 {
-      line-height: 1.2;
-      color: hsl(230, 13%, 9%);
-      font-weight: 700;
-    }
-    
-    h1 {
-      font-size: 2.5rem; /* 40px */
-    }
-    
-    h2 {
-      font-size: 2.125rem; /* 34px */
-    }
-    
-    h3 {
-      font-size: 1.75rem; /* 28px */
-    }
-    
-    h4 {
-      font-size: 1.375rem; /* 22px */
-    }
-    
-    ol, ul, menu {
-      list-style: none;
-    }
-    
-    button, input, textarea, select {
-      background-color: transparent;
-      border-radius: 0;
-      color: inherit;
-      line-height: inherit;
-      -webkit-appearance: none;
-              appearance: none;
-    }
-    
-    textarea {
-      resize: vertical;
-      overflow: auto;
-      vertical-align: top;
-    }
-    
-    a {
-      color: hsl(250, 84%, 54%);
-    }
-    
-    table {
-      border-collapse: collapse;
-      border-spacing: 0;
-    }
-    
-    img, video, svg {
-      display: block;
-      max-width: 100%;
-    }
-    
-    /* -------------------------------- 
-    
-    Component 
-    
-    -------------------------------- */
-    
-    .banner {
-      display: block;
-      text-decoration: none;
-      color: inherit;
-      overflow: hidden;
-      background-color: hsl(0, 0%, 100%);
-      box-shadow: 0 0 0 1px hsla(230, 13%, 9%, 0.05),
-                  0 0.3px 0.4px hsla(230, 13%, 9%, 0.02),
-                  0 0.9px 1.5px hsla(230, 13%, 9%, 0.045),
-                  0 3.5px 6px hsla(230, 13%, 9%, 0.09);
-      border-radius: 0.375em;
-      transition: 0.3s;
-    }
-    
-    .banner__grid {
-      display: flex;
-      flex-direction: column;
-    }
-    
-    .banner__grid > * {
-      min-width: 0;
-    }
-    
-    .banner__link {
-      position: relative;
-      text-decoration: none;
-      color: hsl(250, 84%, 54%);
-      display: inline-block;
-      transition: 0.3s cubic-bezier(0.215, 0.61, 0.355, 1);
-      transform-origin: left bottom;
-    }
-    
-    .banner__link i { /* label */
-      position: relative;
-      z-index: 2;
-      display: inline-block;
-      transition: 0.3s cubic-bezier(0.215, 0.61, 0.355, 1);
-    }
-    
-    .banner__link::after { /* animated border */
-      content: "";
-      background-color: currentColor;
-      height: 2px;
-      width: 100%;
-      position: absolute;
-      z-index: 1;
-      bottom: 0;
-      left: 0;
-      -webkit-clip-path: inset(0% round 0.1875em);
-              clip-path: inset(0% round 0.1875em);
-      opacity: 0.15;
-      transition: 0.3s cubic-bezier(0.215, 0.61, 0.355, 1);
-    }
-    
-    .banner__figure {
-      height: 0;
-      width: 100%;
-      padding-bottom: 50%;
-      transition: 0.3s cubic-bezier(0.215, 0.61, 0.355, 1);
-      background-position: center center;
-      background-repeat: no-repeat;
-      background-size: cover;
-    }
-    
-    .banner__text {
-      padding: 1.5rem;
-    }
-    
-    .banner__link-wrapper {
-      margin-top: 1rem;
-    }
-    
-    .banner:hover {
-      box-shadow: 0 0 0 1px hsla(230, 13%, 9%, 0.05),
-                  0 0.9px 1.25px hsla(230, 13%, 9%, 0.025),
-                  0 3px 5px hsla(230, 13%, 9%, 0.05),
-                  0 12px 20px hsla(230, 13%, 9%, 0.09);
-    }
-    
-    .banner:hover .banner__link {
-      transform: scale(1.3);
-    }
-    
-    .banner:hover .banner__link i { /* reverse parent transformation */
-      transform: scale(0.7);
-    }
-    
-    .banner:hover .banner__link::after {
-      height: 100%;
-    }
-    
-    .banner:hover .banner__figure {
-      transform: scale(1.05);
-    }
-    
-    @media (min-width: 64rem) {
-      .banner__grid {
-        flex-direction: row-reverse;
-      }
-    
-      .banner__grid > * {
-        width: 50%;
-      }
-    
-      .banner__figure {
-        height: 100%;
-        padding-bottom: 0;
-        -webkit-clip-path: polygon(100px 0%, 100% 0%, 100% 100%, 50px 100%);
-                clip-path: polygon(100px 0%, 100% 0%, 100% 100%, 50px 100%);
-      }
-    
-      .banner__text {
-        padding: 3rem;
-      }
-    
-      .banner__link-wrapper {
-        margin-top: 2rem;
-      }
-    
-      .banner--invert .banner__grid {
-        flex-direction: row;
-      }
-    
-      .banner--invert .banner__figure {
-        -webkit-clip-path: polygon(0% 0%, calc(100% - 100px) 0%, calc(100% - 50px) 100%, 0% 100%);
-                clip-path: polygon(0% 0%, calc(100% - 100px) 0%, calc(100% - 50px) 100%, 0% 100%);
-      }
-    
-      .banner--invert .banner__text {
-        text-align: right;
-      }
-    
-      .banner--invert .banner__link {
-        transform-origin: right bottom;
-      }
-    
-      .banner:hover .banner__figure {
-        -webkit-clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%);
-                clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%);
-      }
-    }
-    
-    Copy CSS
 
+    .cart-sidebar {
+        position: fixed;
+        top: 0;
+        right: -400px;
+        bottom: 0;
+        width: 400px;
+        background-color: white;
+        box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+        transition: right 0.3s ease-out;
+        z-index: 1000;
+    }
+
+    .cart-sidebar.open {
+        right: 0;
+    }
+
+    .cart-item-image {
+        width: 80px;
+        height: 100px;
+        object-fit: cover;
+    }
+
+    .quantity-control {
+        display: flex;
+        align-items: center;
+        border: 1px solid #e2e8f0;
+        border-radius: 4px;
+    }
+
+    .quantity-control button {
+        padding: 0 8px;
+        background-color: #f7fafc;
+        border: none;
+        font-size: 18px;
+    }
+
+    .quantity-control span {
+        padding: 0 12px;
+        font-size: 14px;
+    }
     </style>
 </head>
 <script>
-    let lastScrollTop = 0;
-    const navbar = document.getElementById('navbar');
-
-    window.addEventListener('scroll', () => {
-        let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-
-        if (scrollTop > lastScrollTop) {
-            // Scroll down
-            navbar.style.transform = 'translateY(-100%)';
-        } else {
-            // Scroll up
-            navbar.style.transform = 'translateY(0)';
+    function cartData() {
+        return {
+            cartItems: [],
+            cartOpen: false,
+            toggleCart() {
+                this.cartOpen = !this.cartOpen;
+            },
+            addToCart(item) {
+                const existingItem = this.cartItems.find(i => i.id === item.id && i.size === item.size);
+                if (existingItem) {
+                    existingItem.quantity += item.quantity;
+                } else {
+                    this.cartItems.push(item);
+                }
+            },
+            removeFromCart(item) {
+                this.cartItems = this.cartItems.filter(i => i.id !== item.id || i.size !== item.size);
+            },
+            updateQuantity(item, change) {
+                item.quantity += change;
+                if (item.quantity <= 0) {
+                    this.removeFromCart(item);
+                }
+            },
+            get cartTotal() {
+                return this.cartItems.reduce((total, item) => total + item.price * item.quantity, 0).toFixed(2);
+            }
         }
-        lastScrollTop = scrollTop;
-    });
+    }
 </script>
 
 
 
 <!-- component -->
-<script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
-
-<div x-data="{ cartOpen: false , isOpen: false }" class="bg-white">
+<div class="bg-white" id="navbar">
     <header>
         <div class="container mx-auto px-6 py-3">
             <div class="flex items-center justify-between">
@@ -359,12 +150,74 @@
                 </div>
                 
                 <div class="flex items-center justify-end w-full">
-                    <button @click="cartOpen = !cartOpen" class="text-gray-600 focus:outline-none mx-4 sm:mx-0">
-                        <svg class="h-5 w-5" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" stroke="currentColor">
-                            <path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                        </svg>
-                    </button>
+                    <div x-data="cartData()" class="relative">
+                        <button @click="toggleCart()" class="text-gray-600 focus:outline-none mx-4 sm:mx-0 relative">
+                            <svg class="h-5 w-5" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" stroke="currentColor">
+                                <path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                            </svg>
+                            <span x-show="cartItems.length > 0" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
+                                <span x-text="cartItems.length"></span>
+                            </span>
+                        </button>
+                        
+                        <!-- Cart Sidebar -->
+                        <div :class="{ 'open': cartOpen }" class="cart-sidebar">
+                            <div class="p-6 h-full flex flex-col">
+                                <div class="flex justify-between items-center mb-6">
+                                    <h2 class="text-xl font-semibold">Your basket | <span x-text="cartItems.length"></span> Article</h2>
+                                    <button @click="toggleCart()" class="text-gray-500 hover:text-gray-700">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                    </button>
+                                </div>
 
+                                <div class="flex-grow overflow-y-auto">
+                                    <template x-if="cartItems.length === 0">
+                                        <p class="text-gray-500">Your cart is empty.</p>
+                                    </template>
+                                    <template x-for="item in cartItems" :key="`${item.id}-${item.size}`">
+                                        <div class="flex items-start mb-6 pb-6 border-b">
+                                            <img class="cart-item-image mr-4" :src="item.image" :alt="item.name">
+                                            <div class="flex-grow">
+                                                <h3 x-text="item.name" class="font-semibold mb-1"></h3>
+                                                <p x-text="'Size: ' + item.size" class="text-sm text-gray-600 mb-2"></p>
+                                                <p x-text="'€' + (item.price * item.quantity).toFixed(2)" class="font-semibold mb-2"></p>
+                                                <div class="flex items-center justify-between">
+                                                    <div class="quantity-control">
+                                                        <button @click="updateQuantity(item, -1)">-</button>
+                                                        <span x-text="item.quantity"></span>
+                                                        <button @click="updateQuantity(item, 1)">+</button>
+                                                    </div>
+                                                    <button @click="removeFromCart(item)" class="text-blue-600 hover:text-blue-800">Remove</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+
+                                <div class="mt-auto">
+                                    <div class="flex justify-between mb-2">
+                                        <span class="font-semibold">Subtotal</span>
+                                        <span x-text="'€' + cartTotal" class="font-semibold"></span>
+                                    </div>
+                                    <div class="flex justify-between mb-4">
+                                        <span>Shipping</span>
+                                        <span class="text-sm text-gray-600">It will be calculated in the next step</span>
+                                    </div>
+                                    <div class="flex justify-between font-bold text-lg mb-6">
+                                        <span>Total</span>
+                                        <span x-text="'€' + cartTotal"></span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <button @click="toggleCart()" class="text-blue-600 font-bold">Keep buying</button>
+                                        <button class="bg-blue-600 text-white px-4 py-2 rounded" :disabled="cartItems.length === 0">
+                                            Complete Order
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                
                     <div class="flex sm:hidden">
                         <button @click="isOpen = !isOpen" type="button" class="text-gray-600 hover:text-gray-500 focus:outline-none focus:text-gray-500" aria-label="toggle menu">
                             <svg viewBox="0 0 24 24" class="h-6 w-6 fill-current">
@@ -374,38 +227,28 @@
                     </div>
                 </div>
             </div>
-
+            
             <div class="relative mt-6 max-w-lg mx-auto">
-            <span class="absolute inset-y-0 left-0 pl-3 flex items-center">
-                <svg class="h-5 w-5 text-gray-500" viewBox="0 0 24 24" fill="none">
-                    <path d="M21 21L15 15M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-            </span>
-
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center">
+                    <svg class="h-5 w-5 text-gray-500" viewBox="0 0 24 24" fill="none">
+                        <path d="M21 21L15 15M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </span>
                 <input class="w-full border rounded-md pl-10 pr-4 py-2 focus:border-blue-500 focus:outline-none focus:shadow-outline" type="text" placeholder="Search">
             </div>
+            
             <nav :class="isOpen ? '' : 'hidden'" class="sm:flex sm:justify-center sm:items-center mt-4">
                 <div class="flex flex-col sm:flex-row">
-                    <!-- Home Link -->
-                  
-                    
-                    <!-- Categories from Model -->
                     {% for category in categories %}
-                    <a class="mt-3 text-[#43526E] hover:text-blue-500 sm:mx-12 sm:mt-0" href="{% url 'view_more_category' category_id=category.id %}">
-                        {{ category.category_name }}
+                    <a class="mt-3 text-[#43526E] hover:text-blue-500 sm:mx-12 sm:mt-0" 
+                       href="{% url 'view_more_category' category_id=category.id %}">
+                       {{ category.category_name }}
                     </a>
-                {% endfor %}
-
-                    
-                    <!-- Static Links -->
-                 
+                    {% endfor %}
                 </div>
             </nav>
         </div>
     </header>
-    
-
-
 
 
     <section class="bg-white dark:bg-gray-900" style="background: white;">
@@ -440,7 +283,7 @@
             <div class="grid grid-cols-1 gap-8 mt-8 xl:mt-16 md:grid-cols-2 xl:grid-cols-3">
                 {% for item in items %}
                     <div class="bg-white dark:bg-gray-800 border border-gray-600 dark:border-gray-400 rounded-xl shadow-lg overflow-hidden flex flex-col">
-                        <a href="{% url 'product_details' category_id=current_category.id item_id=item.id %}">
+                        <a href="{% url 'product_single_view' category_id=item.category.id item_id=item.id %}">
                             <img class="object-fill w-full h-66" src="{{ item.main_image.url }}" alt="{{ item.name }}">
                         </a>
                         <div class="p-4 text-center flex-grow" style="background: white;">

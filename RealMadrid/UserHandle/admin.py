@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Users, Position, Player ,News,Category,SubCategory,Item,ItemImage,ItemSize
+from .models import Users, Position, Player, News, Category, SubCategory, Item, ItemImage, ItemSize
 
 class UsersAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'email', 'phone', 'password', 'username')

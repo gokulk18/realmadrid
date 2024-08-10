@@ -30,6 +30,9 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.db import transaction
 from allauth.socialaccount.models import SocialAccount
 from django.http import Http404
+from django.db.models import Sum  # Add this import
+from django.views.decorators.http import require_POST
+import json
 
 
 logger = logging.getLogger(__name__)
@@ -317,13 +320,40 @@ def store(request):
         'all_category_items': all_category_items,
     })
 
+
 def product_single_view(request, category_id, item_id):
+    
+    categories = Category.objects.all()
+
     category = get_object_or_404(Category, id=category_id)
     item = get_object_or_404(Item, id=item_id, category=category)
-    return render(request, 'product_single_view.html', {'category': category, 'item': item})
+    
+    # Get sizes with quantity > 0
+    sizes_with_stock = item.sizes.filter(quantity__gt=0)
+    
+    # Calculate total quantity
+    total_quantity = sizes_with_stock.aggregate(total=Sum('quantity'))['total'] or 0
 
+    # Get related items (adjust this query based on how you define "related")
+    related_items = Item.objects.filter(category=category).exclude(id=item.id)[:4]
+
+    context = {
+        'categories': categories,  # Add this line to pass categories to the template
+
+        'category': category,
+        'item': item,
+        'sizes_with_stock': sizes_with_stock,
+        'total_quantity': total_quantity,
+        'related_items': related_items,  # Add this line
+    }
+    
+    return render(request, 'product_single_view.html', context)
     
 def view_more_category(request, category_id):
+    # Fetch all categories
+    categories = Category.objects.all()
+    
+    # Fetch the current category and related data
     category = get_object_or_404(Category, id=category_id)
     subcategories = category.subcategory_set.all()
     
@@ -335,6 +365,7 @@ def view_more_category(request, category_id):
         items = category.items.all()
     
     context = {
+        'categories': categories,  # Add this line to pass categories to the template
         'current_category': category,
         'subcategories': subcategories,
         'items': items,
@@ -351,7 +382,7 @@ def product_details(request, category_id, item_id):
     return render(request, 'product_details.html', {
         'item': item,
     })
-
+    
 
 
 
