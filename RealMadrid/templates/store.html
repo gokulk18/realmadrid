@@ -69,13 +69,25 @@
             box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
             transition: right 0.3s ease-out;
             z-index: 1000;
+            border-top-left-radius: 20px;
+            border-bottom-left-radius: 20px;
+            overflow: hidden;
         }
 
         .cart-sidebar.open {
             right: 0;
         }
 
+        .cart-item {
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background-color: #f9f9f9;
+        }
+
         .cart-item-image {
+            border-radius: 8px;
             width: 80px;
             height: 100px;
             object-fit: cover;
@@ -105,28 +117,34 @@
             return {
                 cartItems: [],
                 cartOpen: false,
-                toggleCart() {
+                async toggleCart() {
                     this.cartOpen = !this.cartOpen;
-                },
-                addToCart(item) {
-                    const existingItem = this.cartItems.find(i => i.id === item.id && i.size === item.size);
-                    if (existingItem) {
-                        existingItem.quantity += item.quantity;
-                    } else {
-                        this.cartItems.push(item);
+                    if (this.cartOpen) {
+                        await this.fetchCartItems();
                     }
                 },
-                removeFromCart(item) {
-                    this.cartItems = this.cartItems.filter(i => i.id !== item.id || i.size !== item.size);
-                },
-                updateQuantity(item, change) {
-                    item.quantity += change;
-                    if (item.quantity <= 0) {
-                        this.removeFromCart(item);
+                async fetchCartItems() {
+                    try {
+                        const response = await fetch('/api/cart-items/');
+                        if (!response.ok) {
+                            throw new Error('Failed to fetch cart items');
+                        }
+                        const data = await response.json();
+                        this.cartItems = data;
+                    } catch (error) {
+                        console.error('Error fetching cart items:', error);
                     }
+                },
+                async updateQuantity(item, change) {
+                    // Implement quantity update logic here
+                    console.log('Update quantity', item, change);
+                },
+                async removeFromCart(item) {
+                    // Implement remove from cart logic here
+                    console.log('Remove from cart', item);
                 },
                 get cartTotal() {
-                    return this.cartItems.reduce((total, item) => total + item.price * item.quantity, 0).toFixed(2);
+                    return this.cartItems.reduce((total, item) => total + item.total, 0).toFixed(2);
                 }
             }
         }
@@ -193,13 +211,13 @@
                                     <template x-if="cartItems.length === 0">
                                         <p class="text-gray-500">Your cart is empty.</p>
                                     </template>
-                                    <template x-for="item in cartItems" :key="`${item.id}-${item.size}`">
-                                        <div class="flex items-start mb-6 pb-6 border-b">
+                                    <template x-for="item in cartItems" :key="item.id">
+                                        <div class="cart-item flex items-start mb-6 pb-6 border-b">
                                             <img class="cart-item-image mr-4" :src="item.image" :alt="item.name">
                                             <div class="flex-grow">
                                                 <h3 x-text="item.name" class="font-semibold mb-1"></h3>
                                                 <p x-text="'Size: ' + item.size" class="text-sm text-gray-600 mb-2"></p>
-                                                <p x-text="'€' + (item.price * item.quantity).toFixed(2)" class="font-semibold mb-2"></p>
+                                                <p x-text="'€' + item.total.toFixed(2)" class="font-semibold mb-2"></p>
                                                 <div class="flex items-center justify-between">
                                                     <div class="quantity-control">
                                                         <button @click="updateQuantity(item, -1)">-</button>

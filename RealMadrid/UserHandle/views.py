@@ -22,7 +22,7 @@ import logging
 from django.views.decorators.cache import never_cache
 from .models import Position
 from .models import Player
-from .models import News
+from .models import News,Cart, CartItem
 from django.core.paginator import Paginator
 from .models import Category
 from .models import SubCategory,ItemImage,Item,ItemSize
@@ -45,6 +45,84 @@ class CustomTokenGenerator(PasswordResetTokenGenerator):
         return str(user.pk) + str(timestamp)
 
 token_generator = CustomTokenGenerator()
+
+
+def player_view(request):
+    positions = Position.objects.all()
+
+    # Create a dictionary to hold players by position
+    players_by_position = {}
+    for position in positions:
+        players_by_position[position.position] = Player.objects.filter(player_position=position)
+
+    return render(request, 'player_view.html', {'players_by_position': players_by_position})
+
+
+
+def get_cart_items(request):
+    user_id = request.session.get('user_id')
+    if not user_id:
+        return JsonResponse({'error': 'User not logged in'}, status=401)
+    
+    user = get_object_or_404(Users, id=user_id)
+    cart, created = Cart.objects.get_or_create(user=user)
+    cart_items = CartItem.objects.filter(cart=cart)
+    
+    items_data = []
+    for cart_item in cart_items:
+        items_data.append({
+            'id': cart_item.id,
+            'name': cart_item.item.name,
+            'price': float(cart_item.item.price),
+            'quantity': cart_item.quantity,
+            'size': cart_item.size,
+            'image': cart_item.item.main_image.url if cart_item.item.main_image else '',
+            'total': float(cart_item.item.price * cart_item.quantity)
+        })
+    
+    return JsonResponse(items_data, safe=False)
+
+
+def add_to_cart(request):
+    if request.method == 'POST':
+        # Get the user using session ID
+        user_id = request.session.get('user_id')
+        if not user_id:
+            messages.error(request, "Please log in to add items to cart.", extra_tags='specific_login_required')
+            # Redirect to the same page without accessing item details
+            return redirect(request.META.get('HTTP_REFERER', 'store'))
+
+        item_id = request.POST.get('item_id')
+        quantity = int(request.POST.get('quantity', 1))
+        size = request.POST.get('size')
+        
+        user = get_object_or_404(Users, id=user_id)
+        item = get_object_or_404(Item, id=item_id)
+        
+        # Get or create cart for the user
+        cart, created = Cart.objects.get_or_create(user=user)
+        
+        # Check if item already in cart
+        cart_item, item_created = CartItem.objects.get_or_create(
+            cart=cart,
+            item=item,
+            size=size
+        )
+        
+        if not item_created:
+            cart_item.quantity += quantity
+            cart_item.save()
+        else:
+            cart_item.quantity = quantity
+            cart_item.save()
+        
+        messages.success(request, f"{item.name} added to your cart.", extra_tags='add_to_cart_success')
+        return redirect('product_single_view', category_id=item.category.id, item_id=item.id)
+    
+    return redirect('store')  # Redirect to store if not a POST request
+
+
+
 
 def add_position(request):
     if request.method == 'POST':
@@ -372,6 +450,7 @@ def view_more_category(request, category_id):
         'selected_subcategory_id': selected_subcategory_id,
     }
     return render(request, 'view_more_category.html', context)
+    
     
 def product_details(request, category_id, item_id):
     item = Item.objects.filter(id=item_id, category_id=category_id).first()

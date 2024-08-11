@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Users, Position, Player, News, Category, SubCategory, Item, ItemImage, ItemSize
+from .models import Users, Position, Player, News, Category, SubCategory, Item, ItemImage, ItemSize ,Cart, CartItem
 
 class UsersAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'email', 'phone', 'password', 'username')
@@ -51,7 +51,34 @@ class ItemAdmin(admin.ModelAdmin):
     total_quantity.short_description = 'Total Quantity'
 
 
-    
+
+class CartItemInline(admin.TabularInline):
+    model = CartItem
+    extra = 1
+
+
+class CartAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user_name', 'created_at', 'updated_at')
+    inlines = [CartItemInline]
+    search_fields = ('user__name',)
+
+    def user_name(self, obj):
+        return obj.user.name
+    user_name.admin_order_field = 'user__name'
+    user_name.short_description = 'User Name'
+
+class CartItemAdmin(admin.ModelAdmin):
+    list_display = ('id', 'cart_user', 'item', 'quantity', 'size')
+    list_filter = ('cart__user', 'item')
+    search_fields = ('cart__user__name', 'item__name')
+
+    def cart_user(self, obj):
+        return obj.cart.user.name
+    cart_user.admin_order_field = 'cart__user__name'
+    cart_user.short_description = 'User'
+
+
+
 
 # Register the models with the admin site
 admin.site.register(Users, UsersAdmin)
@@ -61,5 +88,5 @@ admin.site.register(News,NewsAdmin)
 admin.site.register(Category,CategoryAdmin)
 admin.site.register(SubCategory,SubCategoryAdmin)
 admin.site.register(Item, ItemAdmin)
-
-
+admin.site.register(Cart, CartAdmin)
+admin.site.register(CartItem, CartItemAdmin)

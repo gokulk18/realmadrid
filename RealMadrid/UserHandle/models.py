@@ -80,3 +80,20 @@ class ItemImage(models.Model):
     def __str__(self):
         return f"Image for {self.item.name}"
 
+
+class Cart(models.Model):
+    user = models.ForeignKey(Users, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Cart for {self.user.name}"
+
+class CartItem(models.Model):
+    cart = models.ForeignKey(Cart, related_name='items', on_delete=models.CASCADE)
+    item = models.ForeignKey(Item, on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField(default=1)
+    size = models.CharField(max_length=10, blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.quantity} of {self.item.name} in cart for {self.cart.user.name}"
