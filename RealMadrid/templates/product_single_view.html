@@ -275,13 +275,15 @@
             <div class="container mx-auto px-6 py-3">
                 <div class="flex items-center justify-between">
                     <div class="hidden w-full text-gray-600 md:flex md:items-center">
-                        <a href="#" class="flex items-center">
+                        <a href="{% url 'index' %}" class="flex items-center">
                             <img class="w-auto h-6 sm:h-7" src="{% static 'madrid_images/real-madrid-logo.png' %}" alt="Real Madrid Logo">
                             <span class="ml-2 lg:ml-6 hover:text-blue-500">REAL MADRID FC</span>
                         </a>
                     </div>
                     <div class="ml-2 lg:ml-6 hover:text-blue-500 font-semibold whitespace-nowrap">
+                        <a href="{% url 'store' %}" class="flex items-center">
                         Official Store
+                        </a>
                     </div>
                     
                     <div class="flex items-center justify-end w-full">

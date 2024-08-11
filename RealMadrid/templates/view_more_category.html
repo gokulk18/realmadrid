@@ -158,13 +158,16 @@
         <div class="container mx-auto px-6 py-3">
             <div class="flex items-center justify-between">
                 <div class="hidden w-full text-gray-600 md:flex md:items-center">
-                    <a href="#" class="flex items-center">
+                    <a href="{% url 'index' %}" class="flex items-center">
+                       
                         <img class="w-auto h-6 sm:h-7" src="{% static 'madrid_images/real-madrid-logo.png' %}" alt="Real Madrid Logo">
                         <span class="ml-2 lg:ml-6 hover:text-blue-500">REAL MADRID FC</span>
                     </a>
                 </div>
                 <div class="ml-2 lg:ml-6 hover:text-blue-500 font-semibold whitespace-nowrap">
+                    <a href="{% url 'store' %}" class="flex items-center">
                     Official Store
+                    </a>
                 </div>
                 
                 <div class="flex items-center justify-end w-full">
@@ -267,6 +270,28 @@
             </nav>
         </div>
     </header>
+
+
+    <div class="relative overflow-hidden bg-gray-100">
+        <div class="container mx-auto px-6 py-8 flex items-center">
+            <div class="w-1/2">
+                <img src="{% static 'madrid_images/jerseymain.png' %}" alt="Real Madrid T-shirt 24/25" class="w-full h-auto rounded-lg shadow-lg">
+            </div>
+            
+            <div class="w-1/2 pl-12">
+                <h2 class="text-4xl font-bold text-gray-800 mb-4">
+                    {% if selected_subcategory %}
+                        {{ selected_subcategory.sub_category_name }}
+                    {% else %}
+                        {{ current_category.category_name }}
+                    {% endif %}
+                </h2>
+                <p class="text-gray-600 mb-4">
+                    Admire both the eternal legacy and the new era of Real Madrid CF with our new First Equipment 24/25. The new pure and minimalist design looks back at the club's origins extolling its iconic 'White'. The color that the greatest players in soccer history have!
+                </p>
+            </div>
+        </div>
+    </div>
 
 
     <section class="bg-white dark:bg-gray-900" style="background: white;">

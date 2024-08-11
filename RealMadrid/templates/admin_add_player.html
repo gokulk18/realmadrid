@@ -155,7 +155,7 @@
                 <span class="mx-3 font-m capitalize">Dashboard</span>
             </a>
     
-            <a class="flex items-center px-4 py-2 text-gray-500 transition-colors duration-300 transform rounded-lg hover:text-gray-600 hover:bg-gray-100 bg-opacity-40" href="{% url 'admin_squad_list' %}">
+            <a class="flex items-center px-4 py-2 text-gray-500 transition-colors duration-300 transform bg-gray-200 rounded-lg bg-opacity-50 " href="{% url 'admin_squad_list' %}">
                 <span class="material-symbols-outlined">
                     groups
                     </span>
@@ -170,7 +170,7 @@
     
                 <span class="mx-3 font-medium capitalize active">News</span>
             </a>   
-            <a class="flex items-center px-4 py-2 text-gray-500 transition-colors duration-300 transform bg-gray-200 rounded-lg bg-opacity-50 " href="{% url 'admin_view_store' %}">
+            <a class="flex items-center px-4 py-2 text-gray-500 transition-colors duration-300 transform rounded-lg hover:text-gray-600 hover:bg-gray-100 bg-opacity-40 " href="{% url 'admin_view_store' %}">
                 <span class="material-symbols-outlined">
                     shopping_bag
                     </span>
@@ -286,9 +286,11 @@
                         {% if messages %}
                         <div class="alert-container">
                             {% for message in messages %}
-                                <div class="alert {{ message.tags }}">
-                                    {{ message }}
-                                </div>
+                                {% if 'add_player' in message.tags %}
+                                    <div class="alert {{ message.tags }}">
+                                        {{ message }}
+                                    </div>
+                                {% endif %}
                             {% endfor %}
                         </div>
                     {% endif %}

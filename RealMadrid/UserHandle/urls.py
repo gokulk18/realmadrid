@@ -24,6 +24,7 @@ urlpatterns = [
     path('api/cart-items/', views.get_cart_items, name='get-cart-items'),
     path('category/<int:category_id>/product/<int:item_id>/', views.product_single_view, name='product_single_view'),
     path('player_view',views.player_view,name='player_view'),
+    path('edit-item/<int:item_id>/', views.admin_edit_item, name='admin_edit_item'),
     
 
     path('admin_dashboard/',views.admin_dashboard,name="admin_dashboard"),

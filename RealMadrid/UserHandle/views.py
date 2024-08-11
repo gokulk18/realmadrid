@@ -185,7 +185,7 @@ def add_player(request):
         player.save()
 
         # Add a success message
-        messages.success(request, 'Player added successfully!')
+        messages.success(request, 'Player added successfully!', extra_tags='add_player')
         return redirect('admin_add_player')  # Redirect to the page where you want to show the message
 
     return render(request, 'add_player.html')
@@ -373,13 +373,13 @@ def store(request):
     selected_subcategory_id = request.GET.get('subcategory')
     if selected_subcategory_id:
         # Fetch items based on the selected subcategory
-        items = Item.objects.filter(subcategory_id=selected_subcategory_id)
+        items = Item.objects.filter(subcategory_id=selected_subcategory_id)[:3]  # Limit to 3 items
     else:
         # Default to items based on the current category if no subcategory is selected
-        items = Item.objects.filter(category=current_category) if current_category else []
+        items = Item.objects.filter(category=current_category)[:3] if current_category else []
 
     # Fetch items for the next category
-    next_category_items = Item.objects.filter(category=next_category) if next_category else []
+    next_category_items = Item.objects.filter(category=next_category)[:3] if next_category else []
 
     # Prepare data for all categories with the first 3 items
     all_category_items = {}
@@ -398,6 +398,52 @@ def store(request):
         'selected_subcategory_id': selected_subcategory_id,
         'all_category_items': all_category_items,
     })
+    
+    
+    
+def admin_edit_item(request, item_id):
+    item = get_object_or_404(Item, id=item_id)
+    categories = Category.objects.all()
+    subcategories = SubCategory.objects.filter(category=item.category)  # Filter subcategories based on the item's category
+
+    if request.method == 'POST':
+        item.name = request.POST.get('name')
+        item.category_id = request.POST.get('category')
+        item.subcategory_id = request.POST.get('subcategory')
+        item.price = request.POST.get('price')
+        item.description = request.POST.get('description')
+
+        if 'main_image' in request.FILES:
+            item.main_image = request.FILES['main_image']
+        
+        item.save()
+
+        # Handling additional images
+        if 'additional_images' in request.FILES:
+            for image in request.FILES.getlist('additional_images'):
+                ItemImage.objects.create(item=item, image=image)
+
+        # Handling sizes and quantities
+        sizes = request.POST.getlist('sizes[]')
+        quantities = request.POST.getlist('quantities[]')
+
+        ItemSize.objects.filter(item=item).delete()  # Remove existing sizes
+        for size, quantity in zip(sizes, quantities):
+            if size:
+                ItemSize.objects.create(item=item, size=size, quantity=quantity)
+
+        messages.success(request, 'Item updated successfully.')
+        return redirect('admin_view_store')
+
+    return render(request, 'admin_edit_item.html', {
+        'item': item,
+        'categories': categories,
+        'subcategories': subcategories
+    })
+
+  
+
+
 def product_single_view(request, category_id, item_id):
     
     categories = Category.objects.all()
