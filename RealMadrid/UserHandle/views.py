@@ -208,10 +208,10 @@ def admin_add_item(request):
                 sizes = request.POST.getlist('sizes[]')
                 quantities = request.POST.getlist('quantities[]')
                 for size, quantity in zip(sizes, quantities):
-                    if size and quantity:
+                    if  quantity:
                         ItemSize.objects.create(
                             item=item,
-                            size=size,
+                            size=size or None,
                             quantity=int(quantity)
                         )
 
@@ -351,7 +351,6 @@ def admin_squad_list(request):
 
     return render(request, 'admin_squad_list.html', {'players_by_position': players_by_position})
 
-
 def store(request):
     # Fetch all categories
     categories = Category.objects.all()
@@ -382,10 +381,12 @@ def store(request):
     # Fetch items for the next category
     next_category_items = Item.objects.filter(category=next_category) if next_category else []
 
-    # Prepare data for all categories
+    # Prepare data for all categories with the first 3 items
     all_category_items = {}
     for category in categories:
-        all_category_items[category] = Item.objects.filter(category=category)
+        # Fetch the first 3 items for each category (without ordering)
+        three_items = Item.objects.filter(category=category)[:3]
+        all_category_items[category] = three_items
 
     return render(request, 'store.html', {
         'categories': categories,
@@ -397,8 +398,6 @@ def store(request):
         'selected_subcategory_id': selected_subcategory_id,
         'all_category_items': all_category_items,
     })
-
-
 def product_single_view(request, category_id, item_id):
     
     categories = Category.objects.all()

@@ -39,7 +39,43 @@
         a{
             text-decoration: none !important;
         }
-    
+        .category-slider {
+            position: relative;
+            width: 100%;
+            overflow: hidden;
+            padding: 0 40px; /* Add padding to make room for arrows */
+        }
+        .slider-wrapper {
+            display: flex;
+            transition: transform 0.3s ease;
+        }
+        .player-card {
+            flex: 0 0 auto;
+            width: 18rem;
+            margin-right: 20px;
+        }
+        .slider-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 40px;
+            height: 40px;
+            background-color: rgba(255, 255, 255, 0.7);
+            color: black; /* White arrow color */
+            border-radius: 20%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 100; /* Ensure arrows are above cards */
+            font-size: 24px; /* Larger arrow size */
+        }
+        .slider-arrow-left {
+            left: 0;
+        }
+        .slider-arrow-right {
+            right: 0;
+        }
     </style>
 </head>
 <body class="bg-[#f3f5f8]">
@@ -154,37 +190,74 @@
                          <br>
                         {% for position, players in players_by_position.items %}
                         <br>
-                            <div style="text-align: left; margin-bottom: 20px; position: relative; font-size: 2rem; font-weight: 700; color: #0F2145;">
-                                <h2 style="display: inline-block; background: transparent; padding: 0 10px; margin: 0;margin-top:20px;">
-                                    {{ position }}
-                                </h2>
-
-                            </div>
-                    
-                            <!-- Flexbox container for player cards -->
-                            <div style="display: flex; flex-wrap: wrap; justify-content: left; gap: 20px;">
-
-                                {% for player in players %}
-                                    <!-- Player Card -->
-                                    <div class="card" style="width: 18rem; position: relative; overflow: hidden; border-radius: 10px; background: rgb(72,66,254); background: linear-gradient(353deg, rgba(72,66,254,1) 31%, rgba(250,250,253,1) 94%);">
-
-                                        <img src="{% if player.player_image %}{{ player.player_image.url }}{% else %}{% static 'default_image.png' %}{% endif %}" class="card-img-top" alt="..." style="width: 100%; height: auto;">
-                                       
-                                        <div class="card-body" style="position: absolute; bottom: 0; left: 0; right: 0;  color: black; padding: 10px; display: flex; flex-direction: column; align-items: flex-start; border-radius: 0 0 10px 10px;">
-                                            <div class="flex items-center">
-                                                <span style="font-size: 29px !important; font-weight: 800 !important; color: white !important;" class="text-5xl font-bold tracking-wide lg:text-6xl mr-2" style="flex-shrink: 0;">{{ player.jersey_num }}</span> <!-- Player number -->
-                                                <span style="font-size: 24px !important; font-weight: 800 !important; color: white !important;" class="tracking-wide lg:text-7xl">{{ player.player_name }}</span> <!-- Player name -->
-                                            </div>
-                                            <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; margin-top: auto;">
-                                                <span class="text-4xl font-semibold tracking-wide text-white lg:text-5xl" style="font-size: 1rem ! important;">{{ player.player_role }}</span> <!-- Player role -->
-                                                 
-                                            </div>
-
+                            <div style="margin-bottom: 40px;">
+                                <div style="text-align: left; margin-bottom: 20px; position: relative; font-size: 2rem; font-weight: 700; color: #0F2145;">
+                                    <h2 style="display: inline-block; background: transparent; padding: 0 10px; margin: 0;margin-top:20px;">
+                                        {{ position }}
+                                    </h2>
+                                </div>
+                                
+                                    <div class="category-slider">
+                                        <div class="slider-wrapper">
+                                            {% for player in players %}
+                                                <div class="player-card">
+                                                    <div class="card" style="width: 100%; position: relative; overflow: hidden; border-radius: 10px; background: rgb(72,66,254); background: linear-gradient(353deg, rgba(72,66,254,1) 31%, rgba(250,250,253,1) 94%);">
+    <div class="card-img-container">
+        <img src="{% if player.player_image %}{{ player.player_image.url }}{% else %}{% static 'default_image.png' %}{% endif %}" class=" hover-zoom card-img-top" alt="..." style="width: 100%; height: auto;">
+    </div>
+                                                        <div class="card-body" style="position: absolute; bottom: 0; left: 0; right: 0;  color: black; padding: 10px; display: flex; flex-direction: column; align-items: flex-start; border-radius: 0 0 10px 10px;">
+                                                            <div class="flex items-center">
+                                                                <span style="font-size: 29px !important; font-weight: 800 !important; color: white !important;" class="text-5xl font-bold tracking-wide lg:text-6xl mr-2" style="flex-shrink: 0;">{{ player.jersey_num }}</span>
+                                                                <span style="font-size: 24px !important; font-weight: 800 !important; color: white !important;" class="tracking-wide lg:text-7xl">{{ player.player_name }}</span>
+                                                            </div>
+                                                            <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; margin-top: auto;">
+                                                                <span class="text-4xl font-semibold tracking-wide text-white lg:text-5xl" style="font-size: 1rem ! important;">{{ player.player_role }}</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            {% endfor %}
                                         </div>
+                                        <div class="slider-arrow slider-arrow-left">&#10094;</div>
+                                        <div class="slider-arrow slider-arrow-right">&#10095;</div>
                                     </div>
-                                    
-                                {% endfor %}
-                            </div>
-                        {% endfor %}
-                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
                     
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const sliders = document.querySelectorAll('.category-slider');
+    
+    sliders.forEach(slider => {
+        const wrapper = slider.querySelector('.slider-wrapper');
+        const leftArrow = slider.querySelector('.slider-arrow-left');
+        const rightArrow = slider.querySelector('.slider-arrow-right');
+        let scrollAmount = 0;
+
+        function updateArrowVisibility() {
+            leftArrow.style.display = scrollAmount > 0 ? 'flex' : 'none';
+            rightArrow.style.display = scrollAmount < wrapper.scrollWidth - slider.clientWidth ? 'flex' : 'none';
+        }
+
+        leftArrow.addEventListener('click', () => {
+            scrollAmount = Math.max(scrollAmount - 270, 0);
+            wrapper.style.transform = `translateX(-${scrollAmount}px)`;
+            updateArrowVisibility();
+        });
+
+        rightArrow.addEventListener('click', () => {
+            const maxScroll = wrapper.scrollWidth - slider.clientWidth;
+            scrollAmount = Math.min(scrollAmount + 270, maxScroll);
+            wrapper.style.transform = `translateX(-${scrollAmount}px)`;
+            updateArrowVisibility();
+        });
+
+        // Initial arrow visibility
+        updateArrowVisibility();
+
+        // Update arrow visibility on window resize
+        window.addEventListener('resize', updateArrowVisibility);
+    });
+});
+</script>

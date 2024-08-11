@@ -64,7 +64,7 @@ class Item(models.Model):
 
 class ItemSize(models.Model):
     item = models.ForeignKey(Item, related_name='sizes', on_delete=models.CASCADE)
-    size = models.CharField(max_length=50)
+    size = models.CharField(max_length=50, null=True, blank=True)
     quantity = models.PositiveIntegerField(default=0)
 
     class Meta:

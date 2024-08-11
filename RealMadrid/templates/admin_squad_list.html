@@ -10,6 +10,7 @@
     <title>Madrid Admin </title>
 
     <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
 
     <link rel="icon" type="image/svg+xml" href="assets/images/logo.svg">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
@@ -46,7 +47,40 @@
 .tab-content.active {
   display: block;
 }
-
+.category-slider {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+}
+.slider-wrapper {
+    display: flex;
+    transition: transform 0.3s ease;
+}
+.player-card {
+    flex: 0 0 auto;
+    width: 250px;
+    margin-right: 20px;
+}
+.slider-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 40px;
+    height: 40px;
+    background-color: rgba(255, 255, 255, 0.7);
+    border-radius: 20%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10;
+}
+.slider-arrow-left {
+    left: 10px;
+}
+.slider-arrow-right {
+    right: 10px;
+}
 </style>
 <script>
   document.addEventListener('DOMContentLoaded', function() {
@@ -123,7 +157,7 @@
                 <span class="material-symbols-outlined">
                     newspaper
                     </span>                    
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
     
                 <span class="mx-3 font-medium capitalize active">News</span>
             </a>   
@@ -256,39 +290,62 @@
                       
                 
                 
-                      <div class="container">
-                        <!-- Loop through positions -->
-                        {% for position, players in players_by_position.items %}
-                            <div style="text-align: center; margin-bottom: 20px; position: relative; font-size: 2rem; font-weight: 700; color: #0F2145;">
-                                <span style="position: absolute; left: 0; top: 50%; width: 40%; height: 2px; background-color: #0F2145; transform: translateY(-50%);"></span>
-                                <span style="position: absolute; right: 0; top: 50%; width: 40%; height: 2px; background-color: #0F2145; transform: translateY(-50%);"></span>
-                                <h2 style="display: inline-block; background: transparent; padding: 0 10px; margin: 0;">
-                                    {{ position }}
-                                </h2>
-                            </div>
-                    
-                            <!-- Flexbox container for player cards -->
-                            <div style="display: flex; flex-wrap: wrap; justify-content: left; gap: 20px;">
-                                {% for player in players %}
-                                    <!-- Player Card -->
-                                    <div class="card" style="width: 18rem; position: relative; overflow: hidden; border-radius: 10px; background: rgb(72,66,254); background: linear-gradient(353deg, rgba(72,66,254,1) 31%, rgba(250,250,253,1) 94%);">
-
-                                        <img src="{% if player.player_image %}{{ player.player_image.url }}{% else %}{% static 'default_image.png' %}{% endif %}" class="card-img-top" alt="..." style="width: 100%; height: auto;">
-                                        <div class="card-body" style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(255, 255, 255, 0.8); color: black; padding: 10px; display: flex; flex-direction: column; align-items: flex-start; border-radius: 0 0 10px 10px;">
-                                            <div class="flex items-center">
-                                                <span style="font-size: 29px !important; font-weight: 800 !important; color: #0F2145 !important;" class="text-5xl font-bold tracking-wide lg:text-6xl mr-2" style="flex-shrink: 0;">{{ player.jersey_num }}</span> <!-- Player number -->
-                                                <span style="font-size: 24px !important; font-weight: 800 !important; color: #0F2145 !important;" class="tracking-wide lg:text-7xl">{{ player.player_name }}</span> <!-- Player name -->
-                                            </div>
-                                            <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; margin-top: auto;">
-                                                <span class="text-4xl font-semibold tracking-wide text-[#0F2145] lg:text-5xl">{{ player.player_role }}</span> <!-- Player role -->
-                                                        <button type="button" onclick="window.location.href='{% url 'admin_update_player' player.id %}'" style="background-color: #0F2145; color: white; border: none; border-radius: 0.5rem; padding: 0.5rem 1rem; cursor: pointer; font-size: 14px; font-weight: 600; transition: background-color 0.3s; outline: none; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);" class="hover:bg-[#0d1a2b] focus:ring focus:ring-blue-300 focus:ring-opacity-80">
-                                                    Edit
-                                                </button>
-                                            </div>
-                                        </div>
+                      
+                
+<div class="container">
+    {% for position, players in players_by_position.items %}
+        <div style="margin-bottom: 40px;">
+            <h2 style="font-size: 2rem; font-weight: 700; color: #0F2145; margin-bottom: 20px;">{{ position }}</h2>
+            
+            <div class="category-slider">
+                <div class="slider-wrapper">
+                    {% for player in players %}
+                        <div class="player-card">
+                            <div class="card" style="width: 100%; position: relative; overflow: hidden; border-radius: 10px; background: rgb(72,66,254); background: linear-gradient(353deg, rgba(72,66,254,1) 31%, rgba(250,250,253,1) 94%);">
+                                <img src="{% if player.player_image %}{{ player.player_image.url }}{% else %}{% static 'default_image.png' %}{% endif %}" class="card-img-top" alt="..." style="width: 100%; height: auto;">
+                                <div class="card-body" style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(255, 255, 255, 0.8); color: black; padding: 10px; display: flex; flex-direction: column; align-items: flex-start; border-radius: 0 0 10px 10px;">
+                                    <div class="flex items-center">
+                                        <span style="font-size: 29px !important; font-weight: 800 !important; color: #0F2145 !important;" class="text-5xl font-bold tracking-wide lg:text-6xl mr-2" style="flex-shrink: 0;">{{ player.jersey_num }}</span>
+                                        <span style="font-size: 24px !important; font-weight: 800 !important; color: #0F2145 !important;" class="tracking-wide lg:text-7xl">{{ player.player_name }}</span>
                                     </div>
-                                {% endfor %}
+                                    <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; margin-top: auto;">
+                                        <span class="text-4xl font-semibold tracking-wide text-[#0F2145] lg:text-5xl">{{ player.player_role }}</span>
+                                        <button type="button" onclick="window.location.href='{% url 'admin_update_player' player.id %}'" style="background-color: #0F2145; color: white; border: none; border-radius: 0.5rem; padding: 0.5rem 1rem; cursor: pointer; font-size: 14px; font-weight: 600; transition: background-color 0.3s; outline: none; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);" class="hover:bg-[#0d1a2b] focus:ring focus:ring-blue-300 focus:ring-opacity-80">
+                                            Edit
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
-                        {% endfor %}
-                    </div>
-                    
+                        </div>
+                    {% endfor %}
+                </div>
+                <div class="slider-arrow slider-arrow-left">&#10094;</div>
+                <div class="slider-arrow slider-arrow-right">&#10095;</div>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const sliders = document.querySelectorAll('.category-slider');
+    
+    sliders.forEach(slider => {
+        const wrapper = slider.querySelector('.slider-wrapper');
+        const leftArrow = slider.querySelector('.slider-arrow-left');
+        const rightArrow = slider.querySelector('.slider-arrow-right');
+        let scrollAmount = 0;
+
+        leftArrow.addEventListener('click', () => {
+            scrollAmount = Math.max(scrollAmount - 270, 0);
+            wrapper.style.transform = `translateX(-${scrollAmount}px)`;
+        });
+
+        rightArrow.addEventListener('click', () => {
+            const maxScroll = wrapper.scrollWidth - slider.clientWidth;
+            scrollAmount = Math.min(scrollAmount + 270, maxScroll);
+            wrapper.style.transform = `translateX(-${scrollAmount}px)`;
+        });
+    });
+});
+</script>

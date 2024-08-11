@@ -403,7 +403,7 @@
 
     {% if messages %}
     {% for message in messages %}
-        {% if forloop.first %}
+        {% if 'add_to_cart_success' in message.tags %}
             <div style="
                 background-color: #d4edda;
                 color: #155724;
@@ -464,7 +464,30 @@
             <div class="mt-6" x-data="{ selectedSize: null, quantity: 1 }">
                 <h2 class="text-lg font-medium text-gray-900">Availability</h2>
                 <div class="mt-2">
-                    {% if sizes_with_stock %}
+                    {% if item.category.category_name == 'Accessories' %}
+                        {% if item.sizes.all %}
+                            <div class="flex flex-wrap gap-2">
+                                {% for size in item.sizes.all %}
+                                    {% if size.quantity > 0 %}
+                                        <button 
+                                            @click="selectedSize = selectedSize === '{{ size.quantity }}' ? null : '{{ size.quantity }}'"
+                                            class="px-3 py-1 text-sm font-medium bg-gray-200 rounded-full hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+                                            :class="{ 'bg-blue-500 text-white': selectedSize === '{{ size.quantity }}' }"
+                                        >
+                                            {{ size.quantity }}
+                                        </button>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                            <div x-show="selectedSize" class="mt-2">
+                                <p>
+                                    Available quantity: <span x-text="selectedSize"></span>
+                                </p>
+                            </div>
+                        {% else %}
+                            <p class="text-red-500">Out of stock</p>
+                        {% endif %}
+                    {% elif sizes_with_stock %}
                         <div class="flex flex-wrap gap-2">
                             {% for size in sizes_with_stock %}
                                 <button 
@@ -478,14 +501,14 @@
                         </div>
                         <div x-show="selectedSize" class="mt-2">
                             <p>
-                               Available items <span x-text="selectedSize"></span>: 
+                                Available items <span x-text="selectedSize"></span>: 
                                 <span x-text="{% for size in sizes_with_stock %}selectedSize === '{{ size.size }}' ? {{ size.quantity }} : {% endfor %}null"></span>
                             </p>
                         </div>
                     {% elif total_quantity > 0 %}
                         <p>Total Quantity: {{ total_quantity }}</p>
                     {% else %}
-                    <p class="text-red-500">Out of stock</p>
+                        <p class="text-red-500">Out of stock</p>
                     {% endif %}
                 </div>
             
