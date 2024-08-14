@@ -222,38 +222,37 @@
                         console.error('Error adding item to cart:', error);
                     }
                 },
+
                 async removeFromCart(item) {
                     try {
-                        const response = await fetch('/api/remove-from-cart', {
+                        const csrftoken = getCookie('csrftoken');
+                        console.log('Removing item:', item);
+                        const response = await fetch('/remove-from-cart/', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
+                                'X-CSRFToken': csrftoken
                             },
-                            body: JSON.stringify(item),
+                            body: JSON.stringify({
+                                item_id: item.id  // This is the CartItem.id
+                            })
                         });
+
+                        console.log('Response status:', response.status);
+                        const responseData = await response.json();
+                        console.log('Response data:', responseData);
+
                         if (response.ok) {
                             await this.fetchCartItems();
+                        } else {
+                            console.error('Error removing item from cart:', responseData.error);
                         }
                     } catch (error) {
-                        console.error('Error removing item from cart:', error);
+                        console.error('Error:', error);
                     }
                 },
-                async updateQuantity(item, change) {
-                    try {
-                        const response = await fetch('/api/update-quantity', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({ item, change }),
-                        });
-                        if (response.ok) {
-                            await this.fetchCartItems();
-                        }
-                    } catch (error) {
-                        console.error('Error updating quantity:', error);
-                    }
-                },
+                          
+                
                 get cartTotal() {
                     return this.cartItems.reduce((total, item) => total + item.price * item.quantity, 0).toFixed(2);
                 },
@@ -262,6 +261,21 @@
                     console.log('Proceeding to checkout');
                 }
             }
+        }
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
         }
         </script>
 
@@ -311,7 +325,7 @@
                                             <p class="text-gray-500">Your cart is empty.</p>
                                         </template>
                                         <template x-for="item in cartItems" :key="item.id">
-                                            <div class="flex items-start mb-6 pb-6 border-b">
+                                            <div class="cart-item flex items-start mb-6 pb-6 border-b">
                                                 <img class="cart-item-image mr-4" :src="item.image" :alt="item.name">
                                                 <div class="flex-grow">
                                                     <h3 x-text="item.name" class="font-semibold mb-1"></h3>
@@ -330,7 +344,7 @@
                                         </template>
                                     </div>
 
-                                    <div class="mt-auto">
+                                    <div class="mt-6">
                                         <div class="flex justify-between mb-2">
                                             <span class="font-semibold">Subtotal</span>
                                             <span x-text="'€' + cartTotal" class="font-semibold"></span>
@@ -345,7 +359,7 @@
                                         </div>
                                         <div class="flex justify-between items-center">
                                             <button @click="toggleCart()" class="text-blue-600 font-bold">Keep buying</button>
-                                            <button class="bg-blue-600 text-white px-4 py-2 rounded" :disabled="cartItems.length === 0">
+                                            <button @click="checkout()" class="bg-blue-600 text-white px-4 py-2 rounded" :disabled="cartItems.length === 0">
                                                 Complete Order
                                             </button>
                                         </div>
@@ -464,33 +478,15 @@
             </div>
 
             <div class="mt-6" x-data="{ selectedSize: null, quantity: 1 }">
-                <h2 class="text-lg font-medium text-gray-900">Availability</h2>
+                {% if total_quantity < 5 and total_quantity > 0 %}
+                    <h2 class="text-lg font-medium text-gray-900">Availability</h2>
+                    <p class="mt-2 text-sm text-gray-600">Only {{ total_quantity }} left in stock</p>
+                {% endif %}
+
                 <div class="mt-2">
-                    {% if item.category.category_name == 'Accessories' %}
-                        {% if item.sizes.all %}
-                            <div class="flex flex-wrap gap-2">
-                                {% for size in item.sizes.all %}
-                                    {% if size.quantity > 0 %}
-                                        <button 
-                                            @click="selectedSize = selectedSize === '{{ size.quantity }}' ? null : '{{ size.quantity }}'"
-                                            class="px-3 py-1 text-sm font-medium bg-gray-200 rounded-full hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
-                                            :class="{ 'bg-blue-500 text-white': selectedSize === '{{ size.quantity }}' }"
-                                        >
-                                            {{ size.quantity }}
-                                        </button>
-                                    {% endif %}
-                                {% endfor %}
-                            </div>
-                            <div x-show="selectedSize" class="mt-2">
-                                <p>
-                                    Available quantity: <span x-text="selectedSize"></span>
-                                </p>
-                            </div>
-                        {% else %}
-                            <p class="text-red-500">Out of stock</p>
-                        {% endif %}
-                    {% elif sizes_with_stock %}
-                        <div class="flex flex-wrap gap-2">
+                    {% if sizes_with_stock|length > 1 %}
+                        <h2 class="text-lg font-medium text-gray-900 mb-2">Select Size</h2>
+                        <div class="flex flex-wrap gap-2 mb-4">
                             {% for size in sizes_with_stock %}
                                 <button 
                                     @click="selectedSize = selectedSize === '{{ size.size }}' ? null : '{{ size.size }}'"
@@ -501,24 +497,19 @@
                                 </button>
                             {% endfor %}
                         </div>
-                        <div x-show="selectedSize" class="mt-2">
-                            <p>
-                                Available items <span x-text="selectedSize"></span>: 
-                                <span x-text="{% for size in sizes_with_stock %}selectedSize === '{{ size.size }}' ? {{ size.quantity }} : {% endfor %}null"></span>
-                            </p>
-                        </div>
-                    {% elif total_quantity > 0 %}
-                        <p>Total Quantity: {{ total_quantity }}</p>
+                    {% elif sizes_with_stock|length == 1 %}
+                        <input type="hidden" x-init="selectedSize = '{{ sizes_with_stock.0.size }}'" x-model="selectedSize">
                     {% else %}
-                        <p class="text-red-500">Out of stock</p>
+                        <input type="hidden" x-init="selectedSize = 'one-size'" x-model="selectedSize">
                     {% endif %}
                 </div>
-            
+
                 {% if total_quantity > 0 %}
                     <div class="mt-4">
                         <label for="quantity" class="block text-sm font-medium text-gray-700">Quantity:</label>
-                        <input type="number" id="quantity" name="quantity" min="1" max="{{ total_quantity }}" x-model="quantity"
-                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                        <input type="number" id="quantity" name="quantity" min="1" max="{{ total_quantity }}" x-model.number="quantity"
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                               @input="quantity = quantity < 1 ? 1 : (quantity > {{ total_quantity }} ? {{ total_quantity }} : quantity)">
                     </div>
             
                     <form method="post" action="{% url 'add_to_cart' %}" class="mt-4">
@@ -528,10 +519,16 @@
                         <input type="hidden" name="quantity" x-bind:value="quantity">
                         <button type="submit" 
                                 class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
-                                :disabled="!selectedSize">
+                                :disabled="({% if sizes_with_stock|length > 1 %}!selectedSize || {% endif %}quantity < 1)"
+                                :class="{ 'opacity-50 cursor-not-allowed': ({% if sizes_with_stock|length > 1 %}!selectedSize || {% endif %}quantity < 1) }">
                             Add to Cart
                         </button>
                     </form>
+                    {% if sizes_with_stock|length > 1 %}
+                        <p x-show="!selectedSize" class="text-red-500 mt-2">Please select a size before adding to cart.</p>
+                    {% endif %}
+                {% else %}
+                    <p class="text-red-500 mt-4">Out of stock</p>
                 {% endif %}
             </div>
         </div>

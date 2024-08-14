@@ -33,6 +33,7 @@ from django.http import Http404
 from django.db.models import Sum  # Add this import
 from django.views.decorators.http import require_POST
 import json
+from django.views.decorators.csrf import csrf_protect
 
 
 logger = logging.getLogger(__name__)
@@ -81,6 +82,47 @@ def get_cart_items(request):
         })
     
     return JsonResponse(items_data, safe=False)
+
+
+
+
+@csrf_protect
+@require_POST
+def remove_from_cart(request):
+    user_id = request.session.get('user_id')
+    if not user_id:
+        logger.error(f"User not authenticated. Session: {request.session.items()}")
+        return JsonResponse({'error': 'User not authenticated'}, status=401)
+
+    try:
+        data = json.loads(request.body)
+        cart_item_id = data.get('item_id')  # This is actually the CartItem.id
+        logger.info(f"Removing item. User ID: {user_id}, CartItem ID: {cart_item_id}")
+    except json.JSONDecodeError:
+        logger.error(f"Invalid JSON. Request body: {request.body}")
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+
+    if not cart_item_id:
+        logger.error(f"Invalid request. CartItem ID: {cart_item_id}")
+        return JsonResponse({'error': 'Invalid request'}, status=400)
+
+    try:
+        user = Users.objects.get(id=user_id)
+        cart = Cart.objects.get(user=user)
+        cart_item = CartItem.objects.get(id=cart_item_id, cart=cart)
+        logger.info(f"Found cart item. Cart ID: {cart.id}, CartItem ID: {cart_item_id}")
+        cart_item.delete()
+        return JsonResponse({'success': True, 'message': 'Item removed from cart'})
+    except Users.DoesNotExist:
+        logger.error(f"User not found. User ID: {user_id}")
+    except Cart.DoesNotExist:
+        logger.error(f"Cart not found. User ID: {user_id}")
+    except CartItem.DoesNotExist:
+        logger.error(f"CartItem not found. User ID: {user_id}, CartItem ID: {cart_item_id}")
+    
+    return JsonResponse({'error': 'Item not found in cart'}, status=404)
+
+
 
 
 def add_to_cart(request):
@@ -398,9 +440,14 @@ def store(request):
         'selected_subcategory_id': selected_subcategory_id,
         'all_category_items': all_category_items,
     })
-    
-    
-    
+
+
+
+
+
+
+
+
 def admin_edit_item(request, item_id):
     item = get_object_or_404(Item, id=item_id)
     categories = Category.objects.all()
