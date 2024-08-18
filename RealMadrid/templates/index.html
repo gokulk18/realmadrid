@@ -1,4 +1,5 @@
 {% load static %}
+{% load tz %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -219,11 +220,63 @@
 <br>
 <br>
 <br>
-
-
-
-
-
+<div class="bg-white py-12">
+    <div class="container mx-auto px-4">
+        <h1 class="text-2xl font-bold text-left text-[#0F2145] capitalize lg:text-3xl dark:text-[#0F2145]">Upcoming Events</h1>
+        <br>
+        <br>
+        <div class="uk-position-relative uk-visible-toggle" tabindex="-1" uk-slider="finite: true">
+            <div class="uk-slider-container">
+                <div class="uk-slider-items uk-child-width-1-1 uk-child-width-1-2@s uk-child-width-1-3@m uk-grid">
+                    {% for match in fixtures %}
+                    <div>
+                        <div class="w-full bg-[#15204b] rounded-lg shadow-md overflow-hidden">
+                            <div class="p-8 flex justify-between items-center">
+                                <div class="flex flex-col items-center">
+                                    {% if match.homeTeam.name == "Real Madrid CF" %}
+                                        <img src="{% static 'madrid_images/real-madrid-cf-logo.png' %}" alt="{{ match.homeTeam.name }}" class="w-20 h-20 mb-3">
+                                    {% else %}
+                                        <img src="{% static 'madrid_images/' %}{{ match.homeTeam.name|slugify }}.png" alt="{{ match.homeTeam.name }}" class="w-20 h-20 mb-3">
+                                    {% endif %}
+                                    <span class="text-base font-semibold text-white">{{ match.homeTeam.name }}</span>
+                                </div>
+                                <span class="text-3xl font-bold text-white">vs</span>
+                                <div class="flex flex-col items-center">
+                                    {% if match.awayTeam.name == "Real Madrid CF" %}
+                                        <img src="{% static 'madrid_images/real-madrid-cf-logo.png' %}" alt="{{ match.awayTeam.name }}" class="w-20 h-20 mb-3">
+                                    {% else %}
+                                        <img src="{% static 'madrid_images/' %}{{ match.awayTeam.name|slugify }}.png" alt="{{ match.awayTeam.name }}" class="w-20 h-20 mb-3">
+                                    {% endif %}
+                                    <span class="text-base font-semibold text-white">{{ match.awayTeam.name }}</span>
+                                </div>
+                            </div>
+                            <div class="bg-white p-8 rounded-t-lg">
+                                <p class="text-sm text-gray-500 uppercase mb-2">Soccer · First Team</p>
+                                <p class="font-base text-xl text-[#15204b] mb-2">{{ match.competition.name }}</p>
+                                <p class="text-base text-gray-600 mb-3">Matchday {{ match.matchday }}</p>
+                                <p class="flex items-center text-base text-gray-600 mb-3">
+                                    <svg class="w-5 h-5 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                    {{ match.ist_date }}
+                                </p>
+                                <p class="flex items-center text-base text-gray-600 mb-3">
+                                    <svg class="w-5 h-5 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                    Venue: {{ match.venue|default:"Not available" }}
+                                </p>
+                                <p class="flex items-center text-base text-gray-600">
+                                    <svg class="w-5 h-5 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                                    {{ match.broadcast_channel|default:"TBA" }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <a class="uk-position-center-left uk-position-small uk-hidden-hover" href="#" uk-slidenav-previous uk-slider-item="previous"></a>
+            <a class="uk-position-center-right uk-position-small uk-hidden-hover" href="#" uk-slidenav-next uk-slider-item="next"></a>
+        </div>
+    </div>
+</div>
 
 
 

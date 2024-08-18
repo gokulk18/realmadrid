@@ -34,7 +34,12 @@ from django.db.models import Sum  # Add this import
 from django.views.decorators.http import require_POST
 import json
 from django.views.decorators.csrf import csrf_protect
-
+import requests
+from django.shortcuts import render
+from django.utils.dateparse import parse_datetime
+from django.utils.timezone import make_aware, get_current_timezone
+from datetime import datetime
+import pytz
 
 logger = logging.getLogger(__name__)
 
@@ -82,6 +87,20 @@ def get_cart_items(request):
         })
     
     return JsonResponse(items_data, safe=False)
+
+
+
+
+def real_madrid_fixtures(request):
+    api_key = 'dc93cd61f7a04a67be5652fc72195459'
+    url = 'https://api.football-data.org/v4/teams/86/matches'  # Real Madrid's ID is 86
+    headers = {'X-Auth-Token': api_key}
+
+    response = requests.get(url, headers=headers)
+    fixtures = response.json().get('matches', [])
+
+    return render(request, 'index.html', {'fixtures': fixtures})
+
 
 
 
@@ -162,6 +181,7 @@ def add_to_cart(request):
         return redirect('product_single_view', category_id=item.category.id, item_id=item.id)
     
     return redirect('store')  # Redirect to store if not a POST request
+
 
 
 
@@ -556,6 +576,13 @@ def product_details(request, category_id, item_id):
     
 
 
+def get_team_details(team_id, api_key):
+    url = f'https://api.football-data.org/v4/teams/{team_id}'
+    headers = {'X-Auth-Token': api_key}
+    response = requests.get(url, headers=headers)
+    return response.json() if response.status_code == 200 else {}
+
+
 
 @never_cache
 def index(request):
@@ -611,6 +638,32 @@ def index(request):
         except SocialAccount.DoesNotExist:
             # Handle case where social account is not found
             pass
+
+    # Fetch fixtures from the football-data.org API
+    api_key = 'dc93cd61f7a04a67be5652fc72195459'
+    url = 'https://api.football-data.org/v4/teams/86/matches'  # Real Madrid's ID is 86
+    headers = {'X-Auth-Token': api_key}
+
+    response = requests.get(url, headers=headers)
+    fixtures = response.json().get('matches', [])
+
+    # Convert UTC dates to IST
+    ist_timezone = pytz.timezone('Asia/Kolkata')
+    for fixture in fixtures:
+        utc_date = parse_datetime(fixture['utcDate'])
+        if utc_date:
+            # Make the datetime aware if it's naive
+            if utc_date.tzinfo is None:
+                utc_date = make_aware(utc_date)
+            # Convert to IST
+            ist_date = utc_date.astimezone(ist_timezone)
+            # Format the date as a string
+            fixture['ist_date'] = ist_date.strftime("%a, %b %d, %Y, %I:%M %p IST")
+        else:
+            fixture['ist_date'] = "Date not available"
+
+    # Add fixtures to the context
+    context['fixtures'] = fixtures
 
     return render(request, 'index.html', context)
 
