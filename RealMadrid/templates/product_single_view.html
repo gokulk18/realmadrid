@@ -252,7 +252,36 @@
                     }
                 },
 
-
+                async updateQuantity(item, change) {
+                    try {
+                        const csrftoken = getCookie('csrftoken');
+                        const response = await fetch('/update-cart-quantity/', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': csrftoken
+                            },
+                            body: JSON.stringify({
+                                item_id: item.id,
+                                quantity_change: change
+                            })
+                        });
+    
+                        if (response.ok) {
+                            const data = await response.json();
+                            if (data.success) {
+                                await this.fetchCartItems();
+                            } else {
+                                console.error('Error updating quantity:', data.error);
+                                alert(data.error);
+                            }
+                        } else {
+                            console.error('Error updating quantity');
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                    }
+                },
                           
                 
                 get cartTotal() {
@@ -336,9 +365,9 @@
                                                     <p x-text="'€' + item.total.toFixed(2)" class="font-semibold mb-2"></p>
                                                     <div class="flex items-center justify-between">
                                                         <div class="quantity-control">
-                                                            <button @click="updateQuantity(item, -1)">-</button>
+                                                            <button @click="updateQuantity(item, -1)" :disabled="item.quantity <= 1">-</button>
                                                             <span x-text="item.quantity"></span>
-                                                            <button @click="updateQuantity(item, 1)">+</button>
+                                                            <button @click="updateQuantity(item, 1)" :disabled="item.quantity >= item.available_quantity">+</button>
                                                         </div>
                                                         <button @click="removeFromCart(item)" class="text-blue-600 hover:text-blue-800">Remove</button>
                                                     </div>

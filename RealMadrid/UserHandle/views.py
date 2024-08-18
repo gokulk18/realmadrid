@@ -183,8 +183,70 @@ def add_to_cart(request):
     return redirect('store')  # Redirect to store if not a POST request
 
 
+@csrf_protect
+@require_POST
+def update_cart_quantity(request):
+    user_id = request.session.get('user_id')
+    if not user_id:
+        logger.error(f"User not authenticated. Session: {request.session.items()}")
+        return JsonResponse({'success': False, 'error': 'User not authenticated'}, status=401)
 
+    try:
+        data = json.loads(request.body)
+        cart_item_id = data.get('item_id')
+        quantity_change = data.get('quantity_change')
+        logger.info(f"Updating item quantity. User ID: {user_id}, CartItem ID: {cart_item_id}, Change: {quantity_change}")
+    except json.JSONDecodeError:
+        logger.error(f"Invalid JSON. Request body: {request.body}")
+        return JsonResponse({'success': False, 'error': 'Invalid JSON'}, status=400)
 
+    if not cart_item_id or quantity_change is None:
+        logger.error(f"Invalid request. CartItem ID: {cart_item_id}, Quantity change: {quantity_change}")
+        return JsonResponse({'success': False, 'error': 'Invalid request'}, status=400)
+
+    try:
+        user = Users.objects.get(id=user_id)
+        cart = Cart.objects.get(user=user)
+        cart_item = CartItem.objects.get(id=cart_item_id, cart=cart)
+        
+        new_quantity = cart_item.quantity + quantity_change
+        
+        if new_quantity <= 0:
+            logger.info(f"Removing item from cart. Cart ID: {cart.id}, CartItem ID: {cart_item_id}")
+            cart_item.delete()
+            return JsonResponse({'success': True, 'message': 'Item removed from cart'})
+        
+        # Check if the new quantity exceeds available stock
+        if cart_item.size:
+            item_size = ItemSize.objects.filter(item=cart_item.item, size=cart_item.size).first()
+            if item_size:
+                available_quantity = item_size.quantity
+            else:
+                logger.error(f"ItemSize not found for item {cart_item.item.id} and size {cart_item.size}")
+                return JsonResponse({'success': False, 'error': 'Item size not available'}, status=400)
+        else:
+            # If size is not specified, use the total quantity of the item
+            available_quantity = sum(size.quantity for size in cart_item.item.sizes.all())
+
+        if new_quantity > available_quantity:
+            logger.error(f"Requested quantity exceeds available stock. CartItem ID: {cart_item_id}")
+            return JsonResponse({'success': False, 'error': 'Not enough stock available'}, status=400)
+        
+        cart_item.quantity = new_quantity
+        cart_item.save()
+        
+        logger.info(f"Updated cart item quantity. Cart ID: {cart.id}, CartItem ID: {cart_item_id}, New quantity: {new_quantity}")
+        return JsonResponse({'success': True, 'message': 'Cart updated successfully', 'new_quantity': new_quantity})
+    except Users.DoesNotExist:
+        logger.error(f"User not found. User ID: {user_id}")
+    except Cart.DoesNotExist:
+        logger.error(f"Cart not found. User ID: {user_id}")
+    except CartItem.DoesNotExist:
+        logger.error(f"CartItem not found. User ID: {user_id}, CartItem ID: {cart_item_id}")
+    except Item.DoesNotExist:
+        logger.error(f"Item not found. CartItem ID: {cart_item_id}")
+    
+    return JsonResponse({'success': False, 'error': 'Failed to update cart'}, status=404)
 
 def add_position(request):
     if request.method == 'POST':
