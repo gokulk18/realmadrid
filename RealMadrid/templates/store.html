@@ -135,10 +135,24 @@
                         console.error('Error fetching cart items:', error);
                     }
                 },
-                async updateQuantity(item, change) {
-                    // Implement quantity update logic here
-                    console.log('Update quantity', item, change);
+                async addToCart(item) {
+                    try {
+                        const response = await fetch('/api/add-to-cart', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify(item),
+                        });
+                        if (response.ok) {
+                            await this.fetchCartItems();
+                            this.cartOpen = true;
+                        }
+                    } catch (error) {
+                        console.error('Error adding item to cart:', error);
+                    }
                 },
+
                 async removeFromCart(item) {
                     try {
                         const csrftoken = getCookie('csrftoken');
@@ -168,13 +182,47 @@
                     }
                 },
 
-
+                async updateQuantity(item, change) {
+                    try {
+                        const csrftoken = getCookie('csrftoken');
+                        const response = await fetch('/update-cart-quantity/', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': csrftoken
+                            },
+                            body: JSON.stringify({
+                                item_id: item.id,
+                                quantity_change: change
+                            })
+                        });
+    
+                        if (response.ok) {
+                            const data = await response.json();
+                            if (data.success) {
+                                await this.fetchCartItems();
+                            } else {
+                                console.error('Error updating quantity:', data.error);
+                                alert(data.error);
+                            }
+                        } else {
+                            console.error('Error updating quantity');
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                    }
+                },
+                          
+                
                 get cartTotal() {
-                    return this.cartItems.reduce((total, item) => total + item.total, 0).toFixed(2);
+                    return this.cartItems.reduce((total, item) => total + item.price * item.quantity, 0).toFixed(2);
+                },
+                checkout() {
+                    // Implement checkout logic here
+                    console.log('Proceeding to checkout');
                 }
             }
         }
-
 
         function getCookie(name) {
             let cookieValue = null;
@@ -190,7 +238,8 @@
             }
             return cookieValue;
         }
-    </script>
+        </script>
+
 </head>
 <script>
     let lastScrollTop = 0;

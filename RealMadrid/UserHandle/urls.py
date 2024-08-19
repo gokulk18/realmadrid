@@ -27,6 +27,10 @@ urlpatterns = [
     path('edit-item/<int:item_id>/', views.admin_edit_item, name='admin_edit_item'),
     path('remove-from-cart/', views.remove_from_cart, name='remove_from_cart'),
     path('update-cart-quantity/', views.update_cart_quantity, name='update_cart_quantity'),
+    path('previous_results/', views.previous_results, name='previous_results'),
+    path('match_details/<int:match_id>/', views.match_details, name='match_details'),
+
+
 
 
     path('admin_dashboard/',views.admin_dashboard,name="admin_dashboard"),

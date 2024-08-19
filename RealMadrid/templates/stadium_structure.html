@@ -3,235 +3,177 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Football Stadium Booking</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Stadium of Light Seating Plan</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        .section { stroke: #000; stroke-width: 1; cursor: pointer; }
+        .section:hover { opacity: 0.8; }
+        .category1 { fill: #FFA500; }
+        .category2 { fill: #FFFF00; }
+        .premium-gold { fill: #90EE90; }
+        .away-zone { fill: #9370DB; }
+        .section-label { font-family: Arial, sans-serif; font-size: 10px; font-weight: bold; pointer-events: none; }
+        .stand-label { font-family: Arial, sans-serif; font-size: 14px; font-weight: bold; }
+    </style>
 </head>
-<style>
-    body {
-        font-family: Arial, sans-serif;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-        margin: 0;
-        background-color: #f0f0f0;
-    }
-    
-    .stadium {
-        position: relative;
-        width: 800px;
-        height: 600px;
-        border: 2px solid #000;
-        border-radius: 10px;
-        background-color: #ffffff;
-        overflow: hidden;
-    }
-    
-    .pitch {
-        position: absolute;
-        top: 50px;
-        left: 50px;
-        width: calc(100% - 100px);
-        height: calc(100% - 100px);
-        background-color: #4CAF50; /* Football pitch green */
-        border: 2px solid #000;
-        border-radius: 10px;
-    }
-    
-    .stands {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-    }
-    
-    .stand {
-        position: absolute;
-        background-color: #eeeeee;
-        border: 1px solid #cccccc;
-        text-align: center;
-        overflow: hidden;
-    }
-    
-    .stand.north {
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100px;
-    }
-    
-    .stand.south {
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        height: 100px;
-    }
-    
-    .stand.east {
-        right: 0;
-        top: 100px;
-        width: 100px;
-        height: calc(100% - 200px);
-    }
-    
-    .stand.west {
-        left: 0;
-        top: 100px;
-        width: 100px;
-        height: calc(100% - 200px);
-    }
-    
-    .seat-row {
-        display: flex;
-        justify-content: center;
-        margin: 2px 0;
-    }
-    
-    .seat {
-        width: 30px;
-        height: 30px;
-        border-radius: 5px;
-        margin: 2px;
-        text-align: center;
-        line-height: 30px;
-        font-size: 14px;
-        cursor: pointer;
-    }
-    
-    .seat.available {
-        background-color: #B9DEA0; /* Green for available seats */
-    }
-    
-    .seat.booked {
-        background-color: #E6CAC4; /* Red for booked seats */
-        cursor: not-allowed;
-    }
-    
-    .seat.selected {
-        background-color: #a4d4a7; /* Light green for selected seats */
-    }
-    
-    .seat:hover {
-        background-color: #a4d4a7; /* Hover effect for available seats */
-    }
-    
-    .booking-info {
-        margin-top: 20px;
-        text-align: center;
-    }
-    
-    #selected-seats {
-        margin: 10px 0;
-    }
-</style>    
 <body>
-    <div class="stadium">
-        <div class="pitch">
-            <!-- Pitch visual representation -->
-        </div>
-        <div class="stands">
-            <!-- North Stand -->
-            <div class="stand north">
-                <div class="seat-row">
-                    <div class="seat available" data-id="1">1</div>
-                    <div class="seat available" data-id="2">2</div>
-                    <div class="seat booked" data-id="3">3</div>
-                    <div class="seat available" data-id="4">4</div>
-                    <div class="seat available" data-id="5">5</div>
-                </div>
-                <div class="seat-row">
-                    <div class="seat available" data-id="6">6</div>
-                    <div class="seat available" data-id="7">7</div>
-                    <div class="seat available" data-id="8">8</div>
-                    <div class="seat available" data-id="9">9</div>
-                    <div class="seat available" data-id="10">10</div>
-                </div>
-            </div>
-            <!-- South Stand -->
-            <div class="stand south">
-                <div class="seat-row">
-                    <div class="seat available" data-id="11">11</div>
-                    <div class="seat booked" data-id="12">12</div>
-                    <div class="seat available" data-id="13">13</div>
-                    <div class="seat available" data-id="14">14</div>
-                    <div class="seat available" data-id="15">15</div>
-                </div>
-                <div class="seat-row">
-                    <div class="seat available" data-id="16">16</div>
-                    <div class="seat available" data-id="17">17</div>
-                    <div class="seat available" data-id="18">18</div>
-                    <div class="seat available" data-id="19">19</div>
-                    <div class="seat available" data-id="20">20</div>
-                </div>
-            </div>
-            <!-- East Stand -->
-            <div class="stand east">
-                <div class="seat-row">
-                    <div class="seat available" data-id="21">21</div>
-                    <div class="seat available" data-id="22">22</div>
-                </div>
-                <div class="seat-row">
-                    <div class="seat booked" data-id="23">23</div>
-                    <div class="seat available" data-id="24">24</div>
-                </div>
-                <div class="seat-row">
-                    <div class="seat available" data-id="25">25</div>
-                    <div class="seat available" data-id="26">26</div>
-                </div>
-            </div>
-            <!-- West Stand -->
-            <div class="stand west">
-                <div class="seat-row">
-                    <div class="seat available" data-id="27">27</div>
-                    <div class="seat booked" data-id="28">28</div>
-                </div>
-                <div class="seat-row">
-                    <div class="seat available" data-id="29">29</div>
-                    <div class="seat available" data-id="30">30</div>
-                </div>
-                <div class="seat-row">
-                    <div class="seat available" data-id="31">31</div>
-                    <div class="seat available" data-id="32">32</div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="booking-info">
-        <h2>Selected Seats</h2>
-        <div id="selected-seats">None</div>
-        <button id="book-tickets" disabled>Book Tickets</button>
-    </div>
+    <svg id="stadium-layout" width="800" height="600"></svg>
+
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const selectedSeats = [];
-            const selectedSeatsDiv = document.getElementById('selected-seats');
-            const bookTicketsButton = document.getElementById('book-tickets');
-        
-            function updateSelectedSeats() {
-                selectedSeatsDiv.textContent = selectedSeats.length > 0 ? selectedSeats.join(', ') : 'None';
-                bookTicketsButton.disabled = selectedSeats.length === 0;
-            }
-        
-            document.querySelectorAll('.seat.available').forEach(seat => {
-                seat.addEventListener('click', function() {
-                    if (seat.classList.contains('available')) {
-                        seat.classList.remove('available');
-                        seat.classList.add('selected');
-                        selectedSeats.push(seat.getAttribute('data-id'));
-                    } else if (seat.classList.contains('selected')) {
-                        seat.classList.remove('selected');
-                        seat.classList.add('available');
-                        const seatIndex = selectedSeats.indexOf(seat.getAttribute('data-id'));
-                        if (seatIndex > -1) {
-                            selectedSeats.splice(seatIndex, 1);
-                        }
-                    }
-                    updateSelectedSeats();
-                });
+        const svg = d3.select("#stadium-layout");
+        const width = 800;
+        const height = 600;
+
+        const fieldWidth = 400;
+        const fieldHeight = 250;
+        const fieldX = (width - fieldWidth) / 2;
+        const fieldY = (height - fieldHeight) / 2;
+
+        function createSection(name, x, y, width, height, category, rotation = 0) {
+            const sectionGroup = svg.append("g")
+                .attr("transform", `translate(${x}, ${y}) rotate(${rotation}, ${width/2}, ${height/2})`);
+
+            sectionGroup.append("rect")
+                .attr("class", `section ${category}`)
+                .attr("width", width)
+                .attr("height", height);
+
+            sectionGroup.append("text")
+                .attr("class", "section-label")
+                .attr("x", width / 2)
+                .attr("y", height / 2)
+                .attr("text-anchor", "middle")
+                .attr("dominant-baseline", "central")
+                .text(name);
+
+            sectionGroup.on("click", function() {
+                console.log(`Section ${name} clicked`);
+                // Add booking logic here
             });
+        }
+
+        function createStandLabel(text, x, y, rotation = 0) {
+            svg.append("text")
+                .attr("class", "stand-label")
+                .attr("x", x)
+                .attr("y", y)
+                .attr("text-anchor", "middle")
+                .attr("transform", `rotate(${rotation}, ${x}, ${y})`)
+                .text(text);
+        }
+
+        // Create sections
+        const sectionWidth = 30;
+        const sectionHeight = 20;
+
+        // North Stand
+        for (let i = 0; i < 10; i++) {
+            createSection(`P${38 - i}`, fieldX + i * sectionWidth, fieldY - sectionHeight - 10, sectionWidth, sectionHeight, i < 8 ? "away-zone" : "category2");
+        }
+        createStandLabel("NORTH STAND", width / 2, fieldY - sectionHeight - 30);
+
+        // East Stand
+        for (let i = 0; i < 13; i++) {
+            createSection(`U${i + 1}`, fieldX + fieldWidth + 10, fieldY + i * sectionHeight, sectionWidth, sectionHeight, "category2");
+        }
+        for (let i = 0; i < 10; i++) {
+            createSection(`L${i + 1}`, fieldX + fieldWidth + 10 + sectionWidth, fieldY + (i + 1) * sectionHeight, sectionWidth, sectionHeight, "premium-gold");
+        }
+        createStandLabel("EAST STAND", fieldX + fieldWidth + 80, height / 2, 90);
+
+        // South Stand
+        for (let i = 0; i < 13; i++) {
+            createSection(`U${39 - i}`, fieldX + fieldWidth - i * sectionWidth, fieldY + fieldHeight + 10, sectionWidth, sectionHeight, "category2");
+        }
+        createStandLabel("SOUTH STAND", width / 2, fieldY + fieldHeight + sectionHeight + 30);
+
+        // West Stand
+        for (let i = 0; i < 11; i++) {
+            createSection(`P${i + 1}`, fieldX - sectionWidth - 10, fieldY + fieldHeight - i * sectionHeight, sectionWidth, sectionHeight, i < 3 ? "category2" : "category1");
+        }
+        for (let i = 0; i < 5; i++) {
+            createSection(`P${i + 12}`, fieldX - 2 * sectionWidth - 20, fieldY + fieldHeight - (i + 6) * sectionHeight, sectionWidth, sectionHeight, "category2");
+        }
+        createStandLabel("WEST STAND", fieldX - 80, height / 2, -90);
+
+        // Corner sections
+        createSection("U35", fieldX + fieldWidth + 10, fieldY - sectionHeight, sectionWidth, sectionHeight, "category2", -45);
+        createSection("U36", fieldX + fieldWidth + 10 + sectionWidth * 0.7, fieldY - sectionHeight * 1.7, sectionWidth, sectionHeight, "category2", -45);
+        createSection("U13", fieldX + fieldWidth + 10, fieldY + fieldHeight, sectionWidth, sectionHeight, "category2", 45);
+        createSection("U14", fieldX + fieldWidth + 10 + sectionWidth * 0.7, fieldY + fieldHeight + sectionHeight * 0.7, sectionWidth, sectionHeight, "category2", 45);
+        createSection("U15", fieldX + fieldWidth - sectionWidth, fieldY + fieldHeight + 10, sectionWidth, sectionHeight, "category2", 45);
+        createSection("U16", fieldX + fieldWidth - sectionWidth * 1.7, fieldY + fieldHeight + 10 + sectionHeight * 0.7, sectionWidth, sectionHeight, "category2", 45);
+        createSection("P16", fieldX - sectionWidth - 10, fieldY + fieldHeight, sectionWidth, sectionHeight, "category2", -45);
+        createSection("P18", fieldX - sectionWidth * 1.7 - 10, fieldY + fieldHeight - sectionHeight * 0.7, sectionWidth, sectionHeight, "category2", -45);
+
+        // Add field
+        svg.append("rect")
+            .attr("x", fieldX)
+            .attr("y", fieldY)
+            .attr("width", fieldWidth)
+            .attr("height", fieldHeight)
+            .attr("fill", "#8BC34A")
+            .attr("stroke", "white");
+
+        // Add field markings
+        svg.append("rect")
+            .attr("x", width / 2 - 1)
+            .attr("y", fieldY)
+            .attr("width", 2)
+            .attr("height", fieldHeight)
+            .attr("fill", "white");
+
+        svg.append("circle")
+            .attr("cx", width / 2)
+            .attr("cy", height / 2)
+            .attr("r", 40)
+            .attr("fill", "none")
+            .attr("stroke", "white");
+
+        // Add goal areas
+        const goalAreaWidth = 60;
+        const goalAreaHeight = 30;
+        svg.append("rect")
+            .attr("x", width / 2 - goalAreaWidth / 2)
+            .attr("y", fieldY)
+            .attr("width", goalAreaWidth)
+            .attr("height", goalAreaHeight)
+            .attr("fill", "none")
+            .attr("stroke", "white");
+        svg.append("rect")
+            .attr("x", width / 2 - goalAreaWidth / 2)
+            .attr("y", fieldY + fieldHeight - goalAreaHeight)
+            .attr("width", goalAreaWidth)
+            .attr("height", goalAreaHeight)
+            .attr("fill", "none")
+            .attr("stroke", "white");
+
+        // Add legend
+        const legendData = [
+            { category: "category1", label: "CATEGORY 1" },
+            { category: "category2", label: "CATEGORY 2" },
+            { category: "premium-gold", label: "PREMIUM GOLD" },
+            { category: "away-zone", label: "AWAY ZONE" }
+        ];
+
+        const legend = svg.append("g")
+            .attr("transform", `translate(${width - 120}, ${height - 100})`);
+
+        legendData.forEach((item, index) => {
+            const legendItem = legend.append("g")
+                .attr("transform", `translate(0, ${index * 20})`);
+
+            legendItem.append("rect")
+                .attr("width", 15)
+                .attr("height", 15)
+                .attr("class", `section ${item.category}`);
+
+            legendItem.append("text")
+                .attr("x", 20)
+                .attr("y", 12)
+                .attr("font-size", "10px")
+                .text(item.label);
         });
-        
     </script>
 </body>
 </html>

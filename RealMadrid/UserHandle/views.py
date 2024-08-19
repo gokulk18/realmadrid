@@ -40,6 +40,8 @@ from django.utils.dateparse import parse_datetime
 from django.utils.timezone import make_aware, get_current_timezone
 from datetime import datetime
 import pytz
+from django.utils import timezone
+import http
 
 logger = logging.getLogger(__name__)
 
@@ -707,25 +709,33 @@ def index(request):
     headers = {'X-Auth-Token': api_key}
 
     response = requests.get(url, headers=headers)
-    fixtures = response.json().get('matches', [])
+    all_fixtures = response.json().get('matches', [])
 
-    # Convert UTC dates to IST
+    # Convert UTC dates to IST and filter for upcoming events
     ist_timezone = pytz.timezone('Asia/Kolkata')
-    for fixture in fixtures:
+    current_time = timezone.now()
+    upcoming_fixtures = []
+
+    for fixture in all_fixtures:
         utc_date = parse_datetime(fixture['utcDate'])
         if utc_date:
             # Make the datetime aware if it's naive
             if utc_date.tzinfo is None:
                 utc_date = make_aware(utc_date)
-            # Convert to IST
-            ist_date = utc_date.astimezone(ist_timezone)
-            # Format the date as a string
-            fixture['ist_date'] = ist_date.strftime("%a, %b %d, %Y, %I:%M %p IST")
-        else:
-            fixture['ist_date'] = "Date not available"
+            
+            # Only process if the fixture is in the future
+            if utc_date > current_time:
+                # Convert to IST
+                ist_date = utc_date.astimezone(ist_timezone)
+                # Format the date as a string
+                fixture['ist_date'] = ist_date.strftime("%a, %b %d, %Y, %I:%M %p IST")
+                upcoming_fixtures.append(fixture)
+
+    # Sort upcoming fixtures by date
+    upcoming_fixtures.sort(key=lambda x: parse_datetime(x['utcDate']))
 
     # Add fixtures to the context
-    context['fixtures'] = fixtures
+    context['fixtures'] = upcoming_fixtures
 
     return render(request, 'index.html', context)
 
@@ -1036,3 +1046,99 @@ def check_email_availability(request):
                 return JsonResponse({'error': str(e)}, status=500)
     logger.warning("Invalid request received")
     return JsonResponse({'error': 'Invalid request'}, status=400)
+
+
+def previous_results(request):
+    api_key = 'dc93cd61f7a04a67be5652fc72195459'
+    url = 'https://api.football-data.org/v4/teams/86/matches'  # Real Madrid's ID is 86
+    headers = {'X-Auth-Token': api_key}
+
+    response = requests.get(url, headers=headers)
+    fixtures = response.json().get('matches', [])
+
+    # Convert UTC dates to IST and filter for completed matches
+    ist_timezone = pytz.timezone('Asia/Kolkata')
+    results = []
+    
+    for fixture in fixtures:
+        # We only want completed matches
+        if fixture['status'] == 'FINISHED':
+            utc_date = parse_datetime(fixture['utcDate'])
+            if utc_date:
+                if utc_date.tzinfo is None:
+                    utc_date = make_aware(utc_date)
+                ist_date = utc_date.astimezone(ist_timezone)
+                formatted_date = ist_date.strftime("%a, %b %d, %Y, %I:%M %p IST")
+            else:
+                formatted_date = "Date not available"
+
+            match_result = {
+                'date': formatted_date,
+                'home_team': fixture['homeTeam']['name'],
+                'away_team': fixture['awayTeam']['name'],
+                'home_score': fixture['score']['fullTime']['home'],
+                'away_score': fixture['score']['fullTime']['away'],
+                'competition': fixture['competition']['name'],
+                'matchday': fixture.get('matchday', 'N/A'),
+            }
+            results.append(match_result)
+
+    # Add results to the context
+    context = {
+        'real_madrid_results': results,
+    }
+
+    # Render the results in a template (assuming you have a template named 'previous_results.html')
+    return render(request, 'previous_results.html', context)
+
+def match_details(request, match_id):
+    api_key = 'YOUR_API_KEY'
+    url = f'https://api.football-data.org/v4/matches/{match_id}'
+    headers = {'X-Auth-Token': api_key}
+
+    response = requests.get(url, headers=headers)
+    match_data = response.json()
+
+    # Extract home and away stats
+    home_stats = match_data.get('homeTeam', {}).get('statistics', {})
+    away_stats = match_data.get('awayTeam', {}).get('statistics', {})
+
+    # Extract goal scorers
+    goal_scorers = []
+    for goal in match_data.get('goals', []):
+        scorer = {
+            'name': goal['scorer']['name'],
+            'minute': goal['minute'],
+            'team': 'home' if goal['team']['id'] == match_data['homeTeam']['id'] else 'away'
+        }
+        goal_scorers.append(scorer)
+
+    match_info = {
+        'date': formatted_date,
+        'competition': match_data['competition']['name'],
+        'home_team': match_data['homeTeam']['name'],
+        'away_team': match_data['awayTeam']['name'],
+        'home_score': match_data['score']['fullTime']['home'],
+        'away_score': match_data['score']['fullTime']['away'],
+        'home_stats': {
+            'possession': home_stats.get('ballPossession', 'N/A'),
+            'shots': home_stats.get('shots', 'N/A'),
+            'shots_on_target': home_stats.get('shotsOnGoal', 'N/A'),
+            'fouls': home_stats.get('fouls', 'N/A'),
+            'offsides': home_stats.get('offsides', 'N/A'),
+            'yellow_cards': home_stats.get('yellowCards', 'N/A'),
+            'red_cards': home_stats.get('redCards', 'N/A'),
+        },
+        'away_stats': {
+            'possession': away_stats.get('ballPossession', 'N/A'),
+            'shots': away_stats.get('shots', 'N/A'),
+            'shots_on_target': away_stats.get('shotsOnGoal', 'N/A'),
+            'fouls': away_stats.get('fouls', 'N/A'),
+            'offsides': away_stats.get('offsides', 'N/A'),
+            'yellow_cards': away_stats.get('yellowCards', 'N/A'),
+            'red_cards': away_stats.get('redCards', 'N/A'),
+        },
+        'goal_scorers': goal_scorers,
+    }
+
+    return render(request, 'match_details.html', {'match_info': match_info})
