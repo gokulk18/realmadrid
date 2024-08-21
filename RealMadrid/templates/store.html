@@ -357,14 +357,23 @@
                 </div>
             </div>
             
-            <div class="relative mt-6 max-w-lg mx-auto">
+            <form method="GET" action="{% url 'store' %}" class="relative mt-6 max-w-lg mx-auto">
                 <span class="absolute inset-y-0 left-0 pl-3 flex items-center">
                     <svg class="h-5 w-5 text-gray-500" viewBox="0 0 24 24" fill="none">
                         <path d="M21 21L15 15M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
                 </span>
-                <input class="w-full border rounded-md pl-10 pr-4 py-2 focus:border-blue-500 focus:outline-none focus:shadow-outline" type="text" placeholder="Search">
-            </div>
+                <input 
+                    class="w-full border rounded-md pl-10 pr-4 py-2 focus:border-blue-500 focus:outline-none focus:shadow-outline" 
+                    type="text" 
+                    name="q" 
+                    placeholder="Search for products" 
+                    value="{{ query|default:'' }}"
+                >
+                <button type="submit" class="absolute inset-y-0 right-0 flex items-center px-4 text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:bg-gray-200 rounded-r-md">
+                    Search
+                </button>
+            </form>
             
             <nav :class="isOpen ? '' : 'hidden'" class="sm:flex sm:justify-center sm:items-center mt-4">
                 <div class="flex flex-col sm:flex-row">
@@ -385,182 +394,242 @@
 
 
 
-    <div class="relative isolate overflow-hidden" style="padding-top: 0 !important; padding-bottom: 0 !important;z-index:1 !important">
-        <img src="{% static 'madrid_images/hero_banner_desktop__11_.png' %}">
-    </div>
-    <section class="bg-white dark:bg-gray-900" style="background: white;">
-        <div class="container px-6 py-10 mx-auto">
-    
-            <!-- Display Current Category and Subcategories -->
-                    <!-- Home Link -->
-                    <!-- Categories from Model -->
-            {% if current_category %}
-            <div class="flex items-center justify-between mb-6">
-                <div class="text-center flex-grow">
-                    <h1 class="text-3xl font-semibold text-gray-800 dark:text-[#43526E]">{{ current_category.category_name }}</h1>
-                </div>
-                <a href="{% url 'view_more_category' category_id=current_category.id %}" class="text-blue-600">
-                    View More
-                </a>                
-            </div>
-    
-                <!-- Display Subcategories for Current Category -->
-                <div class="flex items-center justify-center mb-6">
-                    <div class="flex items-center p-1 border border-blue-600 dark:border-blue-400 rounded-xl">
-                        {% for subcategory in subcategories %}
-                            <a href="?category={{ current_category.id }}&subcategory={{ subcategory.id }}"
-                               class="px-4 py-2 mx-2 text-sm font-medium
-                                      {% if selected_subcategory_id|stringformat:'s' == subcategory.id|stringformat:'s' %}
-                                          text-[#43526E] bg-blue-600
-                                      {% else %}
-                                          text-[#43526E] bg-transparent
-                                      {% endif %}
-                                      capitalize transition-colors duration-300 rounded-xl md:px-12 hover:bg-blue-600 hover:text-white">
-                                {{ subcategory.sub_category_name }}
+    {% if query %}
+        <!-- Search results section -->
+        <section class="bg-white dark:bg-gray-900" style="background: white;">
+            <div class="container px-6 py-10 mx-auto">
+                <h2 class="text-3xl font-semibold text-gray-800 dark:text-[#43526E] mb-6">Search Results for "{{ query }}"</h2>
+                
+                <div class="grid grid-cols-1 gap-8 mt-8 xl:mt-16 md:grid-cols-2 xl:grid-cols-3">
+                    {% for item in items %}
+                        <div class="bg-white dark:bg-gray-800 border border-gray-600 dark:border-gray-400 rounded-xl shadow-lg overflow-hidden flex flex-col">
+                            <a href="{% url 'product_single_view' category_id=item.category.id item_id=item.id %}">
+                                <img class="object-fill w-full h-66" src="{{ item.main_image.url }}" alt="{{ item.name }}">
                             </a>
-                        {% endfor %}
-                    </div>
-                </div>
-            {% endif %}
-    
-            <!-- Display Products for Selected Subcategory or Category -->
-            <div class="grid grid-cols-1 gap-8 mt-8 xl:mt-16 md:grid-cols-2 xl:grid-cols-3">
-                {% for item in items %}
-                    <div class="bg-white dark:bg-gray-800 border border-gray-600 dark:border-gray-400 rounded-xl shadow-lg overflow-hidden flex flex-col">
-                        <a href="{% url 'product_single_view' category_id=item.category.id item_id=item.id %}">
-                            <img class="object-fill w-full h-66" src="{{ item.main_image.url }}" alt="{{ item.name }}">
-                        </a>
-                        <div class="p-4 text-center flex-grow" style="background: white;">
-                            {% if item.category.category_name == 'Accessories' %}
-                                <p class="mb-2 text-sm font-medium text-[#43526E] dark:text-[#43526E]">Available Quantity:</p>
-                                <div class="flex justify-center flex-wrap mb-2">
-                                    {% for size in item.sizes.all %}
-                                        {% if size.quantity > 0 %}
+                            <div class="p-4 text-center flex-grow" style="background: white;">
+                                {% if item.category.category_name == 'Accessories' %}
+                                    <p class="mb-2 text-sm font-medium text-[#43526E] dark:text-[#43526E]">Available Quantity:</p>
+                                    <div class="flex justify-center flex-wrap mb-2">
+                                        {% for size in item.sizes.all %}
+                                            {% if size.quantity > 0 %}
+                                                <span class="px-3 py-1 mx-1 text-sm font-medium bg-white dark:bg-white rounded-full border border-blue-600 dark:border-blue-400"
+                                                    style="border-radius: 50px; border-color: #43526E;">
+                                                    {{ size.quantity }}
+                                                </span>
+                                            {% endif %}
+                                        {% empty %}
                                             <span class="px-3 py-1 mx-1 text-sm font-medium bg-white dark:bg-white rounded-full border border-blue-600 dark:border-blue-400"
                                                 style="border-radius: 50px; border-color: #43526E;">
-                                                {{ size.quantity }}
+                                                Out of stock
                                             </span>
-                                        {% endif %}
-                                    {% empty %}
-                                        <span class="px-3 py-1 mx-1 text-sm font-medium bg-white dark:bg-white rounded-full border border-blue-600 dark:border-blue-400"
-                                            style="border-radius: 50px; border-color: #43526E;">
-                                            Out of stock
-                                        </span>
-                                    {% endfor %}
-                                </div>
-                            {% elif item.sizes.exists %}
-                                <p class="mb-2 text-sm font-medium text-[#43526E] dark:text-[#43526E]">Available Sizes:</p>
-                                <div class="flex justify-center flex-wrap mb-2">
-                                    {% for size in item.sizes.all %}
-                                        {% if size.size %}
-                                            <span class="px-3 py-1 mx-1 text-sm font-medium bg-white dark:bg-white rounded-full border border-blue-600 dark:border-blue-400"
-                                                style="border-radius: 50px; border-color: #43526E;">
-                                                {{ size.size }}
-                                            </span>
-                                        {% endif %}
-                                    {% endfor %}
-                                </div>
-                            {% else %}
-                            <p class="mb-2 text-sm font-medium text-[#43526E] dark:text-red-700">Out of stock!</p>
-                            {% endif %}
-                            <h3 class="text-2xl font-semibold text-black capitalize dark:text-black">{{ item.name }}</h3>
-                            <p class="mt-2 text-black capitalize dark:text-black">{{ item.price }}</p>
-                        </div>
-                    </div>
-                {% empty %}
-                    <div class="text-center text-gray-500 dark:text-gray-300 col-span-full">
-                        No products available.
-                    </div>
-                {% endfor %}
-            </div>
-    
-            <!-- Display All Categories and their Products -->
-            <div class="mt-16">
-                {% for category, items in all_category_items.items %}
-                    {% if category != current_category %}
-                        <div class="mb-12">
-                            <div class="flex items-center justify-between mb-6">
-                                <div class="text-center flex-grow">
-                                    <!-- Use category.category_name instead of current_category.category_name -->
-                                    <h1 class="text-3xl font-semibold text-gray-800 dark:text-[#43526E]">{{ category.category_name }}</h1>
-                                </div>
-                                <a href="{% url 'view_more_category' category_id=category.id %}" class="text-blue-600">
-                                    View More
-                                </a>
-                            </div>
-                            <!-- Display Subcategories for Each Category -->
-                            <div class="flex items-center justify-center mb-6">
-                                <div class="flex items-center p-1 border border-blue-600 dark:border-blue-400 rounded-xl">
-                                    {% for subcategory in category.subcategory_set.all %}
-                                        <a href="?category={{ category.id }}&subcategory={{ subcategory.id }}"
-                                           class="px-4 py-2 mx-2 text-sm font-medium
-                                                  {% if selected_subcategory_id|stringformat:'s' == subcategory.id|stringformat:'s' %}
-                                                      text-[#43526E] bg-blue-600
-                                                  {% else %}
-                                                      text-[#43526E] bg-transparent
-                                                  {% endif %}
-                                                  capitalize transition-colors duration-300 rounded-xl md:px-12 hover:bg-blue-600 hover:text-white">
-                                            {{ subcategory.sub_category_name }}
-                                        </a>
-                                    {% endfor %}
-                                </div>
-                            </div>
-                            <div class="grid grid-cols-1 gap-8 mt-8 xl:mt-16 md:grid-cols-2 xl:grid-cols-3">
-                                {% for item in items %}
-                                    <div class="bg-white dark:bg-gray-800 border border-gray-600 dark:border-gray-400 rounded-xl shadow-lg overflow-hidden flex flex-col">
-                                        <a href="{% url 'product_single_view' category_id=category.id item_id=item.id %}">
-                                            <img class="object-fill w-full h-66" src="{{ item.main_image.url }}" alt="{{ item.name }}">
-                                        </a>
-
-
-                                         <div class="p-4 text-center flex-grow" style="background: white;">
-                            {% if item.category.category_name == 'Accessories' %}
-                                <p class="mb-2 text-sm font-medium text-[#43526E] dark:text-[#43526E]">Available Quantity:</p>
-                                <div class="flex justify-center flex-wrap mb-2">
-                                    {% for size in item.sizes.all %}
-                                        {% if size.quantity > 0 %}
-                                            <span class="px-3 py-1 mx-1 text-sm font-medium bg-white dark:bg-white rounded-full border border-blue-600 dark:border-blue-400"
-                                                style="border-radius: 50px; border-color: #43526E;">
-                                                {{ size.quantity }}
-                                            </span>
-                                        {% endif %}
-                                    {% empty %}
-                                        <span class="px-3 py-1 mx-1 text-sm font-medium bg-white dark:bg-white rounded-full border border-blue-600 dark:border-blue-400"
-                                            style="border-radius: 50px; border-color: #43526E;">
-                                            Out of stock
-                                        </span>
-                                    {% endfor %}
-                                </div>
-                            {% elif item.sizes.exists %}
-                                <p class="mb-2 text-sm font-medium text-[#43526E] dark:text-[#43526E]">Available Sizes:</p>
-                                <div class="flex justify-center flex-wrap mb-2">
-                                    {% for size in item.sizes.all %}
-                                        {% if size.size %}
-                                            <span class="px-3 py-1 mx-1 text-sm font-medium bg-white dark:bg-white rounded-full border border-blue-600 dark:border-blue-400"
-                                                style="border-radius: 50px; border-color: #43526E;">
-                                                {{ size.size }}
-                                            </span>
-                                        {% endif %}
-                                    {% endfor %}
-                                </div>
-                            {% else %}
+                                        {% endfor %}
+                                    </div>
+                                {% elif item.sizes.exists %}
+                                    <p class="mb-2 text-sm font-medium text-[#43526E] dark:text-[#43526E]">Available Sizes:</p>
+                                    <div class="flex justify-center flex-wrap mb-2">
+                                        {% for size in item.sizes.all %}
+                                            {% if size.size %}
+                                                <span class="px-3 py-1 mx-1 text-sm font-medium bg-white dark:bg-white rounded-full border border-blue-600 dark:border-blue-400"
+                                                    style="border-radius: 50px; border-color: #43526E;">
+                                                    {{ size.size }}
+                                                </span>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
                                 <p class="mb-2 text-sm font-medium text-[#43526E] dark:text-red-700">Out of stock!</p>
-                            {% endif %}
-                            <h3 class="text-2xl font-semibold text-black capitalize dark:text-black">{{ item.name }}</h3>
-                            <p class="mt-2 text-black capitalize dark:text-black">{{ item.price }}</p>
-                        </div>
-                                    </div>
-                                {% empty %}
-                                    <div class="text-center text-gray-500 dark:text-gray-300 col-span-full">
-                                        No products available.
-                                    </div>
-                                {% endfor %}
+                                {% endif %}
+                                <h3 class="text-2xl font-semibold text-black capitalize dark:text-black">{{ item.name }}</h3>
+                                <p class="mt-2 text-black capitalize dark:text-black">{{ item.price }}</p>
                             </div>
                         </div>
-                    {% endif %}
-                {% endfor %}
+                    {% empty %}
+                        <div class="text-center text-gray-500 dark:text-gray-300 col-span-full">
+                            No products found matching your search.
+                        </div>
+                    {% endfor %}
+                </div>
             </div>
-    
+        </section>
+    {% else %}
+        <!-- Banner and regular store content -->
+        <div class="relative isolate overflow-hidden" style="padding-top: 0 !important; padding-bottom: 0 !important;z-index:1 !important">
+            <img src="{% static 'madrid_images/hero_banner_desktop__11_.png' %}">
         </div>
-    </section>
+        
+        <section class="bg-white dark:bg-gray-900" style="background: white;">
+            <div class="container px-6 py-10 mx-auto">
+                <!-- Display Current Category and Subcategories -->
+                        <!-- Home Link -->
+                        <!-- Categories from Model -->
+                {% if current_category %}
+                <div class="flex items-center justify-between mb-6">
+                    <div class="text-center flex-grow">
+                        <h1 class="text-3xl font-semibold text-gray-800 dark:text-[#43526E]">{{ current_category.category_name }}</h1>
+                    </div>
+                    <a href="{% url 'view_more_category' category_id=current_category.id %}" class="text-blue-600">
+                        View More
+                    </a>                
+                </div>
+        
+                    <!-- Display Subcategories for Current Category -->
+                    <div class="flex items-center justify-center mb-6">
+                        <div class="flex items-center p-1 border border-blue-600 dark:border-blue-400 rounded-xl">
+                            {% for subcategory in subcategories %}
+                                <a href="?category={{ current_category.id }}&subcategory={{ subcategory.id }}"
+                                   class="px-4 py-2 mx-2 text-sm font-medium
+                                          {% if selected_subcategory_id|stringformat:'s' == subcategory.id|stringformat:'s' %}
+                                              text-[#43526E] bg-blue-600
+                                          {% else %}
+                                              text-[#43526E] bg-transparent
+                                          {% endif %}
+                                          capitalize transition-colors duration-300 rounded-xl md:px-12 hover:bg-blue-600 hover:text-white">
+                                    {{ subcategory.sub_category_name }}
+                                </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+        
+                <!-- Display Products for Selected Subcategory or Category -->
+                <div class="grid grid-cols-1 gap-8 mt-8 xl:mt-16 md:grid-cols-2 xl:grid-cols-3">
+                    {% for item in items %}
+                        <div class="bg-white dark:bg-gray-800 border border-gray-600 dark:border-gray-400 rounded-xl shadow-lg overflow-hidden flex flex-col">
+                            <a href="{% url 'product_single_view' category_id=item.category.id item_id=item.id %}">
+                                <img class="object-fill w-full h-66" src="{{ item.main_image.url }}" alt="{{ item.name }}">
+                            </a>
+                            <div class="p-4 text-center flex-grow" style="background: white;">
+                                {% if item.category.category_name == 'Accessories' %}
+                                    <p class="mb-2 text-sm font-medium text-[#43526E] dark:text-[#43526E]">Available Quantity:</p>
+                                    <div class="flex justify-center flex-wrap mb-2">
+                                        {% for size in item.sizes.all %}
+                                            {% if size.quantity > 0 %}
+                                                <span class="px-3 py-1 mx-1 text-sm font-medium bg-white dark:bg-white rounded-full border border-blue-600 dark:border-blue-400"
+                                                    style="border-radius: 50px; border-color: #43526E;">
+                                                    {{ size.quantity }}
+                                                </span>
+                                            {% endif %}
+                                        {% empty %}
+                                            <span class="px-3 py-1 mx-1 text-sm font-medium bg-white dark:bg-white rounded-full border border-blue-600 dark:border-blue-400"
+                                                style="border-radius: 50px; border-color: #43526E;">
+                                                Out of stock
+                                            </span>
+                                        {% endfor %}
+                                    </div>
+                                {% elif item.sizes.exists %}
+                                    <p class="mb-2 text-sm font-medium text-[#43526E] dark:text-[#43526E]">Available Sizes:</p>
+                                    <div class="flex justify-center flex-wrap mb-2">
+                                        {% for size in item.sizes.all %}
+                                            {% if size.size %}
+                                                <span class="px-3 py-1 mx-1 text-sm font-medium bg-white dark:bg-white rounded-full border border-blue-600 dark:border-blue-400"
+                                                    style="border-radius: 50px; border-color: #43526E;">
+                                                    {{ size.size }}
+                                                </span>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                <p class="mb-2 text-sm font-medium text-[#43526E] dark:text-red-700">Out of stock!</p>
+                                {% endif %}
+                                <h3 class="text-2xl font-semibold text-black capitalize dark:text-black">{{ item.name }}</h3>
+                                <p class="mt-2 text-black capitalize dark:text-black">{{ item.price }}</p>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="text-center text-gray-500 dark:text-gray-300 col-span-full">
+                            No products available.
+                        </div>
+                    {% endfor %}
+                </div>
+        
+                <!-- Display All Categories and their Products -->
+                <div class="mt-16">
+                    {% for category, items in all_category_items.items %}
+                        {% if category != current_category %}
+                            <div class="mb-12">
+                                <div class="flex items-center justify-between mb-6">
+                                    <div class="text-center flex-grow">
+                                        <!-- Use category.category_name instead of current_category.category_name -->
+                                        <h1 class="text-3xl font-semibold text-gray-800 dark:text-[#43526E]">{{ category.category_name }}</h1>
+                                    </div>
+                                    <a href="{% url 'view_more_category' category_id=category.id %}" class="text-blue-600">
+                                        View More
+                                    </a>
+                                </div>
+                                <!-- Display Subcategories for Each Category -->
+                                <div class="flex items-center justify-center mb-6">
+                                    <div class="flex items-center p-1 border border-blue-600 dark:border-blue-400 rounded-xl">
+                                        {% for subcategory in category.subcategory_set.all %}
+                                            <a href="?category={{ category.id }}&subcategory={{ subcategory.id }}"
+                                               class="px-4 py-2 mx-2 text-sm font-medium
+                                                      {% if selected_subcategory_id|stringformat:'s' == subcategory.id|stringformat:'s' %}
+                                                          text-[#43526E] bg-blue-600
+                                                      {% else %}
+                                                          text-[#43526E] bg-transparent
+                                                      {% endif %}
+                                                      capitalize transition-colors duration-300 rounded-xl md:px-12 hover:bg-blue-600 hover:text-white">
+                                                {{ subcategory.sub_category_name }}
+                                            </a>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-1 gap-8 mt-8 xl:mt-16 md:grid-cols-2 xl:grid-cols-3">
+                                    {% for item in items %}
+                                        <div class="bg-white dark:bg-gray-800 border border-gray-600 dark:border-gray-400 rounded-xl shadow-lg overflow-hidden flex flex-col">
+                                            <a href="{% url 'product_single_view' category_id=category.id item_id=item.id %}">
+                                                <img class="object-fill w-full h-66" src="{{ item.main_image.url }}" alt="{{ item.name }}">
+                                            </a>
+
+
+                                             <div class="p-4 text-center flex-grow" style="background: white;">
+                                {% if item.category.category_name == 'Accessories' %}
+                                    <p class="mb-2 text-sm font-medium text-[#43526E] dark:text-[#43526E]">Available Quantity:</p>
+                                    <div class="flex justify-center flex-wrap mb-2">
+                                        {% for size in item.sizes.all %}
+                                            {% if size.quantity > 0 %}
+                                                <span class="px-3 py-1 mx-1 text-sm font-medium bg-white dark:bg-white rounded-full border border-blue-600 dark:border-blue-400"
+                                                    style="border-radius: 50px; border-color: #43526E;">
+                                                    {{ size.quantity }}
+                                                </span>
+                                            {% endif %}
+                                        {% empty %}
+                                            <span class="px-3 py-1 mx-1 text-sm font-medium bg-white dark:bg-white rounded-full border border-blue-600 dark:border-blue-400"
+                                                style="border-radius: 50px; border-color: #43526E;">
+                                                Out of stock
+                                            </span>
+                                        {% endfor %}
+                                    </div>
+                                {% elif item.sizes.exists %}
+                                    <p class="mb-2 text-sm font-medium text-[#43526E] dark:text-[#43526E]">Available Sizes:</p>
+                                    <div class="flex justify-center flex-wrap mb-2">
+                                        {% for size in item.sizes.all %}
+                                            {% if size.size %}
+                                                <span class="px-3 py-1 mx-1 text-sm font-medium bg-white dark:bg-white rounded-full border border-blue-600 dark:border-blue-400"
+                                                    style="border-radius: 50px; border-color: #43526E;">
+                                                    {{ size.size }}
+                                                </span>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <p class="mb-2 text-sm font-medium text-[#43526E] dark:text-red-700">Out of stock!</p>
+                                {% endif %}
+                                <h3 class="text-2xl font-semibold text-black capitalize dark:text-black">{{ item.name }}</h3>
+                                <p class="mt-2 text-black capitalize dark:text-black">{{ item.price }}</p>
+                            </div>
+                                        </div>
+                                    {% empty %}
+                                        <div class="text-center text-gray-500 dark:text-gray-300 col-span-full">
+                                            No products available.
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+        
+            </div>
+        </section>
+    {% endif %}
     
