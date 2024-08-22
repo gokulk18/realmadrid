@@ -193,14 +193,20 @@
                         },
                         body: JSON.stringify({
                             item_id: item.id,
-                            quantity_change: change
+                            quantity_change: change,
+                            size: item.size // Include the size in the request
                         })
                     });
 
                     if (response.ok) {
                         const data = await response.json();
                         if (data.success) {
-                            await this.fetchCartItems();
+                            if (data.available) {
+                                await this.fetchCartItems();
+                            } else {
+                                // Item is out of stock
+                                alert(data.message || 'This item is out of stock.');
+                            }
                         } else {
                             console.error('Error updating quantity:', data.error);
                             alert(data.error);

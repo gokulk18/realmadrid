@@ -62,6 +62,15 @@ class Item(models.Model):
     def __str__(self):
         return self.name
 
+    def get_sizes_and_quantities(self):
+        size_quantities = self.sizes.all()
+        if size_quantities.exists():
+            return [(sq.size, sq.quantity) for sq in size_quantities]
+        else:
+            # If no sizes, return a single tuple with None as size and total quantity
+            total_quantity = self.sizes.aggregate(total=models.Sum('quantity'))['total'] or 0
+            return [(None, total_quantity)]
+
 class ItemSize(models.Model):
     item = models.ForeignKey(Item, related_name='sizes', on_delete=models.CASCADE)
     size = models.CharField(max_length=50, null=True, blank=True)
@@ -71,7 +80,7 @@ class ItemSize(models.Model):
         unique_together = ('item', 'size')
 
     def __str__(self):
-        return f"{self.item.name} - {self.size}"
+        return f"{self.item.name} - {self.size or 'No Size'}: {self.quantity}"
 
 class ItemImage(models.Model):
     item = models.ForeignKey(Item, related_name='additional_images', on_delete=models.CASCADE)

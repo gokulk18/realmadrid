@@ -665,6 +665,8 @@ def store(request):
 
     return render(request, 'store.html', context)
 
+
+
 def wishlist(request):
     return render(request, 'wishlist.html')
 
@@ -676,6 +678,9 @@ def admin_edit_item(request, item_id):
     item = get_object_or_404(Item, id=item_id)
     categories = Category.objects.all()
     subcategories = SubCategory.objects.filter(category=item.category)  # Filter subcategories based on the item's category
+
+    # Fetch sizes and quantities
+    item.sizes_quantity_pairs = item.get_sizes_and_quantities()
 
     if request.method == 'POST':
         item.name = request.POST.get('name')
@@ -733,7 +738,6 @@ def product_single_view(request, category_id, item_id):
 
     context = {
         'categories': categories,  # Add this line to pass categories to the template
-
         'category': category,
         'item': item,
         'sizes_with_stock': sizes_with_stock,

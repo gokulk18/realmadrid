@@ -499,92 +499,109 @@
                 </button>
             </div>
         </div>
+
+
+
+        
         <div class="p-8">
             <div class="uppercase tracking-wide text-sm text-indigo-500 font-semibold">{{ category.category_name }}</div>
             <h1 class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl">{{ item.name }}</h1>
-            <p class="mt-4 text-xl text-gray-500">€{{ item.price }}</p>
             
             <div class="mt-6">
-                <h2 class="text-lg font-medium text-gray-900">Description</h2>
-                <p class="mt-2 text-gray-600">{{ item.description }}</p>
+                <h2 class="text-lg font-medium text-gray-900 mb-2">Product Description</h2>
+                <p class="text-gray-600">{{ item.description }}</p>
             </div>
+            
+            <p class="mt-4 text-xl text-black-500">€{{ item.price }}</p>
+            
+          
 
-            <div class="mt-6" x-data="{ selectedSize: null, quantity: 1 }">
-                {% if total_quantity < 5 and total_quantity > 0 %}
-                    <h2 class="text-lg font-medium text-gray-900">Availability</h2>
-                    <p class="mt-2 text-sm text-gray-600">Only {{ total_quantity }} left in stock</p>
+            <div class="mt-6" x-data="{ 
+                selectedSize: null, 
+                quantity: 1, 
+                sizeQuantities: {
+                    {% for size in sizes_with_stock %}
+                        '{{ size.size }}': {{ size.quantity }},
+                    {% endfor %}
+                },
+                get maxQuantity() {
+                    return this.selectedSize ? this.sizeQuantities[this.selectedSize] : {{ total_quantity }};
+                }
+            }">
+                {% if category.category_name != 'Accessories' %}
+                    <h2 class="text-lg font-medium text-gray-900 mb-2">Available Sizes</h2>
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        {% for size in sizes_with_stock %}
+                            <button 
+                                @click="selectedSize = selectedSize === '{{ size.size }}' ? null : '{{ size.size }}'; quantity = 1;"
+                                class="px-3 py-1 text-sm font-medium bg-gray-200 rounded-full hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+                                :class="{ 'bg-blue-500 text-white': selectedSize === '{{ size.size }}' }"
+                            >
+                                {{ size.size }}
+                            </button>
+                        {% endfor %}
+                    </div>
+                    <div x-show="selectedSize" class="mt-2">
+                        <p x-show="sizeQuantities[selectedSize] < 5" class="text-red-500 text-sm">
+                            Only <span x-text="sizeQuantities[selectedSize]"></span> left in stock!
+                        </p>
+                    </div>
+                {% else %}
+                    <input type="hidden" x-init="selectedSize = 'one-size'" x-model="selectedSize">
                 {% endif %}
 
-                <div class="mt-2">
-                    {% if sizes_with_stock|length > 1 %}
-                        <h2 class="text-lg font-medium text-gray-900 mb-2">Select Size</h2>
-                        <div class="flex flex-wrap gap-2 mb-4">
-                            {% for size in sizes_with_stock %}
-                                <button 
-                                    @click="selectedSize = selectedSize === '{{ size.size }}' ? null : '{{ size.size }}'"
-                                    class="px-3 py-1 text-sm font-medium bg-gray-200 rounded-full hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
-                                    :class="{ 'bg-blue-500 text-white': selectedSize === '{{ size.size }}' }"
-                                >
-                                    {{ size.size }}
-                                </button>
-                            {% endfor %}
-                        </div>
-                    {% elif sizes_with_stock|length == 1 %}
-                        <input type="hidden" x-init="selectedSize = '{{ sizes_with_stock.0.size }}'" x-model="selectedSize">
-                    {% else %}
-                        <input type="hidden" x-init="selectedSize = 'one-size'" x-model="selectedSize">
-                    {% endif %}
+                <div x-show="selectedSize || '{{ category.category_name }}' === 'Accessories'" class="mt-4">
+                    <label for="quantity" class="block text-sm font-medium text-gray-700 mb-2">Quantity:</label>
+                    <div class="flex items-center border border-gray-300 rounded-md w-32">
+                        <button type="button" @click="quantity = Math.max(1, quantity - 1)" class="px-3 py-1 text-gray-600 hover:text-gray-800 focus:outline-none">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
+                            </svg>
+                        </button>
+                        <input type="text" id="quantity" name="quantity" min="1" x-model.number="quantity"
+                               class="w-full text-center border-none focus:ring-0 focus:outline-none"
+                               @input="quantity = Math.min(Math.max(1, quantity), maxQuantity)">
+                        <button type="button" @click="quantity = Math.min(maxQuantity, quantity + 1)" class="px-3 py-1 text-gray-600 hover:text-gray-800 focus:outline-none">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
 
+                {% if total_quantity == 0 %}
+                <p class="text-red-500 mt-2 font-bold">Out of Stock</p>
+            {% elif total_quantity < 5 %}
+                <p class="text-red-500 mt-2">Only {{ total_quantity }} left in stock!</p>
+            {% endif %}
+
+            <div class="mt-4 flex items-center space-x-2">
                 {% if total_quantity > 0 %}
-                    <div class="mt-4">
-                        <label for="quantity" class="block text-sm font-medium text-gray-700 mb-2">Quantity:</label>
-                        <div class="flex items-center border border-gray-300 rounded-md w-32">
-                            <button type="button" @click="quantity = Math.max(1, quantity - 1)" class="px-3 py-1 text-gray-600 hover:text-gray-800 focus:outline-none">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
-                                </svg>
-                            </button>
-                            <input type="text" id="quantity" name="quantity" min="1" max="{{ total_quantity }}" x-model.number="quantity"
-                                   class="w-full text-center border-none focus:ring-0 focus:outline-none"
-                                   @input="quantity = Math.min(Math.max(1, quantity), {{ total_quantity }})">
-                            <button type="button" @click="quantity = Math.min({{ total_quantity }}, quantity + 1)" class="px-3 py-1 text-gray-600 hover:text-gray-800 focus:outline-none">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-            
-                    <div class="mt-4 flex items-center space-x-2">
-                        <form method="post" action="{% url 'add_to_cart' %}" class="inline-block">
-                            {% csrf_token %}
-                            <input type="hidden" name="item_id" value="{{ item.id }}">
-                            <input type="hidden" name="size" x-bind:value="selectedSize">
-                            <input type="hidden" name="quantity" x-bind:value="quantity">
-                            <button type="submit" 
-                                    class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
-                                    :disabled="({% if sizes_with_stock|length > 1 %}!selectedSize || {% endif %}quantity < 1)"
-                                    :class="{ 'opacity-50 cursor-not-allowed': ({% if sizes_with_stock|length > 1 %}!selectedSize || {% endif %}quantity < 1) }">
-                                Add to Cart
-                            </button>
-                        </form>
-                        <form method="post" action="{% url 'add_to_wishlist' %}" class="inline-block">
-                            {% csrf_token %}
-                            <input type="hidden" name="item_id" value="{{ item.id }}">
-                            <button type="submit" 
-                                    class="px-4 py-2 bg-yellow-400 text-gray-800 rounded hover:bg-yellow-500 focus:outline-none focus:ring-2 focus:ring-yellow-300 focus:ring-opacity-50 flex items-center">
-                                    <span class="material-symbols-outlined">
-                                        bookmark
-                                        </span>                                Add to Wishlist
-                            </button>
-                        </form> 
-                    </div>
-                    {% if sizes_with_stock|length > 1 %}
-                        <p x-show="!selectedSize" class="text-red-500 mt-2">Please select a size before adding to cart.</p>
-                    {% endif %}
-                {% else %}
-                    <p class="text-red-500 mt-4">Out of stock</p>
+                <form method="post" action="{% url 'add_to_cart' %}" class="inline-block">
+                    {% csrf_token %}
+                    <input type="hidden" name="item_id" value="{{ item.id }}">
+                    <input type="hidden" name="size" x-bind:value="selectedSize">
+                    <input type="hidden" name="quantity" x-bind:value="quantity">
+                    <button type="submit" 
+                            class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+                            :disabled="{% if category.category_name != 'Accessories' %}!selectedSize || {% endif %}quantity < 1"
+                            :class="{ 'opacity-50 cursor-not-allowed': {% if category.category_name != 'Accessories' %}!selectedSize || {% endif %}quantity < 1 }">
+                        Add to Cart
+                    </button>
+                </form>
+                {% endif %}
+                <form method="post" action="{% url 'add_to_wishlist' %}" class="inline-block">
+                    {% csrf_token %}
+                    <input type="hidden" name="item_id" value="{{ item.id }}">
+                    <button type="submit" 
+                            class="px-4 py-2 bg-yellow-400 text-gray-800 rounded hover:bg-yellow-500 focus:outline-none focus:ring-2 focus:ring-yellow-300 focus:ring-opacity-50 flex items-center">
+                            <span class="material-symbols-outlined">
+                                bookmark
+                                </span>                                Add to Wishlist
+                    </button>
+                </form> 
+            </div>
+                {% if category.category_name != 'Accessories' %}
                 {% endif %}
             </div>
         </div>
