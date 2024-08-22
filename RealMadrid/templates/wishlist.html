@@ -44,7 +44,7 @@
                                         <div>
                                             <h2 class="text-xl font-bold text-gray-900 mb-2">{{ item.wishlist_item.item.name }}</h2>
                                             <p class="text-sm text-gray-600 mb-4">{{ item.wishlist_item.item.category.category_name }}</p>
-                                            <p class="text-lg font-semibold text-gray-800">{{ item.wishlist_item.item.price }} ₭</p>
+                                            <p class="text-lg font-semibold text-gray-800">&#8377;{{ item.wishlist_item.item.price }} </p>
                                         </div>
                                         <div class="flex justify-between items-center mt-4">
                                             <a href="{% url 'product_single_view' category_id=item.wishlist_item.item.category.id item_id=item.wishlist_item.item.id %}" 
@@ -84,8 +84,8 @@
                         <div class="flex justify-between items-end mb-6">
                             <p class="text-lg font-semibold text-gray-800">Wishlist Value</p>
                             <div class="text-right">
-                                <p class="text-2xl font-bold text-gray-900">{{ total_value }} ₭</p>
-                                <p class="text-sm text-gray-600">total value of items</p>
+                                <p class="text-2xl font-bold text-gray-900">&#8377;{{ total_value }} </p>
+                                {% comment %} <p class="text-sm text-gray-600">total value of items</p> {% endcomment %}
                             </div>
                         </div>
                         <a href="{% url 'store' %}" class="block w-full bg-blue-500 text-white text-center py-3 rounded-md hover:bg-blue-600 transition duration-300 ease-in-out">
@@ -98,3 +98,29 @@
     </div>
 </body>
 </html>
+<script>
+    function cartData() {
+        return {
+            cartItems: [],
+            async fetchCartItems() {
+                try {
+                    const response = await fetch('/api/cart-items/');
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch cart items');
+                    }
+                    const data = await response.json();
+                    console.log('Cart data:', data);
+                    this.cartItems = data;
+                } catch (error) {
+                    console.error('Error fetching cart items:', error);
+                }
+            },
+            get cartTotal() {
+                return this.cartItems.reduce((total, item) => total + item.total, 0);
+            },
+            init() {
+                this.fetchCartItems();
+            }
+        }
+    }
+</script>

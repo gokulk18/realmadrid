@@ -1,4 +1,4 @@
-{% load static%}
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,9 +6,43 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Real Madrid Official Store</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <style>
+                .custom-login-alert {
+                background-color: #ffe5e5;
+                border-left: 5px solid #ff4d4d;
+                color: #cc0000;
+                padding: 15px;
+                margin-bottom: 20px;
+                border-radius: 4px;
+                position: relative;
+                font-weight: bold;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+        
+            .custom-login-alert::before {
+                content: '\f071';  /* FontAwesome exclamation triangle icon */
+                font-family: 'FontAwesome';
+                margin-right: 10px;
+                font-size: 18px;
+            }
+        
+            .custom-login-alert .close {
+                position: absolute;
+                top: 50%;
+                right: 10px;
+                transform: translateY(-50%);
+                color: #cc0000;
+                opacity: 0.7;
+            }
+        
+            .custom-login-alert .close:hover {
+                opacity: 1;
+            }
        a{
         text-decoration:none !important;
        }
@@ -23,23 +57,23 @@
     }
 
     .search-bar {
-        border: 2px solid #d1d5db; /* Set a visible border color */
+        border: 2px solid #d1d5db;
         background: white;
         height: 40px;
         padding: 0 16px;
         border-radius: 8px;
         font-size: 14px;
-        width: 300px; /* Adjust the width as needed */
+        width: 300px;
         position: relative;
-        outline: none; /* Remove default outline on focus */
+        outline: none;
     }
 
     .search-bar:focus {
-        border-color: #a1a1a1; /* Optional: Change border color on focus */
+        border-color: #a1a1a1;
     }
 
     .search-bar::placeholder {
-        color: #9ca3af; /* Placeholder text color */
+        color: #9ca3af;
     }
 
     .search-container button {
@@ -54,64 +88,100 @@
     }
 
     .search-container .material-symbols-outlined {
-        font-size: 24px; /* Adjust icon size as needed */
+        font-size: 24px;
     }
+    .card-link {
+        display: block;
+        text-decoration: none; /* Remove underline from links */
+        color: inherit; /* Ensure text color is inherited */
+      }
+    
+      .card {
+        position: relative;
+        background: white;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
+    
+      .card:hover {
+        transform: translateY(-5px); /* Lift the card on hover */
+        box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2); /* Enhance shadow on hover */
+      }
+    
+      .card::before {
+        content: '';
+        position: absolute;
+        bottom: -20px; /* Adjust this value to position the shadow correctly */
+        left: 0;
+        right: 0;
+        height: 20px; /* Adjust this value based on the shadow intensity you want */
+        background: linear-gradient(to top, rgba(204, 153, 255, 0.5), transparent);
+        z-index: -1;
+        border-radius: 8px;
+      }
+
+      .cart-sidebar {
+        position: fixed;
+        top: 0;
+        right: -400px;
+        bottom: 0;
+        width: 400px;
+        background-color: white;
+        box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+        transition: right 0.3s ease-out;
+        z-index: 1000;
+        border-top-left-radius: 20px;    /* Add this line */
+        border-bottom-left-radius: 20px; /* Add this line */
+        overflow: hidden;                /* Add this line to ensure content doesn't overflow the rounded corners */
+    }
+
+    .cart-sidebar.open {
+        right: 0;
+    }
+
+      .cart-item-image {
+        width: 80px;
+        height: 100px;
+        object-fit: cover;
+      }
+
+      .quantity-control {
+        display: flex;
+        align-items: center;
+        border: 1px solid #e2e8f0;
+        border-radius: 4px;
+      }
+
+      .quantity-control button {
+        padding: 0 8px;
+        background-color: #f7fafc;
+        border: none;
+        font-size: 18px;
+      }
+
+      .quantity-control span {
+        padding: 0 12px;
+        font-size: 14px;
+      }
+
+      .complete-order-btn {
+        background-color: #6366f1;
+        color: white;
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-weight: bold;
+      }
+
+      .keep-buying-btn {
+        color: #6366f1;
+        font-weight: bold;
+      }
+
+      [x-cloak] { display: none !important; }
     </style>
-    <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
-    <style>
-        .cart-sidebar {
-            position: fixed;
-            top: 0;
-            right: -400px;
-            bottom: 0;
-            width: 400px;
-            background-color: white;
-            box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
-            transition: right 0.3s ease-out;
-            z-index: 1000;
-            border-top-left-radius: 20px;
-            border-bottom-left-radius: 20px;
-            overflow: hidden;
-        }
 
-        .cart-sidebar.open {
-            right: 0;
-        }
-
-        .cart-item {
-            border-radius: 10px;
-            overflow: hidden;
-            margin-bottom: 1rem;
-            padding: 1rem;
-            background-color: #f9f9f9;
-        }
-
-        .cart-item-image {
-            border-radius: 8px;
-            width: 80px;
-            height: 100px;
-            object-fit: cover;
-        }
-
-        .quantity-control {
-            display: flex;
-            align-items: center;
-            border: 1px solid #e2e8f0;
-            border-radius: 4px;
-        }
-
-        .quantity-control button {
-            padding: 0 8px;
-            background-color: #f7fafc;
-            border: none;
-            font-size: 18px;
-        }
-
-        .quantity-control span {
-            padding: 0 12px;
-            font-size: 14px;
-        }
-    </style>
     <script>
         function cartData() {
             return {
@@ -130,7 +200,11 @@
                             throw new Error('Failed to fetch cart items');
                         }
                         const data = await response.json();
-                        this.cartItems = data;
+                        this.cartItems = data.map(item => ({
+                            ...item,
+                            outOfStock: item.available_quantity === 0,
+                            quantityExceeded: item.quantity > item.available_quantity
+                        }));
                     } catch (error) {
                         console.error('Error fetching cart items:', error);
                     }
@@ -185,6 +259,11 @@
                 async updateQuantity(item, change) {
                     try {
                         const csrftoken = getCookie('csrftoken');
+                        const newQuantity = item.quantity + change;
+                        if (newQuantity > item.available_quantity) {
+                            alert(`Sorry, only ${item.available_quantity} items are available.`);
+                            return;
+                        }
                         const response = await fetch('/update-cart-quantity/', {
                             method: 'POST',
                             headers: {
@@ -215,11 +294,22 @@
                           
                 
                 get cartTotal() {
-                    return this.cartItems.reduce((total, item) => total + item.price * item.quantity, 0).toFixed(2);
+                    return this.cartItems
+                        .filter(item => !item.outOfStock)
+                        .reduce((total, item) => total + item.price * item.quantity, 0)
+                        .toFixed(2);
+                },
+                get availableItemsCount() {
+                    return this.cartItems.filter(item => !item.outOfStock).length;
                 },
                 checkout() {
-                    // Implement checkout logic here
-                    console.log('Proceeding to checkout');
+                    const availableItems = this.cartItems.filter(item => !item.outOfStock);
+                    if (availableItems.length === 0) {
+                        alert('There are no available items in your cart to checkout.');
+                        return;
+                    }
+                    // Implement checkout logic here with availableItems
+                    console.log('Proceeding to checkout with available items:', availableItems);
                 }
             }
         }
@@ -240,164 +330,144 @@
         }
         </script>
 
+
+
+
 </head>
-<script>
-    let lastScrollTop = 0;
-    const navbar = document.getElementById('navbar');
-
-    window.addEventListener('scroll', () => {
-        let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-
-        if (scrollTop > lastScrollTop) {
-            // Scroll down
-            navbar.style.transform = 'translateY(-100%)';
-        } else {
-            // Scroll up
-            navbar.style.transform = 'translateY(0)';
-        }
-        lastScrollTop = scrollTop;
-    });
-</script>
-
-
-<!-- component -->
-
-
-<div class="bg-white" id="navbar" x-data="cartData()">
-    <header>
-        <div class="container mx-auto px-6 py-3">
-            <div class="flex items-center justify-between">
-                <div class="hidden w-full text-gray-600 md:flex md:items-center">
-                    <a href="{% url 'index' %}" class="flex items-center">
-                        <img class="w-auto h-6 sm:h-7" src="{% static 'madrid_images/real-madrid-logo.png' %}" alt="Real Madrid Logo">
-                        <span class="ml-2 lg:ml-6 hover:text-blue-500">REAL MADRID FC</span>
-                    </a>
-                </div>
-                <div class="ml-2 lg:ml-6 hover:text-blue-500 font-semibold whitespace-nowrap">
-                    Official Store
-                </div>
-                
-                <div class="flex items-center justify-end w-full">
-                    <div x-data="cartData()" x-init="fetchCartItems()">
-                        <!-- Wishlist Icon -->
-                        <a href="{% url 'view_wishlist' %}" class="text-gray-600 focus:outline-none mx-4 relative">
-                            <span class="material-symbols-outlined">
-                                bookmarks
-                                </span>
+<body class="bg-gray-100 font-sans">
+    <div class="bg-white" id="navbar">
+        <header>
+            <div class="container mx-auto px-6 py-3">
+                <div class="flex items-center justify-between">
+                    <div class="hidden w-full text-gray-600 md:flex md:items-center">
+                        <a href="{% url 'index' %}" class="flex items-center">
+                            <img class="w-auto h-6 sm:h-7" src="{% static 'madrid_images/real-madrid-logo.png' %}" alt="Real Madrid Logo">
+                            <span class="ml-2 lg:ml-6 hover:text-blue-500">REAL MADRID FC</span>
                         </a>
-
-                        <!-- Cart Icon -->
-                        <button @click="toggleCart()" class="text-gray-600 focus:outline-none mx-4 relative">
-                            <svg class="h-5 w-5" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" stroke="currentColor">
-                                <path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                            </svg>
-                            <span x-show="cartItems.length > 0" 
-                                  x-text="cartItems.length"
-                                  class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
-                            </span>
-                        </button>
-                        
-                        <!-- Cart Sidebar -->
-                        <div :class="{ 'open': cartOpen }" class="cart-sidebar">
-                            <div class="p-6 h-full flex flex-col">
-                                <div class="flex justify-between items-center mb-6">
-                                    <h2 class="text-xl font-semibold">Your basket | <span x-text="cartItems.length"></span> Article</h2>
-                                    <button @click="toggleCart()" class="text-gray-500 hover:text-gray-700">
-                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                                    </button>
-                                </div>
-
-                                <div class="flex-grow overflow-y-auto">
-                                    <template x-if="cartItems.length === 0">
-                                        <p class="text-gray-500">Your cart is empty.</p>
-                                    </template>
-                                    <template x-for="item in cartItems" :key="item.id">
-                                        <div class="cart-item flex items-start mb-6 pb-6 border-b">
-                                            <img class="cart-item-image mr-4" :src="item.image" :alt="item.name">
-                                            <div class="flex-grow">
-                                                <h3 x-text="item.name" class="font-semibold mb-1"></h3>
-                                                <p x-text="'Size: ' + item.size" class="text-sm text-gray-600 mb-2"></p>
-                                                <p x-text="'€' + item.total.toFixed(2)" class="font-semibold mb-2"></p>
-                                                <div class="flex items-center justify-between">
-                                                    <div class="quantity-control">
-                                                        <button @click="updateQuantity(item, -1)">-</button>
-                                                        <span x-text="item.quantity"></span>
-                                                        <button @click="updateQuantity(item, 1)">+</button>
-                                                    </div>
-                                                    <button @click="removeFromCart(item)" class="text-blue-600 hover:text-blue-800">Remove</button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </template>
-                                </div>
-
-                                <div class="mt-auto">
-                                    <div class="flex justify-between mb-2">
-                                        <span class="font-semibold">Subtotal</span>
-                                        <span x-text="'€' + cartTotal" class="font-semibold"></span>
-                                    </div>
-                                    <div class="flex justify-between mb-4">
-                                        <span>Shipping</span>
-                                        <span class="text-sm text-gray-600">It will be calculated in the next step</span>
-                                    </div>
-                                    <div class="flex justify-between font-bold text-lg mb-6">
-                                        <span>Total</span>
-                                        <span x-text="'€' + cartTotal"></span>
-                                    </div>
-                                    <div class="flex justify-between items-center">
-                                        <button @click="toggleCart()" class="text-blue-600 font-bold">Keep buying</button>
-                                        <button class="bg-blue-600 text-white px-4 py-2 rounded" :disabled="cartItems.length === 0">
-                                            Complete Order
+                    </div>
+                    <div class="ml-2 lg:ml-6 hover:text-blue-500 font-semibold whitespace-nowrap">
+                        <a href="{% url 'store' %}" class="flex items-center">
+                        Official Store
+                        </a>
+                    </div>
+                    
+                    <div class="flex items-center justify-end w-full">
+                        <div x-data="cartData()" x-init="fetchCartItems()">
+                            <a href="{% url 'view_wishlist' %}" class="text-gray-600 focus:outline-none mx-4 relative">
+                                <span class="material-symbols-outlined">
+                                    bookmarks
+                                    </span>
+                            </a>
+                            <button @click="toggleCart()" class="text-gray-600 focus:outline-none mx-4 sm:mx-0 relative">
+                                <svg class="h-5 w-5" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                </svg>
+                                <span x-show="cartItems.length > 0" 
+                                      x-text="cartItems.length"
+                                      class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
+                                </span>
+                            </button>
+                            
+                            <div :class="{ 'open': cartOpen }" class="cart-sidebar">
+                                <div class="p-6 h-full flex flex-col">
+                                    <div class="flex justify-between items-center mb-6">
+                                        <h2 class="text-xl font-semibold">Your basket | <span x-text="availableItemsCount"></span> Article</h2>
+                                        <button @click="toggleCart()" class="text-gray-500 hover:text-gray-700">
+                                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                                         </button>
+                                    </div>
+
+                                    <div class="flex-grow overflow-y-auto">
+                                        <template x-if="cartItems.length === 0">
+                                            <p class="text-gray-500">Your cart is empty.</p>
+                                        </template>
+                                       <template x-for="item in cartItems" :key="item.id">
+    <div class="cart-item flex items-start mb-6 pb-6 border-b">
+        <img class="cart-item-image mr-4" :src="item.image" :alt="item.name">
+        <div class="flex-grow">
+            <h3 x-text="item.name" class="font-semibold mb-1"></h3>
+            <p x-text="'Size: ' + item.size" class="text-sm text-gray-600 mb-2"></p>
+            <template x-if="!item.outOfStock">
+                <p x-text="'€' + (item.price * item.quantity).toFixed(2)" class="font-semibold mb-2"></p>
+            </template>
+            <div class="flex items-center justify-between">
+                <template x-if="!item.outOfStock">
+                    <div class="quantity-control">
+                        <button @click="updateQuantity(item, -1)" :disabled="item.quantity <= 1">-</button>
+                        <span x-text="item.quantity"></span>
+                        <button @click="updateQuantity(item, 1)" :disabled="item.quantity >= item.available_quantity">+</button>
+                    </div>
+                </template>
+                <template x-if="item.outOfStock">
+                    <p class="text-red-500 font-bold">Out of Stock</p>
+                </template>
+                <template x-if="!item.outOfStock && item.quantity_exceeded">
+                    <p class="text-red-500">
+                        Only <span x-text="item.available_quantity"></span> available
+                    </p>
+                </template>
+                <button @click="removeFromCart(item)" class="text-blue-600 hover:text-blue-800">Remove</button>
+            </div>
+        </div>
+    </div>
+</template>
+                                    </div>
+
+                                    <div class="mt-6">
+                                        <div class="flex justify-between mb-2">
+                                            <span class="font-semibold">Subtotal</span>
+                                            <span x-text="'€' + cartTotal" class="font-semibold"></span>
+                                        </div>
+                                        <div class="flex justify-between mb-4">
+                                            <span>Shipping</span>
+                                            <span class="text-sm text-gray-600">It will be calculated in the next step</span>
+                                        </div>
+                                        <div class="flex justify-between font-bold text-lg mb-6">
+                                            <span>Total</span>
+                                            <span x-text="'€' + cartTotal"></span>
+                                        </div>
+                                        <div class="flex justify-between items-center">
+                                            <button @click="toggleCart()" class="text-blue-600 font-bold">Keep buying</button>
+                                            <button @click="checkout()" class="bg-blue-600 text-white px-4 py-2 rounded" :disabled="availableItemsCount === 0">
+                                                Complete Order
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
+                    
+                        <div class="flex sm:hidden">
+                            <button @click="isOpen = !isOpen" type="button" class="text-gray-600 hover:text-gray-500 focus:outline-none focus:text-gray-500" aria-label="toggle menu">
+                                <svg viewBox="0 0 24 24" class="h-6 w-6 fill-current">
+                                    <path fill-rule="evenodd" d="M4 5h16a1 1 0 0 1 0 2H4a1 1 0 1 1 0-2zm0 6h16a1 1 0 0 1 0 2H4a1 1 0 0 1 0-2zm0 6h16a1 1 0 0 1 0 2H4a1 1 0 0 1 0-2z"></path>
+                                </svg>
+                            </button>
+                        </div>
                     </div>
+                </div>
                 
-                    <div class="flex sm:hidden">
-                        <button @click="isOpen = !isOpen" type="button" class="text-gray-600 hover:text-gray-500 focus:outline-none focus:text-gray-500" aria-label="toggle menu">
-                            <svg viewBox="0 0 24 24" class="h-6 w-6 fill-current">
-                                <path fill-rule="evenodd" d="M4 5h16a1 1 0 0 1 0 2H4a1 1 0 1 1 0-2zm0 6h16a1 1 0 0 1 0 2H4a1 1 0 0 1 0-2zm0 6h16a1 1 0 0 1 0 2H4a1 1 0 0 1 0-2z"></path>
-                            </svg>
-                        </button>
+                <div class="relative mt-6 max-w-lg mx-auto">
+                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center">
+                        <svg class="h-5 w-5 text-gray-500" viewBox="0 0 24 24" fill="none">
+                            <path d="M21 21L15 15M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </span>
+                    <input class="w-full border rounded-md pl-10 pr-4 py-2 focus:border-blue-500 focus:outline-none focus:shadow-outline" type="text" placeholder="Search">
+                </div>
+                
+                <nav :class="isOpen ? '' : 'hidden'" class="sm:flex sm:justify-center sm:items-center mt-4">
+                    <div class="flex flex-col sm:flex-row">
+                        {% for category in categories %}
+                        <a class="mt-3 text-[#43526E] hover:text-blue-500 sm:mx-12 sm:mt-0" 
+                           href="{% url 'view_more_category' category_id=category.id %}">
+                           {{ category.category_name }}
+                        </a>
+                        {% endfor %}
                     </div>
-                </div>
+                </nav>
             </div>
-            
-            <form method="GET" action="{% url 'store' %}" class="relative mt-6 max-w-lg mx-auto">
-                <span class="absolute inset-y-0 left-0 pl-3 flex items-center">
-                    <svg class="h-5 w-5 text-gray-500" viewBox="0 0 24 24" fill="none">
-                        <path d="M21 21L15 15M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                </span>
-                <input 
-                    class="w-full border rounded-md pl-10 pr-4 py-2 focus:border-blue-500 focus:outline-none focus:shadow-outline" 
-                    type="text" 
-                    name="q" 
-                    placeholder="Search for products" 
-                    value="{{ query|default:'' }}"
-                >
-                <button type="submit" class="absolute inset-y-0 right-0 flex items-center px-4 text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:bg-gray-200 rounded-r-md">
-                    Search
-                </button>
-            </form>
-            
-            <nav :class="isOpen ? '' : 'hidden'" class="sm:flex sm:justify-center sm:items-center mt-4">
-                <div class="flex flex-col sm:flex-row">
-                    {% for category in categories %}
-                    <a class="mt-3 text-[#43526E] hover:text-blue-500 sm:mx-12 sm:mt-0" 
-                       href="{% url 'view_more_category' category_id=category.id %}">
-                       {{ category.category_name }}
-                    </a>
-                    {% endfor %}
-                </div>
-            </nav>
-        </div>
-    </header>
-
-
-
+        </header>
      
 
 

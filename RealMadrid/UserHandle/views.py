@@ -66,7 +66,6 @@ def player_view(request):
     return render(request, 'player_view.html', {'players_by_position': players_by_position})
 
 
-
 def get_cart_items(request):
     user_id = request.session.get('user_id')
     if not user_id:
@@ -74,10 +73,11 @@ def get_cart_items(request):
     
     user = get_object_or_404(Users, id=user_id)
     cart, created = Cart.objects.get_or_create(user=user)
-    cart_items = CartItem.objects.filter(cart=cart)
+    cart_items = CartItem.objects.filter(cart=cart).select_related('item')
     
     items_data = []
     for cart_item in cart_items:
+        available_quantity = cart_item.get_available_quantity()
         items_data.append({
             'id': cart_item.id,
             'name': cart_item.item.name,
@@ -85,12 +85,19 @@ def get_cart_items(request):
             'quantity': cart_item.quantity,
             'size': cart_item.size,
             'image': cart_item.item.main_image.url if cart_item.item.main_image else '',
-            'total': float(cart_item.item.price * cart_item.quantity)
+            'total': float(cart_item.item.price * cart_item.quantity),
+            'available_quantity': available_quantity,
+            'out_of_stock': available_quantity == 0,
+            'quantity_exceeded': cart_item.quantity > available_quantity
         })
     
     return JsonResponse(items_data, safe=False)
 
 
+
+
+def checkout(request):
+    return render(request, 'checkout.html')
 
 
 def real_madrid_fixtures(request):
@@ -291,7 +298,6 @@ def add_to_cart(request):
 
 
 
-
 @csrf_protect
 @require_POST
 def update_cart_quantity(request):
@@ -319,33 +325,31 @@ def update_cart_quantity(request):
         cart_item = CartItem.objects.get(id=cart_item_id, cart=cart)
         
         new_quantity = cart_item.quantity + quantity_change
+        available_quantity = cart_item.get_available_quantity()
         
         if new_quantity <= 0:
             logger.info(f"Removing item from cart. Cart ID: {cart.id}, CartItem ID: {cart_item_id}")
             cart_item.delete()
             return JsonResponse({'success': True, 'message': 'Item removed from cart'})
         
-        # Check if the new quantity exceeds available stock
-        if cart_item.size:
-            item_size = ItemSize.objects.filter(item=cart_item.item, size=cart_item.size).first()
-            if item_size:
-                available_quantity = item_size.quantity
-            else:
-                logger.error(f"ItemSize not found for item {cart_item.item.id} and size {cart_item.size}")
-                return JsonResponse({'success': False, 'error': 'Item size not available'}, status=400)
-        else:
-            # If size is not specified, use the total quantity of the item
-            available_quantity = sum(size.quantity for size in cart_item.item.sizes.all())
-
         if new_quantity > available_quantity:
             logger.error(f"Requested quantity exceeds available stock. CartItem ID: {cart_item_id}")
-            return JsonResponse({'success': False, 'error': 'Not enough stock available'}, status=400)
+            return JsonResponse({
+                'success': False, 
+                'error': 'Not enough stock available',
+                'available_quantity': available_quantity
+            }, status=400)
         
         cart_item.quantity = new_quantity
         cart_item.save()
         
         logger.info(f"Updated cart item quantity. Cart ID: {cart.id}, CartItem ID: {cart_item_id}, New quantity: {new_quantity}")
-        return JsonResponse({'success': True, 'message': 'Cart updated successfully', 'new_quantity': new_quantity})
+        return JsonResponse({
+            'success': True, 
+            'message': 'Cart updated successfully', 
+            'new_quantity': new_quantity,
+            'available_quantity': available_quantity
+        })
     except Users.DoesNotExist:
         logger.error(f"User not found. User ID: {user_id}")
     except Cart.DoesNotExist:
@@ -356,6 +360,7 @@ def update_cart_quantity(request):
         logger.error(f"Item not found. CartItem ID: {cart_item_id}")
     
     return JsonResponse({'success': False, 'error': 'Failed to update cart'}, status=404)
+
 
 def add_position(request):
     if request.method == 'POST':

@@ -200,7 +200,11 @@
                             throw new Error('Failed to fetch cart items');
                         }
                         const data = await response.json();
-                        this.cartItems = data;
+                        this.cartItems = data.map(item => ({
+                            ...item,
+                            outOfStock: item.available_quantity === 0,
+                            quantityExceeded: item.quantity > item.available_quantity
+                        }));
                     } catch (error) {
                         console.error('Error fetching cart items:', error);
                     }
@@ -255,6 +259,11 @@
                 async updateQuantity(item, change) {
                     try {
                         const csrftoken = getCookie('csrftoken');
+                        const newQuantity = item.quantity + change;
+                        if (newQuantity > item.available_quantity) {
+                            alert(`Sorry, only ${item.available_quantity} items are available.`);
+                            return;
+                        }
                         const response = await fetch('/update-cart-quantity/', {
                             method: 'POST',
                             headers: {
@@ -285,11 +294,22 @@
                           
                 
                 get cartTotal() {
-                    return this.cartItems.reduce((total, item) => total + item.price * item.quantity, 0).toFixed(2);
+                    return this.cartItems
+                        .filter(item => !item.outOfStock)
+                        .reduce((total, item) => total + item.price * item.quantity, 0)
+                        .toFixed(2);
+                },
+                get availableItemsCount() {
+                    return this.cartItems.filter(item => !item.outOfStock).length;
                 },
                 checkout() {
-                    // Implement checkout logic here
-                    console.log('Proceeding to checkout');
+                    const availableItems = this.cartItems.filter(item => !item.outOfStock && item.quantity > 0);
+                    if (availableItems.length === 0) {
+                        alert('There are no available items in your cart to checkout.');
+                        return;
+                    }
+                    // Redirect to the checkout page
+                    window.location.href = "{% url 'checkout' %}";
                 }
             }
         }
@@ -346,7 +366,7 @@
                             <div :class="{ 'open': cartOpen }" class="cart-sidebar">
                                 <div class="p-6 h-full flex flex-col">
                                     <div class="flex justify-between items-center mb-6">
-                                        <h2 class="text-xl font-semibold">Your basket | <span x-text="cartItems.length"></span> Article</h2>
+                                        <h2 class="text-xl font-semibold">Your basket | <span x-text="availableItemsCount"></span> Article</h2>
                                         <button @click="toggleCart()" class="text-gray-500 hover:text-gray-700">
                                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                                         </button>
@@ -356,24 +376,36 @@
                                         <template x-if="cartItems.length === 0">
                                             <p class="text-gray-500">Your cart is empty.</p>
                                         </template>
-                                        <template x-for="item in cartItems" :key="item.id">
-                                            <div class="cart-item flex items-start mb-6 pb-6 border-b">
-                                                <img class="cart-item-image mr-4" :src="item.image" :alt="item.name">
-                                                <div class="flex-grow">
-                                                    <h3 x-text="item.name" class="font-semibold mb-1"></h3>
-                                                    <p x-text="'Size: ' + item.size" class="text-sm text-gray-600 mb-2"></p>
-                                                    <p x-text="'€' + item.total.toFixed(2)" class="font-semibold mb-2"></p>
-                                                    <div class="flex items-center justify-between">
-                                                        <div class="quantity-control">
-                                                            <button @click="updateQuantity(item, -1)" :disabled="item.quantity <= 1">-</button>
-                                                            <span x-text="item.quantity"></span>
-                                                            <button @click="updateQuantity(item, 1)" :disabled="item.quantity >= item.available_quantity">+</button>
-                                                        </div>
-                                                        <button @click="removeFromCart(item)" class="text-blue-600 hover:text-blue-800">Remove</button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </template>
+                                       <template x-for="item in cartItems" :key="item.id">
+    <div class="cart-item flex items-start mb-6 pb-6 border-b">
+        <img class="cart-item-image mr-4" :src="item.image" :alt="item.name">
+        <div class="flex-grow">
+            <h3 x-text="item.name" class="font-semibold mb-1"></h3>
+            <p x-text="'Size: ' + item.size" class="text-sm text-gray-600 mb-2"></p>
+            <template x-if="!item.outOfStock">
+                <p x-text="'€' + (item.price * item.quantity).toFixed(2)" class="font-semibold mb-2"></p>
+            </template>
+            <div class="flex items-center justify-between">
+                <template x-if="!item.outOfStock">
+                    <div class="quantity-control">
+                        <button @click="updateQuantity(item, -1)" :disabled="item.quantity <= 1">-</button>
+                        <span x-text="item.quantity"></span>
+                        <button @click="updateQuantity(item, 1)" :disabled="item.quantity >= item.available_quantity">+</button>
+                    </div>
+                </template>
+                <template x-if="item.outOfStock">
+                    <p class="text-red-500 font-bold">Out of Stock</p>
+                </template>
+                <template x-if="!item.outOfStock && item.quantity_exceeded">
+                    <p class="text-red-500">
+                        Only <span x-text="item.available_quantity"></span> available
+                    </p>
+                </template>
+                <button @click="removeFromCart(item)" class="text-blue-600 hover:text-blue-800">Remove</button>
+            </div>
+        </div>
+    </div>
+</template>
                                     </div>
 
                                     <div class="mt-6">
@@ -391,7 +423,7 @@
                                         </div>
                                         <div class="flex justify-between items-center">
                                             <button @click="toggleCart()" class="text-blue-600 font-bold">Keep buying</button>
-                                            <button @click="checkout()" class="bg-blue-600 text-white px-4 py-2 rounded" :disabled="cartItems.length === 0">
+                                            <button @click="checkout()" class="bg-blue-600 text-white px-4 py-2 rounded" :disabled="availableItemsCount === 0">
                                                 Complete Order
                                             </button>
                                         </div>
@@ -571,8 +603,7 @@
 
                 {% if total_quantity == 0 %}
                 <p class="text-red-500 mt-2 font-bold">Out of Stock</p>
-            {% elif total_quantity < 5 %}
-                <p class="text-red-500 mt-2">Only {{ total_quantity }} left in stock!</p>
+            
             {% endif %}
 
             <div class="mt-4 flex items-center space-x-2">

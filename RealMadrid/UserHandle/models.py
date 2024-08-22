@@ -107,6 +107,13 @@ class CartItem(models.Model):
     def __str__(self):
         return f"{self.quantity} of {self.item.name} in cart for {self.cart.user.name}"
 
+    def get_available_quantity(self):
+        if self.size:
+            item_size = ItemSize.objects.filter(item=self.item, size=self.size).first()
+            return item_size.quantity if item_size else 0
+        else:
+            return sum(size.quantity for size in self.item.sizes.all())
+    
 
 class Wishlist(models.Model):
     user = models.OneToOneField(Users, on_delete=models.CASCADE)
