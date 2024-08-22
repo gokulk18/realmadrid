@@ -25,7 +25,7 @@ from .models import Player
 from .models import News,Cart, CartItem
 from django.core.paginator import Paginator
 from .models import Category
-from .models import SubCategory,ItemImage,Item,ItemSize
+from .models import SubCategory,ItemImage,Item,ItemSize,Wishlist, WishlistItem
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.db import transaction
 from allauth.socialaccount.models import SocialAccount
@@ -144,6 +144,104 @@ def remove_from_cart(request):
     return JsonResponse({'error': 'Item not found in cart'}, status=404)
 
 
+def add_to_wishlist(request):
+    if request.method == 'POST':
+        # Get the user using session ID
+        user_id = request.session.get('user_id')
+        if not user_id:
+            messages.error(request, "Please log in to add items to wishlist.", extra_tags='specific_login_required')
+            # Redirect to the same page without accessing item details
+            return redirect(request.META.get('HTTP_REFERER', 'store'))
+
+        item_id = request.POST.get('item_id')
+        
+        user = get_object_or_404(Users, id=user_id)
+        item = get_object_or_404(Item, id=item_id)
+        
+        # Get or create wishlist for the user
+        wishlist, _ = Wishlist.objects.get_or_create(user=user)
+        
+        # Try to create a new wishlist item
+        _, created = WishlistItem.objects.get_or_create(
+            wishlist=wishlist,
+            item=item
+        )
+        
+        if created:
+            messages.success(request, f"{item.name} added to your wishlist.", extra_tags='add_to_wishlist_success')
+        else:
+            messages.info(request, f"{item.name} is already in your wishlist.", extra_tags='add_to_wishlist_info')
+        
+        return redirect('product_single_view', category_id=item.category.id, item_id=item.id)
+    
+    return redirect('store')  # Redirect to store if not a POST request
+
+
+from django.db.models import Prefetch,F
+
+def view_wishlist(request):
+    user_id = request.session.get('user_id')
+    if not user_id:
+        return redirect('login')  # Redirect to login if user is not authenticated
+
+    user = Users.objects.get(id=user_id)
+    wishlist, created = Wishlist.objects.get_or_create(user=user)
+    
+    # Fetch wishlist items with related item data
+    wishlist_items = WishlistItem.objects.filter(wishlist=wishlist).select_related('item', 'item__category').prefetch_related(
+        'item__additional_images'
+    )
+
+    # Prepare wishlist items with image URLs
+    wishlist_items_with_images = []
+    for wishlist_item in wishlist_items:
+        item = wishlist_item.item
+        image_url = item.main_image.url if item.main_image else None
+        if not image_url:
+            additional_images = item.additional_images.all()
+            if additional_images:
+                image_url = additional_images[0].image.url
+
+        wishlist_items_with_images.append({
+            'wishlist_item': wishlist_item,
+            'image_url': image_url
+        })
+
+    # Calculate total value
+    total_value = sum(item.item.price for item in wishlist_items)
+
+    context = {
+        'wishlist_items': wishlist_items_with_images,
+        'total_value': total_value,
+    }
+    return render(request, 'wishlist.html', context)
+
+@require_POST
+def remove_from_wishlist(request):
+    user_id = request.session.get('user_id')
+    if not user_id:
+        messages.error(request, "Please log in to manage your wishlist.")
+        return redirect('login')
+
+    wishlist_item_id = request.POST.get('wishlist_item_id')
+    if not wishlist_item_id:
+        messages.error(request, "Invalid request. Item not specified.")
+        return redirect('view_wishlist')
+
+    try:
+        user = get_object_or_404(Users, id=user_id)
+        wishlist_item = get_object_or_404(WishlistItem, id=wishlist_item_id, wishlist__user=user)
+        item_name = wishlist_item.item.name
+        wishlist_item.delete()
+        messages.success(request, f"{item_name} has been removed from your wishlist.")
+    except WishlistItem.DoesNotExist:
+        messages.error(request, "Item not found in your wishlist.")
+    except Exception as e:
+        messages.error(request, f"An error occurred: {str(e)}")
+
+    return redirect('view_wishlist')
+
+
 
 
 def add_to_cart(request):
@@ -183,6 +281,15 @@ def add_to_cart(request):
         return redirect('product_single_view', category_id=item.category.id, item_id=item.id)
     
     return redirect('store')  # Redirect to store if not a POST request
+
+
+
+
+
+
+
+
+
 
 
 @csrf_protect
@@ -465,6 +572,14 @@ def admin_view_store(request):
     return render(request, 'admin_view_store.html', {'category_items': category_items})
 
 
+
+
+
+
+
+
+
+
 @never_cache
 def admin_squad_list(request):
     # Fetch all positions
@@ -550,8 +665,8 @@ def store(request):
 
     return render(request, 'store.html', context)
 
-
-
+def wishlist(request):
+    return render(request, 'wishlist.html')
 
 
 

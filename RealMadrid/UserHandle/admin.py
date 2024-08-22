@@ -1,6 +1,5 @@
 from django.contrib import admin
-from .models import Users, Position, Player, News, Category, SubCategory, Item, ItemImage, ItemSize ,Cart, CartItem
-
+from .models import Users, Position, Player, News, Category, SubCategory, Item, ItemImage, ItemSize ,Cart, CartItem,Wishlist,WishlistItem
 class UsersAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'email', 'phone', 'password', 'username')
     search_fields = ('name', 'email')
@@ -78,6 +77,31 @@ class CartItemAdmin(admin.ModelAdmin):
     cart_user.short_description = 'User'
 
 
+class WishlistItemInline(admin.TabularInline):
+    model = WishlistItem
+    extra = 1
+
+class WishlistAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user_name', 'created_at', 'updated_at')
+    inlines = [WishlistItemInline]
+    search_fields = ('user__name',)
+
+    def user_name(self, obj):
+        return obj.user.name
+    user_name.admin_order_field = 'user__name'
+    user_name.short_description = 'User Name'
+
+class WishlistItemAdmin(admin.ModelAdmin):
+    list_display = ('id', 'wishlist_user', 'item', 'added_at')
+    list_filter = ('wishlist__user', 'item')
+    search_fields = ('wishlist__user__name', 'item__name')
+
+    def wishlist_user(self, obj):
+        return obj.wishlist.user.name
+    wishlist_user.admin_order_field = 'wishlist__user__name'
+    wishlist_user.short_description = 'User'
+
+
 
 
 # Register the models with the admin site
@@ -90,3 +114,5 @@ admin.site.register(SubCategory,SubCategoryAdmin)
 admin.site.register(Item, ItemAdmin)
 admin.site.register(Cart, CartAdmin)
 admin.site.register(CartItem, CartItemAdmin)
+admin.site.register(Wishlist)
+admin.site.register(WishlistItem)

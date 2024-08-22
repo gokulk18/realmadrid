@@ -97,3 +97,23 @@ class CartItem(models.Model):
 
     def __str__(self):
         return f"{self.quantity} of {self.item.name} in cart for {self.cart.user.name}"
+
+
+class Wishlist(models.Model):
+    user = models.OneToOneField(Users, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Wishlist for {self.user.name}"
+
+class WishlistItem(models.Model):
+    wishlist = models.ForeignKey(Wishlist, related_name='items', on_delete=models.CASCADE)
+    item = models.ForeignKey(Item, on_delete=models.CASCADE)
+    added_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('wishlist', 'item')
+
+    def __str__(self):
+        return f"{self.item.name} in wishlist for {self.wishlist.user.name}"

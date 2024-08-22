@@ -29,7 +29,9 @@ urlpatterns = [
     path('update-cart-quantity/', views.update_cart_quantity, name='update_cart_quantity'),
     path('previous_results/', views.previous_results, name='previous_results'),
     path('match_details/<int:match_id>/', views.match_details, name='match_details'),
-
+    path('wishlist/', views.view_wishlist, name='view_wishlist'),
+    path('add-to-wishlist/', views.add_to_wishlist, name='add_to_wishlist'),
+    path('remove-from-wishlist/', views.remove_from_wishlist, name='remove_from_wishlist'),
 
 
 
