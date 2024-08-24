@@ -25,7 +25,7 @@ from .models import Player
 from .models import News,Cart, CartItem
 from django.core.paginator import Paginator
 from .models import Category
-from .models import SubCategory,ItemImage,Item,ItemSize,Wishlist, WishlistItem
+from .models import SubCategory,ItemImage,Item,ItemSize,Wishlist, WishlistItem,Order, OrderItem, Shipping
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.db import transaction
 from allauth.socialaccount.models import SocialAccount
@@ -97,7 +97,96 @@ def get_cart_items(request):
 
 
 def checkout(request):
-    return render(request, 'checkout.html')
+    user_id = request.session.get('user_id')
+    if not user_id:
+        messages.error(request, "Please log in to proceed with checkout.")
+        return redirect('login')
+
+    user = Users.objects.get(id=user_id)
+    cart = Cart.objects.get(user=user)
+    cart_items = CartItem.objects.filter(cart=cart).select_related('item')
+
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        
+        # Extract form data
+        details = data.get('details', {})
+        shipping_method = data.get('shippingMethod')
+
+        try:
+            with transaction.atomic():
+                # Create Order
+                order = Order.objects.create(
+                    user=user,
+                    full_name=details.get('fullname'),
+                    email=details.get('email'),
+                    phone=details.get('phone'),
+                    address=details.get('address'),
+                    apartment=details.get('apartment'),
+                    country=details.get('country'),
+                    state=details.get('state'),
+                    city=details.get('city'),
+                    zipcode=details.get('zipcode'),
+                    total=sum(item.item.price * item.quantity for item in cart_items),
+                    status='Pending'
+                )
+
+                # Create OrderItems
+                for cart_item in cart_items:
+                    OrderItem.objects.create(
+                        order=order,
+                        item=cart_item.item,
+                        quantity=cart_item.quantity,
+                        price=cart_item.item.price,
+                        size=cart_item.size
+                    )
+
+                    # Update inventory
+                    item_size = cart_item.item.sizes.filter(size=cart_item.size).first()
+                    if item_size:
+                        if item_size.quantity < cart_item.quantity:
+                            raise ValueError(f"Not enough stock for {cart_item.item.name}")
+                        item_size.quantity -= cart_item.quantity
+                        item_size.save()
+
+                # Create Shipping
+                Shipping.objects.create(
+                    order=order,
+                    shipping_method=shipping_method,
+                    shipping_cost=5.00 if shipping_method == 'standard' else 15.00,
+                    status='Pending'
+                )
+
+                # Clear the cart
+                cart.items.all().delete()
+
+                return JsonResponse({'success': True, 'order_number': order.order_number})
+
+        except ValueError as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': 'An unexpected error occurred'}, status=500)
+
+    else:  # GET request
+        context = {
+            'cart_items': [
+                {
+                    'id': item.item.id,
+                    'name': item.item.name,
+                    'quantity': item.quantity,
+                    'size': item.size,
+                    'price': float(item.item.price),
+                    'total': float(item.item.price * item.quantity),
+                    'image': item.item.main_image.url if item.item.main_image else None,
+                }
+                for item in cart_items
+            ],
+        }
+        return render(request, 'checkout.html', context)
+
+
+
+
 
 
 def real_madrid_fixtures(request):

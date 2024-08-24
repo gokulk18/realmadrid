@@ -6,13 +6,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Real Madrid FC</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uikit@3.21.6/dist/css/uikit.min.css" />
-
-    <!-- UIkit JS -->
     <script src="https://cdn.jsdelivr.net/npm/uikit@3.21.6/dist/js/uikit.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/uikit@3.21.6/dist/js/uikit-icons.min.js"></script>
     <script src="//unpkg.com/alpinejs" defer></script>
@@ -22,192 +20,207 @@
             transition: transform 0.3s ease-in-out;
         }
         .uk-slider-container .uk-slidenav {
-            color: white; /* Default color */
-            transition: color 0.3s ease; /* Smooth transition */
+            color: white;
+            transition: color 0.3s ease;
         }
-    
         .uk-slider-container .uk-slidenav:hover {
-            color: #3b82f6; /* Blue color on hover */
+            color: #3b82f6;
         }
         .rounded-lg {
-            border-radius: 1rem; /* Adjust radius as needed */
-            overflow: hidden; /* Ensures the image fits within the rounded corners */
+            border-radius: 1rem;
+            overflow: hidden;
         }
-    
         .hover\:scale-105:hover {
-            transform: scale(1.05); /* Zoom effect on hover */
+            transform: scale(1.05);
         }
-        a{
+        a {
             text-decoration: none !important;
         }
     </style>
 </head>
 <body class="bg-[#f3f5f8]">
 
-
 <!-- Navbar Section -->
 <section class="bg-white dark:bg-white-900">
-    <nav id="navbar"  class="fixed inset-x-0 z-30 container p-6 mx-auto lg:flex lg:justify-between lg:items-center bg-white text-[#43526e] transition-transform duration-300 ease-in-out transform top-0">
+    <nav id="navbar" class="fixed inset-x-0 z-30 container p-6 mx-auto lg:flex lg:justify-between lg:items-center bg-white text-[#43526e] transition-transform duration-300 ease-in-out transform top-0">
         <div class="flex items-center justify-between">
             <a href="#" class="flex items-center">
                 <img class="w-auto h-6 sm:h-7" src="{% static 'madrid_images/real-madrid-logo.png' %}" alt="Real Madrid Logo">
                 <span class="ml-2 lg:ml-6 hover:text-blue-500">REAL MADRID FC</span>
             </a>
-    
         </div>
     </nav>
 </section>
-<body class="bg-gray-100 font-sans" x-data="checkoutData()" x-init="init()">    
 
+<body class="bg-gray-100 font-sans" x-data="checkoutData()" x-init="init()">    
     <div class="flex flex-wrap -mx-4">
         <div class="w-full lg:w-2/3 px-4 mb-8">
             <div class="bg-white rounded-lg shadow-md p-6" style="margin-top: 104px;">
                 <div class="flex mb-6 border-b">
                     <div class="w-1/3 text-center">
-                        <button class="text-blue-600 font-semibold pb-2 border-b-2 border-blue-600">Your details</button>
+                        <button @click="step = 'details'" :class="{'text-blue-600 font-semibold pb-2 border-b-2 border-blue-600': step === 'details', 'text-gray-500': step !== 'details'}">Your details</button>
                     </div>
                     <div class="w-1/3 text-center">
-                        <button class="text-gray-500">Shipping</button>
+                        <button >Shipping</button>
                     </div>
                     <div class="w-1/3 text-center">
-                        <button class="text-gray-500">Payment</button>
+                        <button >Pay Now</button>
                     </div>
                 </div>
 
-                <div class="mb-6">
-                    <h2 class="text-xl font-semibold mb-4">Your details</h2>
-                    <div class="text-right mb-2">
-                    </div>
-                    <div class="mb-4">
-                        <label for="fullname" class="block text-sm font-medium text-gray-700 mb-1">Full name</label>
-                        <div class="flex">
-                            <div class="w-10 z-10 pl-1 text-center pointer-events-none flex items-center justify-center"><i class="mdi mdi-account-outline text-gray-400 text-lg"></i></div>
-                            <input name="fullname" id="fullname" type="text" class="w-full -ml-10 pl-10 pr-3 py-2 rounded-lg border-2 border-gray-200 outline-none focus:border-indigo-500" placeholder="John Doe">
+                <div x-show="step === 'details'">
+                    <div class="mb-6">
+                        <h2 class="text-xl font-semibold mb-4">Your details</h2>
+                        <div class="text-right mb-2">
                         </div>
-                        <span id="err_fullname" class="text-red-600 text-xs"></span>
-                    </div>
-                    <div class="mb-4">
-                        <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email                        <span id="err_email" class="text-red-600 text-xs"></span>
-                        </label>
-                        <div class="flex">
-                            <div class="w-10 z-10 pl-1 text-center pointer-events-none flex items-center justify-center"><i class="mdi mdi-email-outline text-gray-400 text-lg"></i></div>
-                            <input name="email" id="email" type="email" class="w-full -ml-10 pl-10 pr-3 py-2 rounded-lg border-2 border-gray-200 outline-none focus:border-indigo-500" placeholder="johnsmith@example.com">
+                        <div class="mb-4">
+                            <label for="fullname" class="block text-sm font-medium text-gray-700 mb-1">Full name</label>
+                            <div class="flex">
+                                <div class="w-10 z-10 pl-1 text-center pointer-events-none flex items-center justify-center"></div>
+                                <input name="fullname" id="fullname" type="text" class="w-full -ml-10 pl-4 pr-3 py-2 rounded-lg border-2 border-gray-200 outline-none focus:border-indigo-500" placeholder="John Doe">
+                            </div>
+                            <span id="err_fullname" class="text-red-600 text-xs"></span>
+                        </div>
+                        <div class="mb-4">
+                            <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email <span id="err_email" class="text-red-600 text-xs"></span></label>
+                            <div class="flex">
+                                <div class="w-10 z-10 pl-1 text-center pointer-events-none flex items-center justify-center"></div>
+                                <input name="email" id="email" type="email" class="w-full -ml-10 pl-4 pr-3 py-2 rounded-lg border-2 border-gray-200 outline-none focus:border-indigo-500" placeholder="johnsmith@example.com">
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">Phone Number <span id="err_phone" class="text-red-600 text-xs"></span></label>
+                            <div class="flex">
+                                <div class="w-10 z-10 pl-1 text-center pointer-events-none flex items-center justify-center"></div>
+                                <input name="phone" id="phone" type="text" class="w-full -ml-10 pl-4 pr-3 py-2 rounded-lg border-2 border-gray-200 outline-none focus:border-indigo-500" placeholder="xxxxx xxxxx">
+                            </div>
                         </div>
                     </div>
-                    <div class="mb-4">
-                        <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">Phone Number                         <span id="err_phone" class="text-red-600 text-xs"></span>
-                        </label>
-                        <div class="flex">
-                            <div class="w-10 z-10 pl-1 text-center pointer-events-none flex items-center justify-center"><i class="mdi mdi-phone-outline text-gray-400 text-lg"></i></div>
-                            <input name="phone" id="phone" type="text" class="w-full -ml-10 pl-10 pr-3 py-2 rounded-lg border-2 border-gray-200 outline-none focus:border-indigo-500" placeholder="xxxxx xxxxx">
+
+                    <div>
+                        <h2 class="text-xl font-semibold mb-4">Shipping address</h2>
+                        <div class="mb-4">
+                            <label for="country" class="block text-sm font-medium text-gray-700 mb-1">Country</label>
+                            <div class="flex">
+                                <div class="w-10 z-10 pl-1 text-center pointer-events-none flex items-center justify-center"></div>
+                                <select name="country" id="country" class="w-full -ml-10 pl-4 pr-3 py-2 rounded-lg border-2 border-gray-200 outline-none focus:border-indigo-500">
+                                    <option value="">Select Country</option>
+                                    <option value="India">India</option>
+                                    <!-- Add more countries as needed -->
+                                </select>
+                            </div>
+                            <span id="err_country" class="text-red-600 text-xs"></span>
+                        </div>
+                        <div class="mb-4">
+                            <label for="address" class="block text-sm font-medium text-gray-700 mb-1">Address <span id="err_address" class="text-red-600 text-xs"></span></label>
+                            <div class="flex">
+                                <div class="w-10 z-10 pl-1 text-center pointer-events-none flex items-center justify-center"></div>
+                                <input name="address" id="address" type="text" class="w-full -ml-10 pl-4 pr-3 py-2 rounded-lg border-2 border-gray-200 outline-none focus:border-indigo-500" placeholder="123 Main St">
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label for="apartment" class="block text-sm font-medium text-gray-700 mb-1">Apartment, suite, etc. (optional)</label>
+                            <div class="flex">
+                                <div class="w-10 z-10 pl-1 text-center pointer-events-none flex items-center justify-center"></div>
+                                <input name="apartment" id="apartment" type="text" class="w-full -ml-10 pl-4 pr-3 py-2 rounded-lg border-2 border-gray-200 outline-none focus:border-indigo-500" placeholder="Apt. 123">
+                            </div>
+                        </div>
+                        <div class="flex -mx-2 mb-4">
+                            <div class="w-1/2 px-2">
+                                <label for="zipcode" class="block text-sm font-medium text-gray-700 mb-1">Zip code <span id="err_zipcode" class="text-red-600 text-xs"></span></label>
+                                <div class="flex">
+                                    <div class="w-10 z-10 pl-1 text-center pointer-events-none flex items-center justify-center"></div>
+                                    <input name="zipcode" id="zipcode" type="text" class="w-full -ml-10 pl-4 pr-3 py-2 rounded-lg border-2 border-gray-200 outline-none focus:border-indigo-500" placeholder="12345">
+                                </div>
+                            </div>
+                            <div class="w-1/2 px-2">
+                                <label for="city" class="block text-sm font-medium text-gray-700 mb-1">City <span id="err_city" class="text-red-600 text-xs"></span></label>
+                                <div class="flex">
+                                    <div class="w-10 z-10 pl-1 text-center pointer-events-none flex items-center justify-center"></div>
+                                    <input name="city" id="city" type="text" class="w-full -ml-10 pl-4 pr-3 py-2 rounded-lg border-2 border-gray-200 outline-none focus:border-indigo-500" placeholder="New York">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label for="state" class="block text-sm font-medium text-gray-700 mb-1">State / Province / Region <span id="err_state" class="text-red-600 text-xs"></span></label>
+                            <div class="flex">
+                                <div class="w-10 z-10 pl-1 text-center pointer-events-none flex items-center justify-center"></div>
+                                <select name="state" id="state" class="w-full -ml-10 pl-4 pr-3 py-2 rounded-lg border-2 border-gray-200 outline-none focus:border-indigo-500">
+                                    <option value="">Select State</option>
+                                    <option value="Andhra Pradesh">Andhra Pradesh</option>
+                                    <option value="Arunachal Pradesh">Arunachal Pradesh</option>
+                                    <option value="Assam">Assam</option>
+                                    <option value="Bihar">Bihar</option>
+                                    <option value="Chhattisgarh">Chhattisgarh</option>
+                                    <option value="Goa">Goa</option>
+                                    <option value="Gujarat">Gujarat</option>
+                                    <option value="Haryana">Haryana</option>
+                                    <option value="Himachal Pradesh">Himachal Pradesh</option>
+                                    <option value="Jharkhand">Jharkhand</option>
+                                    <option value="Karnataka">Karnataka</option>
+                                    <option value="Kerala">Kerala</option>
+                                    <option value="Madhya Pradesh">Madhya Pradesh</option>
+                                    <option value="Maharashtra">Maharashtra</option>
+                                    <option value="Manipur">Manipur</option>
+                                    <option value="Meghalaya">Meghalaya</option>
+                                    <option value="Mizoram">Mizoram</option>
+                                    <option value="Nagaland">Nagaland</option>
+                                    <option value="Odisha">Odisha</option>
+                                    <option value="Punjab">Punjab</option>
+                                    <option value="Rajasthan">Rajasthan</option>
+                                    <option value="Sikkim">Sikkim</option>
+                                    <option value="Tamil Nadu">Tamil Nadu</option>
+                                    <option value="Telangana">Telangana</option>
+                                    <option value="Tripura">Tripura</option>
+                                    <option value="Uttar Pradesh">Uttar Pradesh</option>
+                                    <option value="Uttarakhand">Uttarakhand</option>
+                                    <option value="West Bengal">West Bengal</option>
+                                </select>
+                            </div>
+                        </div>
+                     
+                        <div class="mt-6">
+                            <button id="submitBtn" @click="step = 'shipping'" class="block w-full max-w-xs mx-auto bg-indigo-500 hover:bg-indigo-700 focus:bg-indigo-700 text-white rounded-lg px-3 py-3 font-semibold disabled:opacity-50 disabled:cursor-not-allowed" disabled>Continue to shipping</button>
                         </div>
                     </div>
                 </div>
 
-                <div>
-                    <h2 class="text-xl font-semibold mb-4">Shipping address</h2>
+                <div x-show="step === 'shipping'">
+                    <h2 class="text-xl font-semibold mb-4">Shipping Options</h2>
                     <div class="mb-4">
-                        <label for="country" class="block text-sm font-medium text-gray-700 mb-1">Country</label>
-                        <div class="flex">
-                            <div class="w-10 z-10 pl-1 text-center pointer-events-none flex items-center justify-center"><i class="mdi mdi-flag-outline text-gray-400 text-lg"></i></div>
-                            <select name="country" id="country" class="w-full -ml-10 pl-10 pr-3 py-2 rounded-lg border-2 border-gray-200 outline-none focus:border-indigo-500">
-                                <option value="">Select Country</option>
-                                <option value="India">India</option>
-                                <!-- Add more countries as needed -->
-                            </select>
-                        </div>
-                        <span id="err_country" class="text-red-600 text-xs"></span>
-                    </div>
-                    <div class="mb-4">
-                        <label for="address" class="block text-sm font-medium text-gray-700 mb-1">Address                         <span id="err_address" class="text-red-600 text-xs"></span>
-                        </label>
-                        <div class="flex">
-                            <div class="w-10 z-10 pl-1 text-center pointer-events-none flex items-center justify-center"><i class="mdi mdi-home-outline text-gray-400 text-lg"></i></div>
-                            <input name="address" id="address" type="text" class="w-full -ml-10 pl-10 pr-3 py-2 rounded-lg border-2 border-gray-200 outline-none focus:border-indigo-500" placeholder="123 Main St">
-                        </div>
-                    </div>
-                    <div class="mb-4">
-                        <label for="apartment" class="block text-sm font-medium text-gray-700 mb-1">Apartment, suite, etc. (optional)</label>
-                        <div class="flex">
-                            <div class="w-10 z-10 pl-1 text-center pointer-events-none flex items-center justify-center"><i class="mdi mdi-home-outline text-gray-400 text-lg"></i></div>
-                            <input name="apartment" id="apartment" type="text" class="w-full -ml-10 pl-10 pr-3 py-2 rounded-lg border-2 border-gray-200 outline-none focus:border-indigo-500" placeholder="Apt. 123">
-                        </div>
-                    </div>
-                    <div class="flex -mx-2 mb-4">
-                        <div class="w-1/2 px-2">
-                            <label for="zipcode" class="block text-sm font-medium text-gray-700 mb-1">Zip code                             <span id="err_zipcode" class="text-red-600 text-xs"></span>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Select Shipping Method</label>
+                        <div class="space-y-2">
+                            <label class="flex items-center">
+                                <input type="radio" name="shipping_method" value="standard" class="form-radio h-4 w-4 text-indigo-600" x-model="shippingMethod">
+                                <span class="ml-2">Standard Shipping (5-7 business days) - €5.00</span>
                             </label>
-                            <div class="flex">
-                                <div class="w-10 z-10 pl-1 text-center pointer-events-none flex items-center justify-center"><i class="mdi mdi-numeric text-gray-400 text-lg"></i></div>
-                                <input name="zipcode" id="zipcode" type="text" class="w-full -ml-10 pl-10 pr-3 py-2 rounded-lg border-2 border-gray-200 outline-none focus:border-indigo-500" placeholder="12345">
-                            </div>
-                        </div>
-                        <div class="w-1/2 px-2">
-                            <label for="city" class="block text-sm font-medium text-gray-700 mb-1">City                            <span id="err_city" class="text-red-600 text-xs"></span>
+                            <label class="flex items-center">
+                                <input type="radio" name="shipping_method" value="express" class="form-radio h-4 w-4 text-indigo-600" x-model="shippingMethod">
+                                <span class="ml-2">Express Shipping (2-3 business days) - €15.00</span>
                             </label>
-                            <div class="flex">
-                                <div class="w-10 z-10 pl-1 text-center pointer-events-none flex items-center justify-center"><i class="mdi mdi-city-outline text-gray-400 text-lg"></i></div>
-                                <input name="city" id="city" type="text" class="w-full -ml-10 pl-10 pr-3 py-2 rounded-lg border-2 border-gray-200 outline-none focus:border-indigo-500" placeholder="New York">
-                            </div>
                         </div>
                     </div>
-                    <div class="mb-4">
-                        <label for="state" class="block text-sm font-medium text-gray-700 mb-1">State / Province / Region                         <span id="err_state" class="text-red-600 text-xs"></span>
-                        </label>
-                        <div class="flex">
-                            <div class="w-10 z-10 pl-1 text-center pointer-events-none flex items-center justify-center"><i class="mdi mdi-map-marker-outline text-gray-400 text-lg"></i></div>
-                            <select name="state" id="state" class="w-full -ml-10 pl-10 pr-3 py-2 rounded-lg border-2 border-gray-200 outline-none focus:border-indigo-500">
-                                <option value="">Select State</option>
-                                <option value="AN">Andaman and Nicobar Islands</option>
-                                <option value="AP">Andhra Pradesh</option>
-                                <option value="AR">Arunachal Pradesh</option>
-                                <option value="AS">Assam</option>
-                                <option value="BR">Bihar</option>
-                                <option value="CH">Chandigarh</option>
-                                <option value="CT">Chhattisgarh</option>
-                                <option value="DN">Dadra and Nagar Haveli</option>
-                                <option value="DD">Daman and Diu</option>
-                                <option value="DL">Delhi</option>
-                                <option value="GA">Goa</option>
-                                <option value="GJ">Gujarat</option>
-                                <option value="HR">Haryana</option>
-                                <option value="HP">Himachal Pradesh</option>
-                                <option value="JK">Jammu and Kashmir</option>
-                                <option value="JH">Jharkhand</option>
-                                <option value="KA">Karnataka</option>
-                                <option value="KL">Kerala</option>
-                                <option value="LA">Ladakh</option>
-                                <option value="LD">Lakshadweep</option>
-                                <option value="MP">Madhya Pradesh</option>
-                                <option value="MH">Maharashtra</option>
-                                <option value="MN">Manipur</option>
-                                <option value="ML">Meghalaya</option>
-                                <option value="MZ">Mizoram</option>
-                                <option value="NL">Nagaland</option>
-                                <option value="OR">Odisha</option>
-                                <option value="PY">Puducherry</option>
-                                <option value="PB">Punjab</option>
-                                <option value="RJ">Rajasthan</option>
-                                <option value="SK">Sikkim</option>
-                                <option value="TN">Tamil Nadu</option>
-                                <option value="TG">Telangana</option>
-                                <option value="TR">Tripura</option>
-                                <option value="UP">Uttar Pradesh</option>
-                                <option value="UT">Uttarakhand</option>
-                                <option value="WB">West Bengal</option>
-                            </select>
-                        </div>
+                    <div class="mt-6 flex justify-between">
+                        <button @click="step = 'details'" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
+                            Back to Details
+                        </button>
+                        <button id="placeOrderBtn" @click="step = 'payment'" class="block w-full max-w-xs mx-auto bg-indigo-500 hover:bg-indigo-700 text-white rounded-lg px-3 py-3 font-semibold">
+                            Place Order
+                        </button>
                     </div>
-                 
-                    <div class="mt-6">
-                        <button id="submitBtn" type="submit" class="block w-full max-w-xs mx-auto bg-indigo-500 hover:bg-indigo-700 focus:bg-indigo-700 text-white rounded-lg px-3 py-3 font-semibold disabled:opacity-50 disabled:cursor-not-allowed" disabled>Continue shipping</button>
-                    </div>
+                </div>
+
+                <div x-show="step === 'payment'" class="mt-6">
+                    <h2 class="text-xl font-semibold mb-4">Payment</h2>
+                    <button id="razorpay-btn" class="block w-full max-w-xs mx-auto bg-indigo-500 hover:bg-indigo-700 text-white rounded-lg px-3 py-3 font-semibold">
+                        Pay Now
+                    </button>
                 </div>
             </div>
         </div>
 
         <div class="w-full lg:w-1/3 px-4">
-            <div class="bg-white rounded-lg shadow-md p-6" style=" margin-top: 104px;">
+            <div class="bg-white rounded-lg shadow-md p-6" style="margin-top: 104px;">
                 <h2 class="text-xl font-semibold mb-4">Your basket</h2>
                 <p class="text-sm text-gray-600 mb-4" x-show="availableItems.length > 0">
                     <span x-text="availableItems.length"></span> Article<span x-show="availableItems.length > 1">s</span>
@@ -225,177 +238,329 @@
                             <p x-text="'€' + item.total.toFixed(2)" class="font-semibold mt-1"></p>
                         </div>
                     </div>
-                </template>
-                <div class="border-t pt-4 mt-4">
-                    <div class="flex justify-between mb-2">
-                        <span>Subtotal</span>
-                        <span x-text="'€' + cartTotal.toFixed(2)"></span>
-                    </div>
-                    <div class="flex justify-between mb-2">
-                        <span>Shipping</span>
-                        <span>It will be calculated in the next step</span>
-                    </div>
-                    <div class="flex justify-between font-bold text-lg mt-4">
-                        <span>Total</span>
-                        <span x-text="'€' + cartTotal.toFixed(2)"></span>
-                    </div>
+                </div>
+            </template>
+            <div class="border-t pt-4 mt-4">
+                <div class="flex justify-between mb-2">
+                    <span>Subtotal</span>
+                    <span x-text="'€' + cartTotal.toFixed(2)"></span>
+                </div>
+                <div class="flex justify-between mb-2">
+                    <span>Shipping</span>
+                    <span x-text="shippingCost ? '€' + shippingCost.toFixed(2) : 'To be calculated'"></span>
+                </div>
+                <div class="flex justify-between font-bold text-lg mt-4">
+                    <span>Total</span>
+                    <span x-text="'€' + (cartTotal + (shippingCost || 0)).toFixed(2)"></span>
                 </div>
             </div>
         </div>
     </div>
 </div>
-
+</div>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-    $(document).ready(function() {
-        function disableErrorMessages() {
-            $('#err_fullname, #err_email, #err_phone, #err_address, #err_city, #err_country').text('');
+$(document).ready(function() {
+    function disableErrorMessages() {
+        $('#err_fullname, #err_email, #err_phone, #err_address, #err_city, #err_country').text('');
+    }
+
+    function toggleSubmitButton() {
+        var isValid = true;
+        var fullname = $('#fullname').val().trim();
+        var email = $('#email').val().trim();
+        var phone = $('#phone').val().trim();
+        var address = $('#address').val().trim();
+        var city = $('#city').val().trim();
+        var country = $('#country').val();
+
+        if (fullname.length === 0 || email.length === 0 || phone.length === 0 || 
+            address.length === 0 || city.length === 0 || country.length === 0 ||
+            !validateEmail(email) || !validatePhone(phone)) {
+            isValid = false;
         }
 
-        function toggleSubmitButton() {
-            var isValid = true;
-            var fullname = $('#fullname').val().trim();
-            var email = $('#email').val().trim();
-            var phone = $('#phone').val().trim();
-            var address = $('#address').val().trim();
-            var city = $('#city').val().trim();
-            var country = $('#country').val();
+        $('#submitBtn').prop('disabled', !isValid);
+    }
 
-            if (fullname.length === 0 || email.length === 0 || phone.length === 0 || 
-                address.length === 0 || city.length === 0 || country.length === 0 ||
-                !validateEmail(email) || !validatePhone(phone)) {
-                isValid = false;
-            }
+    disableErrorMessages();
 
-            $('#submitBtn').prop('disabled', !isValid);
+    $('#fullname').keyup(function() {
+        var fullname = $(this).val().trim();
+        if (fullname.length === 0) {
+            $('#err_fullname').text('Full name is required');
+        } else {
+            $('#err_fullname').text('');
         }
-
-        disableErrorMessages();
-
-        $('#fullname').keyup(function() {
-            var fullname = $(this).val().trim();
-            if (fullname.length === 0) {
-                $('#err_fullname').text('Full name is required');
-            } else {
-                $('#err_fullname').text('');
-            }
-            toggleSubmitButton();
-        });
-
-        $('#email').keyup(function() {
-            var email = $(this).val().trim();
-            if (email.length === 0) {
-                $('#err_email').text('Email is required');
-            } else if (!validateEmail(email)) {
-                $('#err_email').text('Email format is example@gmail.com');
-            } else {
-                $('#err_email').text('');
-            }
-            toggleSubmitButton();
-        });
-
-        $('#phone').keyup(function() {
-            var phone = $(this).val().trim();
-            if (phone.length === 0) {
-                $('#err_phone').text('Phone number is required');
-            } else if (!validatePhone(phone)) {
-                $('#err_phone').text('Phone number must be 10 digits and start with 6-9');
-            } else {
-                $('#err_phone').text('');
-            }
-            toggleSubmitButton();
-        });
-
-        $('#address').keyup(function() {
-            var address = $(this).val().trim();
-            if (address.length === 0) {
-                $('#err_address').text('Address is required');
-            } else {
-                $('#err_address').text('');
-            }
-            toggleSubmitButton();
-        });
-
-        $('#city').keyup(function() {
-            var city = $(this).val().trim();
-            if (city.length === 0) {
-                $('#err_city').text('City is required');
-            } else {
-                $('#err_city').text('');
-            }
-            toggleSubmitButton();
-        });
-
-        $('#country').change(function() {
-            var country = $(this).val();
-            if (country.length === 0) {
-                $('#err_country').text('Country is required');
-            } else {
-                $('#err_country').text('');
-            }
-            toggleSubmitButton();
-        });
-
-        $('#checkout-form').submit(function(event) {
-            event.preventDefault();
-            if ($('#submitBtn').prop('disabled')) {
-                UIkit.modal.alert('Please fill all required fields correctly.');
-                return;
-            }
-            
-            // Here you would typically send the form data to your server
-            UIkit.modal.alert('Order placed successfully!');
-            // Optionally, redirect to a confirmation page or clear the form
-        });
+        toggleSubmitButton();
     });
 
-    function validateEmail(email) {
+    $('#email').keyup(function() {
+        var email = $(this).val().trim();
+        if (email.length === 0) {
+            $('#err_email').text('Email is required');
+        } else if (!validateEmail(email)) {
+            $('#err_email').text('Email format is example@gmail.com');
+        } else {
+            $('#err_email').text('');
+        }
+        toggleSubmitButton();
+    });
+
+    $('#phone').keyup(function() {
+        var phone = $(this).val().trim();
+        if (phone.length === 0) {
+            $('#err_phone').text('Phone number is required');
+        } else if (!validatePhone(phone)) {
+            $('#err_phone').text('Phone number must be 10 digits and start with 6-9 and must have only 10 digits');
+        } else {
+            $('#err_phone').text('');
+        }
+        toggleSubmitButton();
+    });
+
+    $('#address').keyup(function() {
+        var address = $(this).val().trim();
+        if (address.length === 0) {
+            $('#err_address').text('Address is required');
+        } else {
+            $('#err_address').text('');
+        }
+        toggleSubmitButton();
+    });
+
+    $('#city').keyup(function() {
+        var city = $(this).val().trim();
+        if (city.length === 0) {
+            $('#err_city').text('City is required');
+        } else {
+            $('#err_city').text('');
+        }
+        toggleSubmitButton();
+        });
+        $('#country').change(function() {
+        var country = $(this).val();
+        if (country.length === 0) {
+        $('#err_country').text('Country is required');
+        } else {
+        $('#err_country').text('');
+        }
+        toggleSubmitButton();
+        });
+        $('#checkout-form').submit(function(event) {
+        event.preventDefault();
+        if ($('#submitBtn').prop('disabled')) {
+        UIkit.modal.alert('Please fill all required fields correctly.');
+        return;
+        }
+        // Here you would typically send the form data to your server
+        UIkit.modal.alert('Order placed successfully!');
+        // Optionally, redirect to a confirmation page or clear the form
+        });
+        });
+        function validateEmail(email) {
         var re = /\S+@\S+\.\S+/;
         return re.test(email);
-    }
-
-    function validatePhone(phone) {
+        }
+        function validatePhone(phone) {
         var re = /^[6-9]\d{9}$/;
         return re.test(phone);
-    }
-</script>
-
-<script>
-    function checkoutData() {
-        return {
-            cartItems: [],
-            loading: true,
-            error: null,
-            get availableItems() {
-                return this.cartItems.filter(item => !item.out_of_stock);
-            },
-            async fetchCartItems() {
-                this.loading = true;
-                this.error = null;
-                try {
-                    const response = await fetch('/api/cart-items/');
-                    if (!response.ok) {
-                        throw new Error('Failed to fetch cart items');
-                    }
-                    const data = await response.json();
-                    this.cartItems = Array.isArray(data) ? data : [data];
-                } catch (error) {
-                    console.error('Error fetching cart items:', error);
-                    this.error = error.message;
-                } finally {
-                    this.loading = false;
-                }
-            },
-            get cartTotal() {
-                return this.availableItems.reduce((total, item) => total + item.total, 0);
-            },
-            init() {
-                this.fetchCartItems();
-            }
         }
-    }
-</script>
-</body>
-</html>
+        </script>
+        <script>
+        function checkoutData() {
+        return {
+        cartItems: [],
+        loading: true,
+        error: null,
+        step: 'details',
+        shippingMethod: null,
+        get availableItems() {
+        return this.cartItems.filter(item => !item.out_of_stock);
+        },
+        async fetchCartItems() {
+        this.loading = true;
+        this.error = null;
+        try {
+        const response = await fetch('/api/cart-items/');
+        if (!response.ok) {
+        throw new Error('Failed to fetch cart items');
+        }
+        const data = await response.json();
+        this.cartItems = Array.isArray(data) ? data : [data];
+        } catch (error) {
+        console.error('Error fetching cart items:', error);
+        this.error = error.message;
+        } finally {
+        this.loading = false;
+        }
+        },
+        get cartTotal() {
+        return this.availableItems.reduce((total, item) => total + item.total, 0);
+        },
+        get shippingCost() {
+        return this.shippingMethod === 'standard' ? 5 : this.shippingMethod === 'express' ? 15 : 0;
+        },
+        init() {
+        this.fetchCartItems();
+        },
+        proceedToShipping() {
+            if (this.formValid) {
+                this.step = 'shipping';
+            } else {
+                alert('Please fill out all required fields correctly before proceeding.');
+            }
+        },
+        placeOrder() {
+            const details = {
+                fullname: document.getElementById('fullname').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                address: document.getElementById('address').value,
+                apartment: document.getElementById('apartment').value,
+                country: document.getElementById('country').value,
+                state: document.getElementById('state').value,
+                city: document.getElementById('city').value,
+                zipcode: document.getElementById('zipcode').value,
+            };
+        
+            fetch('/checkout/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken'), // Ensure CSRF token is included
+                },
+                body: JSON.stringify({
+                    details: details,
+                    shippingMethod: this.shippingMethod,
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    this.step = 'payment'; // Redirect to payment section
+                    alert('Order placed successfully! Proceed to payment.');
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An unexpected error occurred.');
+            });
+        }
+        }
+        }
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    // Check if this cookie string begins with the name we want
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        </script>
+        <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+                <script>
+                    // Assuming you have a function to calculate the cart total
+                    function calculateCartTotal() {
+                        let total = 0;
+                        // Assuming you have an array of cart items
+                        const cartItems = [
+                            { price: 100, quantity: 2 }, // Example item
+                            { price: 200, quantity: 1 }  // Example item
+                        ];
 
+                        cartItems.forEach(item => {
+                            total += item.price * item.quantity;
+                        });
+
+                        return total;
+                    }
+
+                    // Calculate the cart total and store it in a variable
+                    let cartTotal = calculateCartTotal();
+
+                    // Log the cart total to verify
+                    console.log('Cart Total:', cartTotal);
+
+                    document.getElementById('razorpay-btn').onclick = function(e) {
+                        e.preventDefault(); // Prevent default button action
+
+                        // Prepare the payment options
+                        var options = {
+                            key: 'rzp_test_7FTQA5xPrTVrqk', // Replace with your Razorpay key
+                            amount: Math.round(cartTotal * 100), // Amount in paise
+                            currency: 'INR',
+                            name: 'Real Madrid FC',
+                            description: 'Order Payment',
+                            image: 'https://your-logo-url.com/logo.png', // Replace with your logo URL
+                            handler: function (response) {
+                                // Handle successful payment here
+                                const orderDetails = {
+                                    details: {
+                                        fullname: document.getElementById('fullname').value,
+                                        email: document.getElementById('email').value,
+                                        phone: document.getElementById('phone').value,
+                                        address: document.getElementById('address').value,
+                                        apartment: document.getElementById('apartment').value,
+                                        country: document.getElementById('country').value,
+                                        state: document.getElementById('state').value,
+                                        city: document.getElementById('city').value,
+                                        zipcode: document.getElementById('zipcode').value,
+                                    },
+                                    shippingMethod: shippingMethod,
+                                    payment_response: { success: true, payment_id: response.razorpay_payment_id }
+                                };
+
+                                // Send order details to the server
+                                fetch('/checkout/', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'X-CSRFToken': getCookie('csrftoken'), // Ensure CSRF token is included
+                                    },
+                                    body: JSON.stringify(orderDetails),
+                                })
+                                .then(res => res.json())
+                                .then(data => {
+                                    if (data.success) {
+                                        alert(data.message);
+                                        // Redirect to a success page or confirmation
+                                        window.location.href = '/success-page/'; // Change to your success page URL
+                                    } else {
+                                        alert('Error: ' + data.error);
+                                    }
+                                })
+                                .catch(error => {
+                                    console.error('Error:', error);
+                                    alert('An unexpected error occurred.');
+                                });
+                            },
+                            prefill: {
+                                name: document.getElementById('fullname').value,
+                                email: document.getElementById('email').value,
+                                contact: document.getElementById('phone').value
+                            },
+                            notes: {
+                                address: document.getElementById('address').value
+                            },
+                            theme: {
+                                color: '#F37254'
+                            }
+                        };
+
+                        var rzp1 = new Razorpay(options);
+                        rzp1.open(); // Open the Razorpay payment modal
+                    };
+        </script>
+        </body>
+        </html>
