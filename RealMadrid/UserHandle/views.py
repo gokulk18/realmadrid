@@ -25,7 +25,7 @@ from .models import Player
 from .models import News,Cart, CartItem
 from django.core.paginator import Paginator
 from .models import Category
-from .models import SubCategory,ItemImage,Item,ItemSize,Wishlist, WishlistItem,Order, OrderItem, Shipping
+from .models import SubCategory,ItemImage,Item,ItemSize,Wishlist, WishlistItem,Order, OrderItem, Shipping,Payment
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.db import transaction
 from allauth.socialaccount.models import SocialAccount
@@ -94,7 +94,76 @@ def get_cart_items(request):
     return JsonResponse(items_data, safe=False)
 
 
+def payment_success(request):
+    return render(request,'payment_success.html')
 
+
+
+def order_detail(request, order_id):
+    order = get_object_or_404(Order.objects.select_related('shipping'), id=order_id)
+    return render(request, 'order_detail.html', {'order': order})
+
+
+def admin_view_orders(request):
+    # Get all orders and order them by creation date (newest first)
+    all_orders = Order.objects.all().order_by('-created_at')
+    
+    # Set up pagination
+    page = request.GET.get('page', 1)
+    items_per_page = 20  # You can adjust this number
+    paginator = Paginator(all_orders, items_per_page)
+    
+    try:
+        orders = paginator.page(page)
+    except PageNotAnInteger:
+        orders = paginator.page(1)
+    except EmptyPage:
+        orders = paginator.page(paginator.num_pages)
+    
+    # Prepare order data for the template
+    order_data = []
+    for order in orders:
+        order_items = OrderItem.objects.filter(order=order)
+        total_quantity = sum(item.quantity for item in order_items)
+        order_data.append({
+            'order': order,
+            'items': order_items,
+            'total_quantity': total_quantity,
+        })
+    
+    context = {
+        'order_data': order_data,
+        'orders': orders,  # This is for pagination
+    }
+    
+    return render(request, 'admin_view_orders.html', context)
+
+def view_order(request):
+    user_id = request.session.get('user_id')
+    if not user_id:
+        messages.error(request, "Please log in to view your orders.")
+        return redirect('login')  # Redirect to login page if user is not logged in
+
+    try:
+        user = Users.objects.get(id=user_id)
+        orders = Order.objects.filter(user=user).order_by('-created_at')
+        
+        # Debugging information
+        debug_info = f"User: {user.username}, User ID: {user_id}, Order count: {orders.count()}"
+        print(debug_info)  # This will print to the console
+        
+        if not orders:
+            # If no orders, let's check if there are any orders at all
+            all_orders = Order.objects.all()
+            print(f"Total orders in database: {all_orders.count()}")
+            if all_orders:
+                print("Sample order:", all_orders.first())
+        
+        return render(request, 'view_order.html', {'orders': orders, 'debug_info': debug_info})
+    
+    except Users.DoesNotExist:
+        messages.error(request, "User not found. Please try logging in again.")
+        return redirect('login')
 
 def checkout(request):
     user_id = request.session.get('user_id')
@@ -107,65 +176,94 @@ def checkout(request):
     cart_items = CartItem.objects.filter(cart=cart).select_related('item')
 
     if request.method == 'POST':
-        data = json.loads(request.body)
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse({'success': False, 'error': 'Invalid JSON data'}, status=400)
         
-        # Extract form data
         details = data.get('details', {})
         shipping_method = data.get('shippingMethod')
+        payment_response = data.get('payment_response', {})
 
-        try:
-            with transaction.atomic():
-                # Create Order
-                order = Order.objects.create(
-                    user=user,
-                    full_name=details.get('fullname'),
-                    email=details.get('email'),
-                    phone=details.get('phone'),
-                    address=details.get('address'),
-                    apartment=details.get('apartment'),
-                    country=details.get('country'),
-                    state=details.get('state'),
-                    city=details.get('city'),
-                    zipcode=details.get('zipcode'),
-                    total=sum(item.item.price * item.quantity for item in cart_items),
-                    status='Pending'
-                )
+        logger.info(f"Received checkout data: {data}")
 
-                # Create OrderItems
-                for cart_item in cart_items:
-                    OrderItem.objects.create(
-                        order=order,
-                        item=cart_item.item,
-                        quantity=cart_item.quantity,
-                        price=cart_item.item.price,
-                        size=cart_item.size
+        if payment_response.get('success'):
+            try:
+                with transaction.atomic():
+                    # Create Order
+                    order = Order.objects.create(
+                        user=user,
+                        full_name=details.get('fullname'),
+                        email=details.get('email'),
+                        phone=details.get('phone'),
+                        address=details.get('address'),
+                        apartment=details.get('apartment'),
+                        country=details.get('country'),
+                        state=details.get('state'),
+                        city=details.get('city'),
+                        zipcode=details.get('zipcode'),
+                        total=sum(item.item.price * item.quantity for item in cart_items),
+                        status='Processing',
+                        is_paid=True
                     )
+                    logger.info(f"Created order: {order.order_number}")
 
-                    # Update inventory
-                    item_size = cart_item.item.sizes.filter(size=cart_item.size).first()
-                    if item_size:
-                        if item_size.quantity < cart_item.quantity:
-                            raise ValueError(f"Not enough stock for {cart_item.item.name}")
-                        item_size.quantity -= cart_item.quantity
-                        item_size.save()
+                    # Create OrderItems
+                    for cart_item in cart_items:
+                        OrderItem.objects.create(
+                            order=order,
+                            item=cart_item.item,
+                            quantity=cart_item.quantity,
+                            price=cart_item.item.price,
+                            size=cart_item.size
+                        )
+                        logger.info(f"Created order item for: {cart_item.item.name}")
 
-                # Create Shipping
-                Shipping.objects.create(
-                    order=order,
-                    shipping_method=shipping_method,
-                    shipping_cost=5.00 if shipping_method == 'standard' else 15.00,
-                    status='Pending'
-                )
+                        # Update inventory
+                        item_size = ItemSize.objects.filter(item=cart_item.item, size=cart_item.size).first()
+                        if item_size:
+                            if item_size.quantity < cart_item.quantity:
+                                raise ValueError(f"Not enough stock for {cart_item.item.name}")
+                            item_size.quantity -= cart_item.quantity
+                            item_size.save()
+                            logger.info(f"Updated inventory for: {cart_item.item.name}, size: {cart_item.size}")
 
-                # Clear the cart
-                cart.items.all().delete()
+                    # Create Payment
+                    payment = Payment.objects.create(
+                        order=order,
+                        payment_method='Razorpay',
+                        transaction_id=payment_response.get('payment_id'),
+                        amount_paid=order.total,
+                        status='Completed'
+                    )
+                    logger.info(f"Created payment: {payment.transaction_id}")
 
-                return JsonResponse({'success': True, 'order_number': order.order_number})
+                    # Create Shipping
+                    shipping_cost = 5.00 if shipping_method == 'standard' else 15.00
+                    shipping = Shipping.objects.create(
+                        order=order,
+                        shipping_method=shipping_method,
+                        shipping_cost=shipping_cost,
+                        status='Pending',
+                        estimated_delivery=timezone.now().date() + timezone.timedelta(days=7)
+                    )
+                    logger.info(f"Created shipping for order: {order.order_number}")
 
-        except ValueError as e:
-            return JsonResponse({'success': False, 'error': str(e)}, status=400)
-        except Exception as e:
-            return JsonResponse({'success': False, 'error': 'An unexpected error occurred'}, status=500)
+                    # Clear the cart
+                    cart.items.all().delete()
+                    logger.info(f"Cleared cart for user: {user.id}")
+
+                    return JsonResponse({'success': True, 'order_number': order.order_number, 'redirect': '/payment_success/'})
+
+            except ValueError as e:
+                logger.error(f"ValueError in checkout: {str(e)}")
+                return JsonResponse({'success': False, 'error': str(e)}, status=400)
+            except Exception as e:
+                logger.error(f"Unexpected error in checkout: {str(e)}", exc_info=True)
+                return JsonResponse({'success': False, 'error': 'An unexpected error occurred'}, status=500)
+        else:
+            logger.warning("Payment was not successful")
+            return JsonResponse({'success': False, 'error': 'Payment was not successful'}, status=400)
 
     else:  # GET request
         context = {

@@ -33,7 +33,14 @@ urlpatterns = [
     path('add-to-wishlist/', views.add_to_wishlist, name='add_to_wishlist'),
     path('remove-from-wishlist/', views.remove_from_wishlist, name='remove_from_wishlist'),
     path('checkout/', views.checkout, name='checkout'),
+    path('payment_success/', views.payment_success, name='payment_success'),
+    path('view_order/', views.view_order, name='view_order'),
+    path('order_detail/<int:order_id>/', views.order_detail, name='order_detail'),
 
+    
+    
+    
+    
 
     path('admin_dashboard/',views.admin_dashboard,name="admin_dashboard"),
     path('admin_squad_list/',views.admin_squad_list,name="admin_squad_list"),
@@ -50,6 +57,7 @@ urlpatterns = [
     path('admin_add_subcategory/', views.admin_add_subcategory, name='admin_add_subcategory'),
     path('admin_add_item/', views.admin_add_item, name='admin_add_item'),
     path('get_subcategories/<int:category_id>/', views.get_subcategories, name='get_subcategories'),
+    path('admin_view_orders/', views.admin_view_orders, name='admin_view_orders'),
 
 
 

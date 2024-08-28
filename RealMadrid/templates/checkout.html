@@ -64,7 +64,7 @@
                         <button >Shipping</button>
                     </div>
                     <div class="w-1/3 text-center">
-                        <button >Pay Now</button>
+                        <button >Payment</button>
                     </div>
                 </div>
 
@@ -429,24 +429,26 @@ $(document).ready(function() {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken'), // Ensure CSRF token is included
+                    'X-CSRFToken': getCookie('csrftoken'),
                 },
                 body: JSON.stringify({
                     details: details,
                     shippingMethod: this.shippingMethod,
                 }),
             })
-            .then(response => response.json())
+            .then(res => res.json())
             .then(data => {
                 if (data.success) {
-                    this.step = 'payment'; // Redirect to payment section
-                    alert('Order placed successfully! Proceed to payment.');
+                    console.log("Order placed successfully:", data);
+                    alert("Order placed successfully!");
+                    window.location.href = data.redirect;
                 } else {
+                    console.error("Error in checkout:", data.error);
                     alert('Error: ' + data.error);
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
+                console.error('Fetch error:', error);
                 alert('An unexpected error occurred.');
             });
         }
@@ -495,47 +497,53 @@ $(document).ready(function() {
                     document.getElementById('razorpay-btn').onclick = function(e) {
                         e.preventDefault(); // Prevent default button action
 
-                        // Prepare the payment options
+                        // Gather all the order details
+                        const orderDetails = {
+                            details: {
+                                fullname: document.getElementById('fullname').value,
+                                email: document.getElementById('email').value,
+                                phone: document.getElementById('phone').value,
+                                address: document.getElementById('address').value,
+                                apartment: document.getElementById('apartment').value,
+                                country: document.getElementById('country').value,
+                                state: document.getElementById('state').value,
+                                city: document.getElementById('city').value,
+                                zipcode: document.getElementById('zipcode').value,
+                            },
+                            shippingMethod: document.querySelector('input[name="shipping_method"]:checked').value,
+                        };
+
+                        // Calculate total amount (you might want to replace this with the actual total from your cart)
+                        const totalAmount = calculateCartTotal() * 100; // Amount in paise
+
                         var options = {
                             key: 'rzp_test_7FTQA5xPrTVrqk', // Replace with your Razorpay key
-                            amount: Math.round(cartTotal * 100), // Amount in paise
+                            amount: totalAmount,
                             currency: 'INR',
                             name: 'Real Madrid FC',
                             description: 'Order Payment',
-                            image: 'https://your-logo-url.com/logo.png', // Replace with your logo URL
+                            image: '{% static 'madrid_images/real-madrid-logo.png' %}',
                             handler: function (response) {
-                                // Handle successful payment here
-                                const orderDetails = {
-                                    details: {
-                                        fullname: document.getElementById('fullname').value,
-                                        email: document.getElementById('email').value,
-                                        phone: document.getElementById('phone').value,
-                                        address: document.getElementById('address').value,
-                                        apartment: document.getElementById('apartment').value,
-                                        country: document.getElementById('country').value,
-                                        state: document.getElementById('state').value,
-                                        city: document.getElementById('city').value,
-                                        zipcode: document.getElementById('zipcode').value,
-                                    },
-                                    shippingMethod: shippingMethod,
-                                    payment_response: { success: true, payment_id: response.razorpay_payment_id }
+                                // This function is called after successful payment
+                                orderDetails.payment_response = {
+                                    success: true,
+                                    payment_id: response.razorpay_payment_id
                                 };
 
-                                // Send order details to the server
+                                // Now send all order details to the server
                                 fetch('/checkout/', {
                                     method: 'POST',
                                     headers: {
                                         'Content-Type': 'application/json',
-                                        'X-CSRFToken': getCookie('csrftoken'), // Ensure CSRF token is included
+                                        'X-CSRFToken': getCookie('csrftoken'),
                                     },
                                     body: JSON.stringify(orderDetails),
                                 })
                                 .then(res => res.json())
                                 .then(data => {
                                     if (data.success) {
-                                        alert(data.message);
-                                        // Redirect to a success page or confirmation
-                                        window.location.href = '/success-page/'; // Change to your success page URL
+                                        alert("Order placed successfully!");
+                                        window.location.href = data.redirect;
                                     } else {
                                         alert('Error: ' + data.error);
                                     }

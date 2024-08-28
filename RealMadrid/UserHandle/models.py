@@ -205,7 +205,10 @@ class Payment(models.Model):
 class Shipping(models.Model):
     SHIPPING_STATUS_CHOICES = [
         ('Pending', 'Pending'),
+        ('Packed', 'Packed'),
+        ('Shipped', 'Shipped'),
         ('In Transit', 'In Transit'),
+        ('Out for Delivery', 'Out for Delivery'),
         ('Delivered', 'Delivered')
     ]
 
@@ -216,8 +219,20 @@ class Shipping(models.Model):
     estimated_delivery = models.DateField(null=True, blank=True)
     shipping_cost = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     status = models.CharField(max_length=20, choices=SHIPPING_STATUS_CHOICES, default='Pending')
+    packed_at = models.DateTimeField(null=True, blank=True)
     shipped_at = models.DateTimeField(null=True, blank=True)
+    out_for_delivery_at = models.DateTimeField(null=True, blank=True)
     delivered_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return f"Shipping for Order {self.order.order_number}"
+
+    def get_tracking_url(self):
+        if self.carrier and self.tracking_number:
+            # This is a simplified example. You'll need to implement logic for different carriers
+            if self.carrier.lower() == 'ups':
+                return f"https://www.ups.com/track?tracknum={self.tracking_number}"
+            elif self.carrier.lower() == 'fedex':
+                return f"https://www.fedex.com/fedextrack/?trknbr={self.tracking_number}"
+            # Add more carriers as needed
+        return None

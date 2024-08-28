@@ -180,6 +180,37 @@
       }
 
       [x-cloak] { display: none !important; }
+
+      .filter-section {
+        background-color: #f3f4f6;
+        padding: 1rem;
+        border-radius: 0.5rem;
+    }
+
+    .filter-group {
+        display: inline-block;
+        margin-right: 1rem;
+    }
+
+    .form-select {
+        display: block;
+        width: 100%;
+        padding: 0.5rem;
+        font-size: 1rem;
+        line-height: 1.5;
+        color: #495057;
+        background-color: #fff;
+        background-clip: padding-box;
+        border: 1px solid #ced4da;
+        border-radius: 0.25rem;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+
+    .form-select:focus {
+        border-color: #80bdff;
+        outline: 0;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
     </style>
 
     <script>
@@ -328,6 +359,54 @@
             }
             return cookieValue;
         }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const priceRange = document.getElementById('price-range');
+            const size = document.getElementById('size');
+            const availability = document.getElementById('availability');
+            const applyFiltersBtn = document.getElementById('apply-filters');
+            const products = document.querySelectorAll('.grid > div');
+
+            function filterProducts() {
+                const selectedPrice = priceRange.value;
+                const selectedSize = size.value;
+                const selectedAvailability = availability.value;
+
+                products.forEach(product => {
+                    let showProduct = true;
+
+                    // Filter by price
+                    if (selectedPrice) {
+                        const price = parseFloat(product.querySelector('.mt-2').textContent.replace('€', ''));
+                        const [min, max] = selectedPrice.split('-').map(Number);
+                        if (max) {
+                            showProduct = showProduct && (price >= min && price <= max);
+                        } else {
+                            showProduct = showProduct && price >= min;
+                        }
+                    }
+
+                    // Filter by size
+                    if (selectedSize) {
+                        const sizes = Array.from(product.querySelectorAll('.flex.justify-center span')).map(span => span.textContent.trim());
+                        showProduct = showProduct && sizes.includes(selectedSize);
+                    }
+
+                    // Filter by availability
+                    if (selectedAvailability) {
+                        const isOutOfStock = product.textContent.includes('Out of stock');
+                        showProduct = showProduct && (
+                            (selectedAvailability === 'in-stock' && !isOutOfStock) ||
+                            (selectedAvailability === 'out-of-stock' && isOutOfStock)
+                        );
+                    }
+
+                    product.style.display = showProduct ? '' : 'none';
+                });
+            }
+
+            applyFiltersBtn.addEventListener('click', filterProducts);
+        });
         </script>
 
 
@@ -353,6 +432,12 @@
                     
                     <div class="flex items-center justify-end w-full">
                         <div x-data="cartData()" x-init="fetchCartItems()">
+                            <!-- Add Orders link here -->
+                            <a href="{% url 'view_order' %}" class="text-gray-600 focus:outline-none mx-4 relative">
+                                <span class="material-symbols-outlined">
+                                    receipt_long
+                                </span>
+                            </a>
                             <a href="{% url 'view_wishlist' %}" class="text-gray-600 focus:outline-none mx-4 relative">
                                 <span class="material-symbols-outlined">
                                     bookmarks
@@ -570,6 +655,45 @@
                 {% endif %}
         
                 <!-- Display Products for Selected Subcategory or Category -->
+                <div class="filter-section mb-8 bg-gray-100 rounded-lg p-6 shadow-md">
+                    <h3 class="text-2xl font-semibold mb-4 text-gray-800">Filter Products</h3>
+                    <div class="flex flex-wrap gap-4">
+                        <div class="filter-group flex-1 min-w-[200px]">
+                            <label for="price-range" class="block mb-2 text-sm font-medium text-gray-700">Price Range</label>
+                            <select id="price-range" class="form-select w-full bg-white border border-gray-300 text-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">All Prices</option>
+                                <option value="0-500">€0 - €500</option>
+                                <option value="500-750">€500 - €750</option>
+                                <option value="750-1000">€750- €1000</option>
+                                <option value="1000+">€100+</option>
+                            </select>
+                        </div>
+                        <div class="filter-group flex-1 min-w-[200px]">
+                            <label for="size" class="block mb-2 text-sm font-medium text-gray-700">Size</label>
+                            <select id="size" class="form-select w-full bg-white border border-gray-300 text-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">All Sizes</option>
+                                <option value="XS">XS</option>
+                                <option value="S">S</option>
+                                <option value="M">M</option>
+                                <option value="L">L</option>
+                                <option value="XL">XL</option>
+                            </select>
+                        </div>
+                        <div class="filter-group flex-1 min-w-[200px]">
+                            <label for="availability" class="block mb-2 text-sm font-medium text-gray-700">Availability</label>
+                            <select id="availability" class="form-select w-full bg-white border border-gray-300 text-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">All</option>
+                                <option value="in-stock">In Stock</option>
+                                <option value="out-of-stock">Out of Stock</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mt-6 flex justify-end">
+                        <button id="apply-filters" class="px-6 py-2 bg-blue-600 text-white font-semibold rounded-md shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition duration-300 ease-in-out">
+                            Apply Filters
+                        </button>
+                    </div>
+                </div>
                 <div class="grid grid-cols-1 gap-8 mt-8 xl:mt-16 md:grid-cols-2 xl:grid-cols-3">
                     {% for item in items %}
                         <div class="bg-white dark:bg-gray-800 border border-gray-600 dark:border-gray-400 rounded-xl shadow-lg overflow-hidden flex flex-col">

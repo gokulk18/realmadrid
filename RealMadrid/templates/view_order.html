@@ -1,0 +1,445 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real Madrid Official Store</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <style>
+                .custom-login-alert {
+                background-color: #ffe5e5;
+                border-left: 5px solid #ff4d4d;
+                color: #cc0000;
+                padding: 15px;
+                margin-bottom: 20px;
+                border-radius: 4px;
+                position: relative;
+                font-weight: bold;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+        
+            .custom-login-alert::before {
+                content: '\f071';  /* FontAwesome exclamation triangle icon */
+                font-family: 'FontAwesome';
+                margin-right: 10px;
+                font-size: 18px;
+            }
+        
+            .custom-login-alert .close {
+                position: absolute;
+                top: 50%;
+                right: 10px;
+                transform: translateY(-50%);
+                color: #cc0000;
+                opacity: 0.7;
+            }
+        
+            .custom-login-alert .close:hover {
+                opacity: 1;
+            }
+       a{
+        text-decoration:none !important;
+       }
+       .search-container {
+        display: flex;
+        justify-content: center;
+        width: 100%;
+    }
+
+    .relative {
+        position: relative;
+    }
+
+    .search-bar {
+        border: 2px solid #d1d5db;
+        background: white;
+        height: 40px;
+        padding: 0 16px;
+        border-radius: 8px;
+        font-size: 14px;
+        width: 300px;
+        position: relative;
+        outline: none;
+    }
+
+    .search-bar:focus {
+        border-color: #a1a1a1;
+    }
+
+    .search-bar::placeholder {
+        color: #9ca3af;
+    }
+
+    .search-container button {
+        position: absolute;
+        top: 50%;
+        left: 0;
+        transform: translateY(-50%);
+        height: 100%;
+        border: none;
+        background: transparent;
+        cursor: pointer;
+    }
+
+    .search-container .material-symbols-outlined {
+        font-size: 24px;
+    }
+    .card-link {
+        display: block;
+        text-decoration: none; /* Remove underline from links */
+        color: inherit; /* Ensure text color is inherited */
+      }
+    
+      .card {
+        position: relative;
+        background: white;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
+    
+      .card:hover {
+        transform: translateY(-5px); /* Lift the card on hover */
+        box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2); /* Enhance shadow on hover */
+      }
+    
+      .card::before {
+        content: '';
+        position: absolute;
+        bottom: -20px; /* Adjust this value to position the shadow correctly */
+        left: 0;
+        right: 0;
+        height: 20px; /* Adjust this value based on the shadow intensity you want */
+        background: linear-gradient(to top, rgba(204, 153, 255, 0.5), transparent);
+        z-index: -1;
+        border-radius: 8px;
+      }
+
+      .cart-sidebar {
+        position: fixed;
+        top: 0;
+        right: -400px;
+        bottom: 0;
+        width: 400px;
+        background-color: white;
+        box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+        transition: right 0.3s ease-out;
+        z-index: 1000;
+        border-top-left-radius: 20px;    /* Add this line */
+        border-bottom-left-radius: 20px; /* Add this line */
+        overflow: hidden;                /* Add this line to ensure content doesn't overflow the rounded corners */
+    }
+
+    .cart-sidebar.open {
+        right: 0;
+    }
+
+      .cart-item-image {
+        width: 80px;
+        height: 100px;
+        object-fit: cover;
+      }
+
+      .quantity-control {
+        display: flex;
+        align-items: center;
+        border: 1px solid #e2e8f0;
+        border-radius: 4px;
+      }
+
+      .quantity-control button {
+        padding: 0 8px;
+        background-color: #f7fafc;
+        border: none;
+        font-size: 18px;
+      }
+
+      .quantity-control span {
+        padding: 0 12px;
+        font-size: 14px;
+      }
+
+      .complete-order-btn {
+        background-color: #6366f1;
+        color: white;
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-weight: bold;
+      }
+
+      .keep-buying-btn {
+        color: #6366f1;
+        font-weight: bold;
+      }
+
+      [x-cloak] { display: none !important; }
+    </style>
+
+    <script>
+        function cartData() {
+            return {
+                cartItems: [],
+                cartOpen: false,
+                async toggleCart() {
+                    this.cartOpen = !this.cartOpen;
+                    if (this.cartOpen) {
+                        await this.fetchCartItems();
+                    }
+                },
+                async fetchCartItems() {
+                    try {
+                        const response = await fetch('/api/cart-items/');
+                        if (!response.ok) {
+                            throw new Error('Failed to fetch cart items');
+                        }
+                        const data = await response.json();
+                        this.cartItems = data.map(item => ({
+                            ...item,
+                            outOfStock: item.available_quantity === 0,
+                            quantityExceeded: item.quantity > item.available_quantity
+                        }));
+                    } catch (error) {
+                        console.error('Error fetching cart items:', error);
+                    }
+                },
+                async addToCart(item) {
+                    try {
+                        const response = await fetch('/api/add-to-cart', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify(item),
+                        });
+                        if (response.ok) {
+                            await this.fetchCartItems();
+                            this.cartOpen = true;
+                        }
+                    } catch (error) {
+                        console.error('Error adding item to cart:', error);
+                    }
+                },
+
+                async removeFromCart(item) {
+                    try {
+                        const csrftoken = getCookie('csrftoken');
+                        console.log('Removing item:', item);
+                        const response = await fetch('/remove-from-cart/', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': csrftoken
+                            },
+                            body: JSON.stringify({
+                                item_id: item.id  // This is the CartItem.id
+                            })
+                        });
+
+                        console.log('Response status:', response.status);
+                        const responseData = await response.json();
+                        console.log('Response data:', responseData);
+
+                        if (response.ok) {
+                            await this.fetchCartItems();
+                        } else {
+                            console.error('Error removing item from cart:', responseData.error);
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                    }
+                },
+
+                async updateQuantity(item, change) {
+                    try {
+                        const csrftoken = getCookie('csrftoken');
+                        const newQuantity = item.quantity + change;
+                        if (newQuantity > item.available_quantity) {
+                            alert(`Sorry, only ${item.available_quantity} items are available.`);
+                            return;
+                        }
+                        const response = await fetch('/update-cart-quantity/', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': csrftoken
+                            },
+                            body: JSON.stringify({
+                                item_id: item.id,
+                                quantity_change: change
+                            })
+                        });
+    
+                        if (response.ok) {
+                            const data = await response.json();
+                            if (data.success) {
+                                await this.fetchCartItems();
+                            } else {
+                                console.error('Error updating quantity:', data.error);
+                                alert(data.error);
+                            }
+                        } else {
+                            console.error('Error updating quantity');
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                    }
+                },
+                          
+                
+                get cartTotal() {
+                    return this.cartItems
+                        .filter(item => !item.outOfStock)
+                        .reduce((total, item) => total + item.price * item.quantity, 0)
+                        .toFixed(2);
+                },
+                get availableItemsCount() {
+                    return this.cartItems.filter(item => !item.outOfStock).length;
+                },
+                checkout() {
+                    const availableItems = this.cartItems.filter(item => !item.outOfStock);
+                    if (availableItems.length === 0) {
+                        alert('There are no available items in your cart to checkout.');
+                        return;
+                    }
+                    // Implement checkout logic here with availableItems
+                    console.log('Proceeding to checkout with available items:', availableItems);
+                }
+            }
+        }
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        </script>
+
+
+
+
+</head>
+<body class="bg-gray-100 font-sans">
+    <div class="bg-white" id="navbar">
+        <header>
+            <div class="container mx-auto px-6 py-3">
+                <div class="flex items-center justify-between">
+                    <div class="hidden w-full text-gray-600 md:flex md:items-center">
+                        <a href="{% url 'index' %}" class="flex items-center">
+                            <img class="w-auto h-6 sm:h-7" src="{% static 'madrid_images/real-madrid-logo.png' %}" alt="Real Madrid Logo">
+                            <span class="ml-2 lg:ml-6 hover:text-blue-500">REAL MADRID FC</span>
+                        </a>
+                    </div>
+                    <div class="ml-2 lg:ml-6 hover:text-blue-500 font-semibold whitespace-nowrap">
+                        <a href="{% url 'store' %}" class="flex items-center">
+                        Official Store
+                        </a>
+                    </div>
+                    
+                    <div class="flex items-center justify-end w-full">
+                        <div x-data="cartData()" x-init="fetchCartItems()">
+                            <a href="{% url 'view_order' %}" class="text-gray-600 focus:outline-none mx-4 relative">
+                                <span class="material-symbols-outlined">
+                                    receipt_long
+                                </span>
+                            </a>
+                            <a href="{% url 'view_wishlist' %}" class="text-gray-600 focus:outline-none mx-4 relative">
+                                <span class="material-symbols-outlined">
+                                    bookmarks
+                                </span>
+                            </a>
+                            <button @click="toggleCart()" class="text-gray-600 focus:outline-none mx-4 sm:mx-0 relative">
+                                <span class="material-symbols-outlined">
+                                    shopping_cart
+                                </span>
+                                <span x-show="cartItems.length > 0" x-text="cartItems.length" class="absolute -top-2 -right-2 bg-blue-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"></span>
+                            </button>
+                            <!-- Cart sidebar -->
+                            <div x-show="cartOpen" @click.away="cartOpen = false" class="cart-sidebar" :class="{ 'open': cartOpen }">
+                                <!-- Cart content -->
+                            </div>
+                        </div>
+                      
+                    </div>
+                </div>
+            </div>
+        </header>
+    </div>
+    <body class="bg-gray-100 font-sans">
+        <!-- Navbar (you can include your existing navbar here) -->
+    
+        <div class="container mx-auto px-4 py-8">
+            <h1 class="text-3xl font-bold text-gray-800 mb-8">Your Orders</h1>
+    
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
+                        <p>{{ message }}</p>
+                    </div>
+                {% endfor %}
+            {% endif %}
+    
+           
+    
+            {% if orders %}
+                {% for order in orders %}
+                    <div class="bg-white shadow-lg rounded-lg mb-8 overflow-hidden transition-all duration-300 hover:shadow-xl">
+                        <div class="bg-gray-200 px-4 py-3 border-b border-gray-300">
+                            <div class="flex justify-between items-center">
+                                <span class="font-semibold text-gray-700">Order #{{ order.order_number }}</span>
+                                <span class="text-sm text-gray-600">{{ order.created_at|date:"F j, Y" }}</span>
+                            </div>
+                        </div>
+                        <div class="p-4">
+                            {% for item in order.items.all %}
+                                <div class="flex items-center mb-4 pb-4 border-b border-gray-200 last:border-b-0 last:pb-0 last:mb-0">
+                                    <img src="{{ item.item.main_image.url }}" alt="{{ item.item.name }}" class="w-16 h-16 object-cover rounded mr-4">
+                                    <div class="flex-grow">
+                                        <h3 class="font-semibold text-gray-800">{{ item.item.name }}</h3>
+                                        <p class="text-sm text-gray-600">
+                                            Quantity: {{ item.quantity }} | 
+                                            {% if item.size %}Size: {{ item.size }} | {% endif %}
+                                            Price: €{{ item.price }}
+                                        </p>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="font-semibold text-gray-700">Total:</span>
+                                <span class="font-bold text-gray-800">€{{ order.total }}</span>
+                            </div>
+                            <div class="text-sm text-gray-600">
+                                Status: <span class="font-semibold {% if order.status == 'Delivered' %}text-green-600{% elif order.status == 'Processing' %}text-blue-600{% else %}text-yellow-600{% endif %}">{{ order.status }}</span>
+                            </div>
+                            <div class="mt-4">
+                                <a href="{% url 'order_detail' order.id %}" class="inline-block bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-300">
+                                    View Details
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="bg-white shadow-md rounded-lg p-6 text-center">
+                    <p class="text-gray-600">You haven't placed any orders yet.</p>
+                    <a href="{% url 'store' %}" class="mt-4 inline-block bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-200">Start Shopping</a>
+                </div>
+            {% endif %}
+        </div>
