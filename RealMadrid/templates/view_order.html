@@ -358,21 +358,7 @@
                                     receipt_long
                                 </span>
                             </a>
-                            <a href="{% url 'view_wishlist' %}" class="text-gray-600 focus:outline-none mx-4 relative">
-                                <span class="material-symbols-outlined">
-                                    bookmarks
-                                </span>
-                            </a>
-                            <button @click="toggleCart()" class="text-gray-600 focus:outline-none mx-4 sm:mx-0 relative">
-                                <span class="material-symbols-outlined">
-                                    shopping_cart
-                                </span>
-                                <span x-show="cartItems.length > 0" x-text="cartItems.length" class="absolute -top-2 -right-2 bg-blue-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"></span>
-                            </button>
-                            <!-- Cart sidebar -->
-                            <div x-show="cartOpen" @click.away="cartOpen = false" class="cart-sidebar" :class="{ 'open': cartOpen }">
-                                <!-- Cart content -->
-                            </div>
+
                         </div>
                       
                     </div>
