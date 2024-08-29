@@ -97,8 +97,56 @@ def get_cart_items(request):
 def payment_success(request):
     return render(request,'payment_success.html')
 
+def stadium(request):
+    return render(request,'stadium.html')
 
 
+def schedule(request):
+    api_key = 'dc93cd61f7a04a67be5652fc72195459'
+    url = 'https://api.football-data.org/v4/teams/86/matches'  # Real Madrid's ID is 86
+    headers = {'X-Auth-Token': api_key}
+
+    response = requests.get(url, headers=headers)
+    all_fixtures = response.json().get('matches', [])
+
+    # Convert UTC dates to IST and filter for upcoming home matches
+    ist_timezone = pytz.timezone('Asia/Kolkata')
+    current_time = datetime.now(ist_timezone)
+    upcoming_home_match = None
+
+    for fixture in all_fixtures:
+        utc_date = parse_datetime(fixture['utcDate'])
+        if utc_date:
+            # Make the datetime aware if it's naive
+            if utc_date.tzinfo is None:
+                utc_date = make_aware(utc_date)
+            
+            # Convert to IST
+            ist_date = utc_date.astimezone(ist_timezone)
+            
+            # Check if it's a future home match
+            if ist_date > current_time and fixture['homeTeam']['name'] == 'Real Madrid CF':
+                upcoming_home_match = {
+                    'date': ist_date.strftime("%a, %b %d, %Y"),
+                    'time': ist_date.strftime("%I:%M %p IST"),
+                    'home_team': fixture['homeTeam']['name'],
+                    'away_team': fixture['awayTeam']['name'],
+                    
+                    'competition': fixture['competition']['name'],
+                    'id': fixture['id']
+                }
+                break  # Stop after finding the first upcoming home match
+
+    context = {
+        'upcoming_home_match': upcoming_home_match,
+        'user_name': request.user.username if request.user.is_authenticated else None,
+    }
+    return render(request, 'schedule.html', context)
+
+
+    
+    
+    
 def order_detail(request, order_id):
     order = get_object_or_404(Order.objects.select_related('shipping'), id=order_id)
     return render(request, 'order_detail.html', {'order': order})
@@ -409,6 +457,8 @@ def view_wishlist(request):
         'total_value': total_value,
     }
     return render(request, 'wishlist.html', context)
+
+
 
 @require_POST
 def remove_from_wishlist(request):

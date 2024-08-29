@@ -36,8 +36,8 @@ urlpatterns = [
     path('payment_success/', views.payment_success, name='payment_success'),
     path('view_order/', views.view_order, name='view_order'),
     path('order_detail/<int:order_id>/', views.order_detail, name='order_detail'),
-
-    
+    path('stadium/', views.stadium, name='stadium'),
+    path('schedule/',views.schedule,name="schedule"),
     
     
     
