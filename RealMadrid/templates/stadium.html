@@ -89,7 +89,7 @@
         .quantity-selector {
             display: flex;
             align-items: center;
-            background-color: #3b82f6;
+            background-color: #00004B;
             border-radius: 4px;
             overflow: hidden;
         }
@@ -114,7 +114,7 @@
             border-top: 1px solid #eee;
         }
         .add-to-cart {
-            background-color: #3b82f6;
+            background-color: #00004B;
             color: white;
             border: none;
             padding: 10px 20px;
@@ -190,7 +190,7 @@
             </div>
 
             <!-- New Ticket Selection Interface -->
-            <div class="ticket-container" x-show="selectedSection">
+            <div class="ticket-container" x-show="selectedSection" id="ticket-container">
                 <h2 class="text-xl font-semibold mb-4 text-center">CHOOSE TICKETS</h2>
                 <!-- Display selected stand and section -->
                 <div class="mb-4 text-center text-gray-600">
@@ -289,6 +289,7 @@
                     if (section) {
                         this.selectedSectionName = section.name;
                         this.selectedSectionPrice = section.price;
+                        this.scrollToTicketContainer(); // Add this line
                     } else {
                         this.selectedSectionName = '';
                         this.selectedSectionPrice = 0;
@@ -306,6 +307,14 @@
                 addToCart() {
                     // Implement your add to cart logic here
                     console.log(`Added ${this.quantity} tickets for ${this.selectedSectionName} to cart`);
+                },
+                scrollToTicketContainer() {
+                    setTimeout(() => {
+                        const ticketContainer = document.getElementById('ticket-container');
+                        if (ticketContainer) {
+                            ticketContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+                    }, 100); // Small delay to ensure the container is visible
                 }
             }
         }
