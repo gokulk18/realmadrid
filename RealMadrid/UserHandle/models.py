@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.utils.crypto import get_random_string
+from django.core.validators import MinValueValidator
 
 class Users(AbstractUser):
     name = models.CharField(max_length=255)
@@ -236,3 +237,24 @@ class Shipping(models.Model):
                 return f"https://www.fedex.com/fedextrack/?trknbr={self.tracking_number}"
             # Add more carriers as needed
         return None
+    
+
+class Stand(models.Model):
+    name = models.CharField(max_length=100)
+    
+    def __str__(self):
+        return self.name
+
+
+class Section(models.Model):
+    name = models.CharField(max_length=100)
+    stand = models.ForeignKey(Stand, on_delete=models.CASCADE, related_name='sections')
+    seats = models.JSONField(default=list)  # Store seat numbers as a JSON list
+    price = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
+
+    class Meta:
+        unique_together = ('stand', 'name')  # Ensure unique section names per stand
+
+    def __str__(self):
+        return f"{self.stand.name} - {self.name}"
+

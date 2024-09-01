@@ -6,13 +6,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
-    <title>Real Madrid FC</title>
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Real Madrid FC - Match Details</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uikit@3.21.6/dist/css/uikit.min.css" />
-
-    <!-- UIkit JS -->
     <script src="https://cdn.jsdelivr.net/npm/uikit@3.21.6/dist/js/uikit.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/uikit@3.21.6/dist/js/uikit-icons.min.js"></script>
     <script src="//unpkg.com/alpinejs" defer></script>
@@ -22,28 +20,25 @@
             transition: transform 0.3s ease-in-out;
         }
         .uk-slider-container .uk-slidenav {
-            color: white; /* Default color */
-            transition: color 0.3s ease; /* Smooth transition */
+            color: white;
+            transition: color 0.3s ease;
         }
-    
         .uk-slider-container .uk-slidenav:hover {
-            color: #3b82f6; /* Blue color on hover */
+            color: #3b82f6;
         }
         .rounded-lg {
-            border-radius: 1rem; /* Adjust radius as needed */
-            overflow: hidden; /* Ensures the image fits within the rounded corners */
+            border-radius: 1rem;
+            overflow: hidden;
         }
-    
         .hover\:scale-105:hover {
-            transform: scale(1.05); /* Zoom effect on hover */
+            transform: scale(1.05);
         }
-        a{
+        a {
             text-decoration: none !important;
         }
     </style>
 </head>
 <body class="bg-[#f3f5f8]">
-
 
 <!-- Navbar Section -->
 <section class="bg-white dark:bg-white-900">
@@ -60,7 +55,6 @@
                     <svg x-show="!isOpen" xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4 8h16M4 16h16" />
                     </svg>
-
                     <svg x-show="isOpen" xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                     </svg>
@@ -112,118 +106,59 @@
     <hr>
 </section>
 
-
-
-
-
-
+<!-- Content Section -->
+<div class="container mx-auto px-4 py-8 mt-20">
+    <h1 class="text-3xl font-bold text-center mb-8">Match Details</h1>
     
-    <!-- Content Section -->
-
-
-    <!-- JavaScript for Scroll Behavior -->
-    <script>
-        let lastScrollTop = 0;
-        const navbar = document.getElementById('navbar');
-
-        window.addEventListener('scroll', () => {
-            let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-
-            if (scrollTop > lastScrollTop) {
-                // Scroll down
-                navbar.style.transform = 'translateY(-100%)';
-            } else {
-                // Scroll up
-                navbar.style.transform = 'translateY(0)';
-            }
-            lastScrollTop = scrollTop;
-        });
-    </script>
-    <body class="bg-gray-100">
-        <div class="container mx-auto px-4 py-8">
-            <h1 class="text-3xl font-bold text-center mb-8">Match Details</h1>
+    <div class="bg-white shadow-lg rounded-lg overflow-hidden mb-8">
+        <div class="bg-gray-800 text-white text-xl font-semibold p-4 text-center">
+            {{ match_info.date }}
+        </div>
+        
+        <div class="p-6">
+            <h2 class="text-lg font-semibold mb-4 text-center">{{ match_info.competition }}</h2>
             
-            <div class="bg-white shadow-lg rounded-lg overflow-hidden mb-8">
-                <div class="bg-gray-800 text-white text-xl font-semibold p-4 text-center">
-                    {{ match_info.date }}
-                </div>
-                
-                <div class="p-6">
-                    <h2 class="text-lg font-semibold mb-4 text-center">{{ match_info.competition }}</h2>
-                    
-                    <div class="grid grid-cols-3 gap-4 items-center mb-6">
-                        <div class="text-right text-lg">{{ match_info.home_team }}</div>
-                        <div class="text-center bg-red-600 text-white font-bold text-2xl rounded-md py-2">
-                            {{ match_info.home_score|default_if_none:"?" }} - {{ match_info.away_score|default_if_none:"?" }}
-                        </div>
-                        <div class="text-lg">{{ match_info.away_team }}</div>
-                    </div>
-                    
-                    <!-- Match Statistics -->
-                    <div class="space-y-4 mb-6">
-                        <div class="grid grid-cols-3 gap-4 items-center">
-                            <div class="text-right">{{ match_info.home_stats.possession|default_if_none:"N/A" }}%</div>
-                            <div class="text-center font-semibold">Possession</div>
-                            <div>{{ match_info.away_stats.possession|default_if_none:"N/A" }}%</div>
-                        </div>
-                        <div class="grid grid-cols-3 gap-4 items-center">
-                            <div class="text-right">{{ match_info.home_stats.shots|default_if_none:"N/A" }}</div>
-                            <div class="text-center font-semibold">Shots</div>
-                            <div>{{ match_info.away_stats.shots|default_if_none:"N/A" }}</div>
-                        </div>
-                        <div class="grid grid-cols-3 gap-4 items-center">
-                            <div class="text-right">{{ match_info.home_stats.shots_on_target|default_if_none:"N/A" }}</div>
-                            <div class="text-center font-semibold">Shots on Target</div>
-                            <div>{{ match_info.away_stats.shots_on_target|default_if_none:"N/A" }}</div>
-                        </div>
-                        <div class="grid grid-cols-3 gap-4 items-center">
-                            <div class="text-right">{{ match_info.home_stats.fouls|default_if_none:"N/A" }}</div>
-                            <div class="text-center font-semibold">Fouls</div>
-                            <div>{{ match_info.away_stats.fouls|default_if_none:"N/A" }}</div>
-                        </div>
-                        <div class="grid grid-cols-3 gap-4 items-center">
-                            <div class="text-right">{{ match_info.home_stats.offsides|default_if_none:"N/A" }}</div>
-                            <div class="text-center font-semibold">Offsides</div>
-                            <div>{{ match_info.away_stats.offsides|default_if_none:"N/A" }}</div>
-                        </div>
-                        <div class="grid grid-cols-3 gap-4 items-center">
-                            <div class="text-right">{{ match_info.home_stats.yellow_cards|default_if_none:"N/A" }}</div>
-                            <div class="text-center font-semibold">Yellow Cards</div>
-                            <div>{{ match_info.away_stats.yellow_cards|default_if_none:"N/A" }}</div>
-                        </div>
-                        <div class="grid grid-cols-3 gap-4 items-center">
-                            <div class="text-right">{{ match_info.home_stats.red_cards|default_if_none:"N/A" }}</div>
-                            <div class="text-center font-semibold">Red Cards</div>
-                            <div>{{ match_info.away_stats.red_cards|default_if_none:"N/A" }}</div>
-                        </div>
-                    </div>
-                    
-                    <!-- Goal Scorers -->
-                    <div class="mt-6">
-                        <h3 class="font-semibold mb-2 text-center">Goal Scorers</h3>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <h4 class="font-semibold mb-2">{{ match_info.home_team }}</h4>
-                                {% for scorer in match_info.goal_scorers %}
-                                {% if scorer.team == 'home' %}
-                                <p>{{ scorer.name }} ({{ scorer.minute }}')</p>
-                                {% endif %}
-                                {% endfor %}
-                            </div>
-                            <div class="text-right">
-                                <h4 class="font-semibold mb-2">{{ match_info.away_team }}</h4>
-                                {% for scorer in match_info.goal_scorers %}
-                                {% if scorer.team == 'away' %}
-                                <p>{{ scorer.name }} ({{ scorer.minute }}')</p>
-                                {% endif %}
-                                {% endfor %}
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="mt-6 text-center">
-                        <a href="#" class="text-blue-500 hover:underline">More Stats</a>
-                    </div>
-                </div>
+            <!-- API-Football Widget for Match Details -->
+            <div id="wg-api-football-game"
+                data-host="v3.football.api-sports.io"
+                data-key="{{ api_football_key }}"
+                data-id="{{ fixture_id }}"
+                data-theme=""
+                data-refresh="15"
+                data-show-errors="true"
+                data-show-logos="true"
+                data-show-info="true"
+                data-show-statistics="true"
+                data-show-lineups="true"
+                data-show-h2h="true">
             </div>
         </div>
+    </div>
+</div>
+
+<!-- JavaScript for Scroll Behavior -->
+<script>
+    let lastScrollTop = 0;
+    const navbar = document.getElementById('navbar');
+
+    window.addEventListener('scroll', () => {
+        let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+        if (scrollTop > lastScrollTop) {
+            // Scroll down
+            navbar.style.transform = 'translateY(-100%)';
+        } else {
+            // Scroll up
+            navbar.style.transform = 'translateY(0)';
+        }
+        lastScrollTop = scrollTop;
+    });
+</script>
+
+<script
+    type="module"
+    src="https://widgets.api-sports.io/2.0.3/widgets.js">
+</script>
+
+</body>
+</html>

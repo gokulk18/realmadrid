@@ -5,10 +5,11 @@ from django.conf.urls.static import static  # Import static
 from django.conf import settings
 
 urlpatterns = [
+    # ... other url patterns ...
+    path('stadium/<int:match_id>/', views.stadium, name='stadium'),
     path('', views.index, name="index"),
     path('register', views.register, name="register"),
     path('login', views.login, name="login"),
-    path('stadium_structure',views.stadium_structure,name="stadium_structure"),
     path('email_otp_verif', views.email_otp_verif, name="email_otp_verif"),
     path('profile',views.profile,name="profile"),
     path('logout',views.logout,name="logout"),
@@ -28,7 +29,6 @@ urlpatterns = [
     path('remove-from-cart/', views.remove_from_cart, name='remove_from_cart'),
     path('update-cart-quantity/', views.update_cart_quantity, name='update_cart_quantity'),
     path('previous_results/', views.previous_results, name='previous_results'),
-    path('match_details/<int:match_id>/', views.match_details, name='match_details'),
     path('wishlist/', views.view_wishlist, name='view_wishlist'),
     path('add-to-wishlist/', views.add_to_wishlist, name='add_to_wishlist'),
     path('remove-from-wishlist/', views.remove_from_wishlist, name='remove_from_wishlist'),
@@ -36,10 +36,8 @@ urlpatterns = [
     path('payment_success/', views.payment_success, name='payment_success'),
     path('view_order/', views.view_order, name='view_order'),
     path('order_detail/<int:order_id>/', views.order_detail, name='order_detail'),
-    path('stadium/', views.stadium, name='stadium'),
     path('schedule/',views.schedule,name="schedule"),
-    
-    
+    path('match_details/<int:fixture_id>/', views.match_details, name='match_details'),
     
 
     path('admin_dashboard/',views.admin_dashboard,name="admin_dashboard"),
@@ -58,8 +56,9 @@ urlpatterns = [
     path('admin_add_item/', views.admin_add_item, name='admin_add_item'),
     path('get_subcategories/<int:category_id>/', views.get_subcategories, name='get_subcategories'),
     path('admin_view_orders/', views.admin_view_orders, name='admin_view_orders'),
-
-
+    path('admin_stadium/',views.admin_stadium,name="admin_stadium"),
+    path('admin_add_subsection/',views.admin_add_subsection,name="admin_add_subsection"),
+    path('admin_delete_section/',views.admin_delete_section,name='admin_delete_section'),
 
 
 

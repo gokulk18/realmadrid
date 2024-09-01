@@ -1,7 +1,8 @@
 from django.contrib import admin
 from .models import (
     Users, Position, Player, News, Category, SubCategory, Item, ItemImage, ItemSize,
-    Cart, CartItem, Wishlist, WishlistItem, Order, OrderItem, Payment, Shipping
+    Cart, CartItem, Wishlist, WishlistItem, Order, OrderItem, Payment, Shipping,
+    Stand, Section
 )
 
 class UsersAdmin(admin.ModelAdmin):
@@ -119,6 +120,23 @@ class ShippingAdmin(admin.ModelAdmin):
     search_fields = ('order__order_number', 'tracking_number')
     list_filter = ('status', 'shipping_method', 'shipped_at', 'delivered_at')
 
+class SectionInline(admin.TabularInline):
+    model = Section
+    extra = 1
+
+class SectionAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'stand', 'seats', 'price')
+    list_filter = ('stand',)
+    search_fields = ('name', 'stand__name')
+
+    def seats_display(self, obj):
+        return ", ".join(obj.seats)
+    seats_display.short_description = 'Seats'
+
+class StandAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name')
+    search_fields = ('name',)
+
 # Register the models with the admin site
 admin.site.register(Users, UsersAdmin)
 admin.site.register(Position, PositionAdmin)
@@ -135,3 +153,7 @@ admin.site.register(Order, OrderAdmin)
 admin.site.register(OrderItem)
 admin.site.register(Payment, PaymentAdmin)
 admin.site.register(Shipping, ShippingAdmin)
+
+# Register the new models
+admin.site.register(Stand, StandAdmin)
+admin.site.register(Section, SectionAdmin)

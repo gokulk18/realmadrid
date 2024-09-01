@@ -8,15 +8,124 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="//unpkg.com/alpinejs" defer></script>
     <style>
-        body { overflow: hidden; }
-        .section { fill: #4CAF50; cursor: pointer; }
-        .section:hover { fill: #45a049; }
-        .section.disabled { fill: #ccc; cursor: not-allowed; }
-        #booking-form { display: none; margin-top: 20px; }
+        .iframe-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+        }
+        .section-highlight {
+            position: absolute;
+            background-color: rgba(59, 130, 246, 0.3);
+            transition: all 0.3s ease;
+        }
+        .section-highlight:hover {
+            background-color: rgba(59, 130, 246, 0.5);
+        }
+        .section-highlight.selected {
+            background-color: rgba(59, 130, 246, 0.7);
+        }
+        .stadium-layout {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .stadium-section {
+            aspect-ratio: 1;
+            background-color: #e5e7eb;
+            border: 2px solid #d1d5db;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .stadium-section:hover {
+            background-color: #d1d5db;
+        }
+        .stadium-section.selected {
+            background-color: #93c5fd;
+            border-color: #3b82f6;
+        }
+        .stadium-section.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .ticket-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 770px;
+            margin: 20px auto 0;
+        }
+        .ticket-option {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .ticket-info {
+            flex-grow: 1;
+        }
+        .ticket-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .ticket-price {
+            font-size: 1.2em;
+            color: #333;
+        }
+        .quantity-selector {
+            display: flex;
+            align-items: center;
+            background-color: #3b82f6;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .quantity-btn {
+            background-color: transparent;
+            border: none;
+            color: white;
+            font-size: 1.2em;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        .quantity {
+            color: white;
+            padding: 0 10px;
+        }
+        .total {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        .add-to-cart {
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
     </style>
 </head>
-<body class="bg-white">
-    <nav id="navbar" x-data="{ isOpen: false }" class="fixed inset-x-0 z-30 bg-white text-[#43526e] p-4">
+<body class="bg-gray-100 font-sans">
+    <nav id="navbar" x-data="{ isOpen: false }" class="fixed inset-x-0 z-30 bg-white text-[#43526e] p-4 shadow-md">
         <!-- Simplified navbar content -->
         <div class="flex justify-between items-center">
             <a href="#" class="flex items-center">
@@ -32,13 +141,176 @@
         </div>
     </nav>
 
-    <div class="pt-16">
-        <iframe 
-            src="https://previews.customer.envatousercontent.com/files/439745440/index.html" 
-            frameborder="0" 
-            style="width: 100%; height: calc(100vh - 64px);"
-            allow="geolocation 'self'; autoplay 'self'">
-        </iframe>
+    <div class="pt-20 relative" x-data="stadiumApp()">
+        <div class="max-w-6xl mx-auto p-4">
+            <h2 class="text-3xl text-center font-bold mb-6 text-gray-800">Select Your Seats</h2>
+            <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+                <p class="text-center text-lg font-semibold mb-2">Match: {{ match.homeTeam.name }} vs {{ match.awayTeam.name }}</p>
+                <p class="text-center text-gray-600">Date: {{ match.ist_date }}</p>
+            </div>
+            <div class="relative mb-6">
+                <iframe 
+                    id="stadium-iframe"
+                    src="https://previews.customer.envatousercontent.com/files/439745440/index.html" 
+                    frameborder="0" 
+                    class="w-full h-[600px] rounded-lg shadow-lg"
+                    allow="geolocation 'self'; autoplay 'self'"
+                    style="pointer-events: none;">
+                </iframe>
+            </div>
+            
+            <div class="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
+                <div class="relative w-full sm:w-1/3">
+                    <select id="stand-select" x-model="selectedStand" @change="updateSections()" class="appearance-none w-full bg-white border border-gray-300 text-gray-700 py-3 px-4 pr-8 rounded-lg leading-tight focus:outline-none focus:bg-white focus:border-blue-500 focus:ring focus:ring-blue-200 transition-all duration-200">
+                        <option value="">Select a stand</option>
+                        {% for stand, sections in stands_sections.items %}
+                            <option value="{{ stand.id }}">{{ stand.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                        <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                            <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <div class="relative w-full sm:w-1/3">
+                    <select id="section-select" x-model="selectedSection" :disabled="!selectedStand" @change="updateSelectedSection()" class="appearance-none w-full bg-white border border-gray-300 text-gray-700 py-3 px-4 pr-8 rounded-lg leading-tight focus:outline-none focus:bg-white focus:border-blue-500 focus:ring focus:ring-blue-200 transition-all duration-200" :class="{'opacity-50 cursor-not-allowed': !selectedStand}">
+                        <option value="">Select a section</option>
+                        <template x-for="section in sections" :key="section.id">
+                            <option :value="section.id" x-text="section.name"></option>
+                        </template>
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                        <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                            <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- New Ticket Selection Interface -->
+            <div class="ticket-container" x-show="selectedSection">
+                <h2 class="text-xl font-semibold mb-4 text-center">CHOOSE TICKETS</h2>
+                <!-- Display selected stand and section -->
+                <div class="mb-4 text-center text-gray-600">
+                    <div x-text="`Stand: ${selectedStandName}`"></div>
+                    <div x-text="`Section: ${selectedSectionName}`"></div>
+                </div>
+                <div class="ticket-option">
+                    <div class="ticket-info">
+                        <div class="ticket-name" x-text="selectedSectionName"></div>
+                        <div class="ticket-price" x-text="`₹${selectedSectionPrice}`"></div>
+                    </div>
+                    <div class="quantity-selector">
+                        <button class="quantity-btn" @click="decrementQuantity">-</button>
+                        <span class="quantity" x-text="quantity"></span>
+                        <button class="quantity-btn" @click="incrementQuantity">+</button>
+                    </div>
+                </div>
+                <div class="total">
+                    <div>
+                        <div class="ticket-price" x-text="`₹${totalPrice}`"></div>
+                        <div x-text="`${quantity} ticket${quantity > 1 ? 's' : ''}`"></div>
+                    </div>
+                    <button class="add-to-cart" @click="addToCart">ADD TO CART</button>
+                </div>
+            </div>
+        </div>
     </div>
+
+    <script>
+        const standsData = {
+            {% for stand, sections in stands_sections.items %}
+                {{ stand.id }}: [
+                    {% for section in sections %}
+                        {id: {{ section.id }}, name: "{{ section.name }}", price: {{ section.price }}},
+                    {% endfor %}
+                ],
+            {% endfor %}
+        };
+
+        document.getElementById('stand-select').addEventListener('change', function() {
+            const sectionSelect = document.getElementById('section-select');
+            sectionSelect.innerHTML = '<option value="">Select a section</option>';
+            sectionSelect.disabled = true;
+
+            const standId = this.value;
+            if (standId) {
+                const sections = standsData[standId];
+                sections.forEach(section => {
+                    const option = document.createElement('option');
+                    option.value = section.id;
+                    option.textContent = section.name;
+                    sectionSelect.appendChild(option);
+                });
+                sectionSelect.disabled = false;
+            }
+        });
+    </script>
+
+    <script>
+        function stadiumApp() {
+            return {
+                selectedStand: '',
+                selectedStandName: '',
+                selectedSection: '',
+                selectedSectionName: '',
+                selectedSectionPrice: 0,
+                sections: [],
+                quantity: 1,
+                standsData: {
+                    {% for stand, sections in stands_sections.items %}
+                        {{ stand.id }}: {
+                            name: "{{ stand.name }}",
+                            sections: [
+                                {% for section in sections %}
+                                    {id: {{ section.id }}, name: "{{ section.name }}", price: {{ section.price }}},
+                                {% endfor %}
+                            ]
+                        },
+                    {% endfor %}
+                },
+                updateSections() {
+                    if (this.selectedStand) {
+                        this.selectedStandName = this.standsData[this.selectedStand].name;
+                        this.sections = this.standsData[this.selectedStand].sections;
+                    } else {
+                        this.selectedStandName = '';
+                        this.sections = [];
+                    }
+                    this.selectedSection = '';
+                    this.selectedSectionName = '';
+                    this.selectedSectionPrice = 0;
+                    this.quantity = 1;
+                },
+                updateSelectedSection() {
+                    const section = this.sections.find(s => s.id == this.selectedSection);
+                    if (section) {
+                        this.selectedSectionName = section.name;
+                        this.selectedSectionPrice = section.price;
+                    } else {
+                        this.selectedSectionName = '';
+                        this.selectedSectionPrice = 0;
+                    }
+                },
+                incrementQuantity() {
+                    if (this.quantity < 10) this.quantity++;
+                },
+                decrementQuantity() {
+                    if (this.quantity > 1) this.quantity--;
+                },
+                get totalPrice() {
+                    return this.selectedSectionPrice * this.quantity;
+                },
+                addToCart() {
+                    // Implement your add to cart logic here
+                    console.log(`Added ${this.quantity} tickets for ${this.selectedSectionName} to cart`);
+                }
+            }
+        }
+    </script>
+
+    <!-- Removed the injectScript function and its invocation -->
 </body>
 </html>

@@ -23,9 +23,9 @@ from django.views.decorators.cache import never_cache
 from .models import Position
 from .models import Player
 from .models import News,Cart, CartItem
-from django.core.paginator import Paginator
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from .models import Category
-from .models import SubCategory,ItemImage,Item,ItemSize,Wishlist, WishlistItem,Order, OrderItem, Shipping,Payment
+from .models import SubCategory,ItemImage,Item,ItemSize,Wishlist, WishlistItem,Order, OrderItem, Shipping,Payment,Section
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.db import transaction
 from allauth.socialaccount.models import SocialAccount
@@ -97,8 +97,30 @@ def get_cart_items(request):
 def payment_success(request):
     return render(request,'payment_success.html')
 
-def stadium(request):
-    return render(request,'stadium.html')
+
+def stadium(request, match_id):
+    # Fetch the match details using the match_id
+    api_key = 'dc93cd61f7a04a67be5652fc72195459'
+    url = f'https://api.football-data.org/v4/matches/{match_id}'
+    headers = {'X-Auth-Token': api_key}
+
+    response = requests.get(url, headers=headers)
+    match = response.json()
+    
+    # Fetch all stands with their related sections
+    stands = Stand.objects.prefetch_related('sections').all()
+
+    # Create a dictionary to store stands and their sections
+    stands_sections = {}
+    for stand in stands:
+        stands_sections[stand] = stand.sections.all()
+    
+    # Pass the match details, stands, and sections to the template
+    context = {
+        'match': match,
+        'stands_sections': stands_sections,
+    }
+    return render(request, 'stadium.html', context)
 
 
 def schedule(request):
@@ -109,47 +131,167 @@ def schedule(request):
     response = requests.get(url, headers=headers)
     all_fixtures = response.json().get('matches', [])
 
-    # Convert UTC dates to IST and filter for upcoming home matches
+    # Convert UTC dates to IST and filter for upcoming home games
     ist_timezone = pytz.timezone('Asia/Kolkata')
-    current_time = datetime.now(ist_timezone)
-    upcoming_home_match = None
+    current_time = timezone.now()
+    upcoming_home_fixtures = []
 
     for fixture in all_fixtures:
         utc_date = parse_datetime(fixture['utcDate'])
-        if utc_date:
+        if utc_date and fixture['homeTeam']['name'] == 'Real Madrid CF':
             # Make the datetime aware if it's naive
             if utc_date.tzinfo is None:
                 utc_date = make_aware(utc_date)
             
-            # Convert to IST
-            ist_date = utc_date.astimezone(ist_timezone)
-            
-            # Check if it's a future home match
-            if ist_date > current_time and fixture['homeTeam']['name'] == 'Real Madrid CF':
-                upcoming_home_match = {
-                    'date': ist_date.strftime("%a, %b %d, %Y"),
-                    'time': ist_date.strftime("%I:%M %p IST"),
-                    'home_team': fixture['homeTeam']['name'],
-                    'away_team': fixture['awayTeam']['name'],
-                    
-                    'competition': fixture['competition']['name'],
-                    'id': fixture['id']
-                }
-                break  # Stop after finding the first upcoming home match
+            # Only process if the fixture is in the future
+            if utc_date > current_time:
+                # Convert to IST
+                ist_date = utc_date.astimezone(ist_timezone)
+                # Format the date as a string
+                fixture['ist_date'] = ist_date.strftime("%a, %b %d, %Y, %I:%M %p IST")
+                # Add the match ID to the fixture dictionary
+                fixture['match_id'] = fixture['id']
+                upcoming_home_fixtures.append(fixture)
+
+    # Sort upcoming fixtures by date
+    upcoming_home_fixtures.sort(key=lambda x: parse_datetime(x['utcDate']))
 
     context = {
-        'upcoming_home_match': upcoming_home_match,
+        'fixtures': upcoming_home_fixtures,
         'user_name': request.user.username if request.user.is_authenticated else None,
     }
     return render(request, 'schedule.html', context)
 
 
+
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from .models import Stand
+from django.db import IntegrityError
+from django.views.decorators.cache import never_cache
+
+@never_cache
+def admin_stadium(request):
+    if request.method == 'POST':
+        stand_id = request.POST.get('stand_id')
+        stand_name = request.POST.get('stand_name', '').strip()
+        
+        if stand_id:  # This is an update operation
+            stand = get_object_or_404(Stand, id=stand_id)
+            if stand_name:
+                try:
+                    stand.name = stand_name
+                    stand.save()
+                    messages.success(request, 'Stand updated successfully!', extra_tags='admin_edit_stand')
+                except IntegrityError:
+                    messages.error(request, 'Stand name already exists.', extra_tags='admin_edit_stand')
+            else:
+                messages.error(request, 'Stand name cannot be empty.', extra_tags='admin_edit_stand')
+        else:  # This is an add operation
+            if stand_name:
+                try:
+                    Stand.objects.create(name=stand_name)
+                    messages.success(request, 'Stand added successfully!', extra_tags='admin_add_stand')
+                except IntegrityError:
+                    messages.error(request, 'Stand name already exists.', extra_tags='admin_add_stand')
+            else:
+                messages.error(request, 'Stand name cannot be empty.', extra_tags='admin_add_stand')
+        
+        return redirect('admin_stadium')
+
+    # For GET requests, fetch all stands
+    stands = Stand.objects.all().order_by('name')
+    context = {
+        'stands_list': stands
+    }
+    return render(request, 'admin_stadium.html', context)
     
     
+    
+from django.contrib import messages
+
+@never_cache
+def admin_add_subsection(request):
+    if request.method == 'POST':
+        section_id = request.POST.get('section_id')
+        stand_id = request.POST.get('stand')
+        section_name = request.POST.get('section').strip()
+        seats_count = request.POST.get('seats')
+        price = request.POST.get('price')
+
+        if not stand_id:
+            messages.error(request, 'Stand must be selected.', extra_tags='admin_add_section')
+        elif not section_name or not section_name.replace(' ', '').isalnum():
+            messages.error(request, 'Section name must contain only alphabets, numbers, and spaces.', extra_tags='admin_add_section')
+        elif not seats_count or not seats_count.isdigit() or int(seats_count) <= 0:
+            messages.error(request, 'Number of seats must be a positive integer.', extra_tags='admin_add_section')
+        elif not price or float(price) < 0:
+            messages.error(request, 'Price must be a non-negative number.', extra_tags='admin_add_section')
+        else:
+            try:
+                stand = Stand.objects.get(id=stand_id)
+                if section_id:  # This is an update operation
+                    section = get_object_or_404(Section, id=section_id)
+                    if Section.objects.filter(stand=stand, name=section_name).exclude(id=section_id).exists():
+                        messages.error(request, 'Section name already exists in the selected stand.', extra_tags='admin_edit_section')
+                    else:
+                        section.name = section_name
+                        section.stand = stand
+                        section.seats = list(range(1, int(seats_count) + 1))
+                        section.price = float(price)
+                        section.save()
+                        messages.success(request, 'Section updated successfully!', extra_tags='admin_edit_section success-message')
+                else:  # This is an add operation
+                    if Section.objects.filter(stand=stand, name=section_name).exists():
+                        messages.error(request, 'Section already exists in the selected stand.', extra_tags='admin_add_section')
+                    else:
+                        seats = list(range(1, int(seats_count) + 1))
+                        Section.objects.create(name=section_name, stand=stand, seats=seats, price=float(price))
+                        messages.success(request, 'Section added successfully!', extra_tags='admin_add_section success-message')
+                return redirect('admin_add_subsection')
+            except Stand.DoesNotExist:
+                messages.error(request, 'Selected stand does not exist.', extra_tags='admin_add_section')
+            except ValueError:
+                messages.error(request, 'Invalid price format.', extra_tags='admin_add_section')
+
+    # Fetch all stands and their associated sections
+    stands = Stand.objects.all().prefetch_related('sections')
+
+    context = {
+        'stand_list': stands,
+    }
+    return render(request, 'admin_add_subsection.html', context)
+
+@require_POST
+def admin_delete_section(request):
+    section_id = request.POST.get('section_id')
+    try:
+        section = Section.objects.get(id=section_id)
+        section.delete()
+        messages.success(request, 'Section deleted successfully!', extra_tags='admin_delete_section')
+        return JsonResponse({'success': True})
+    except Section.DoesNotExist:
+        messages.error(request, 'Section not found.', extra_tags='admin_delete_section')
+        return JsonResponse({'success': False})
+
+
+
+
+
+
+
+
+
+
+
+
     
 def order_detail(request, order_id):
     order = get_object_or_404(Order.objects.select_related('shipping'), id=order_id)
     return render(request, 'order_detail.html', {'order': order})
+
+def match_details(request):
+    return render(request,'match_details.html')
 
 
 def admin_view_orders(request):
@@ -186,6 +328,9 @@ def admin_view_orders(request):
     
     return render(request, 'admin_view_orders.html', context)
 
+
+
+
 def view_order(request):
     user_id = request.session.get('user_id')
     if not user_id:
@@ -212,6 +357,8 @@ def view_order(request):
     except Users.DoesNotExist:
         messages.error(request, "User not found. Please try logging in again.")
         return redirect('login')
+
+
 
 def checkout(request):
     user_id = request.session.get('user_id')
@@ -1227,8 +1374,7 @@ def logout(request):
 def forgotpassword(request):
     return render(request,'forgotpassword.html')
 
-def stadium_structure(request):
-    return render (request,'stadium_structure.html') 
+
 
 
 
@@ -1434,97 +1580,98 @@ def check_email_availability(request):
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
 
+from django.conf import settings
+
+from django.conf import settings
+import requests
+
+import requests
+from django.shortcuts import render
+from django.conf import settings
+import logging
+
+
+import requests
+from django.shortcuts import render
+from django.conf import settings
+import logging
+
+logger = logging.getLogger(__name__)
+
 def previous_results(request):
-    api_key = 'dc93cd61f7a04a67be5652fc72195459'
-    url = 'https://api.football-data.org/v4/teams/86/matches'  # Real Madrid's ID is 86
-    headers = {'X-Auth-Token': api_key}
-
-    response = requests.get(url, headers=headers)
-    fixtures = response.json().get('matches', [])
-
-    # Convert UTC dates to IST and filter for completed matches
-    ist_timezone = pytz.timezone('Asia/Kolkata')
-    results = []
+    url = "https://v3.football.api-sports.io/fixtures"
     
-    for fixture in fixtures:
-        # We only want completed matches
-        if fixture['status'] == 'FINISHED':
-            utc_date = parse_datetime(fixture['utcDate'])
-            if utc_date:
-                if utc_date.tzinfo is None:
-                    utc_date = make_aware(utc_date)
-                ist_date = utc_date.astimezone(ist_timezone)
-                formatted_date = ist_date.strftime("%a, %b %d, %Y, %I:%M %p IST")
-            else:
-                formatted_date = "Date not available"
-
-            match_result = {
-                'date': formatted_date,
-                'home_team': fixture['homeTeam']['name'],
-                'away_team': fixture['awayTeam']['name'],
-                'home_score': fixture['score']['fullTime']['home'],
-                'away_score': fixture['score']['fullTime']['away'],
-                'competition': fixture['competition']['name'],
-                'matchday': fixture.get('matchday', 'N/A'),
-            }
-            results.append(match_result)
-
-    # Add results to the context
-    context = {
-        'real_madrid_results': results,
+    primary_headers = {
+        'x-apisports-key': settings.API_FOOTBALL_KEY
+    }
+    secondary_headers = {
+        'x-apisports-key': '4d6bbab217dd9bdaf14a4203e9313bf1'
     }
 
-    # Render the results in a template (assuming you have a template named 'previous_results.html')
+    params = {
+        'team': 541,  # Real Madrid's team ID
+        'last': 10,   # Last 10 matches
+        'status': 'FT'  # Only finished matches
+    }
+
+    matches = []
+    api_source = None
+
+    def fetch_data(headers):
+        response = requests.get(url, headers=headers, params=params)
+        response.raise_for_status()
+        return response.json()
+
+    try:
+        # Try primary API first
+        logger.info("Attempting to fetch data from primary API")
+        data = fetch_data(primary_headers)
+
+        if 'response' in data and data['response']:
+            matches = data['response']
+            api_source = 'primary'
+            logger.info(f"Fetched {len(matches)} matches from primary API")
+        else:
+            raise ValueError("No fixtures found in the primary API response")
+
+    except (requests.RequestException, ValueError) as e:
+        logger.warning(f"Primary API request failed: {str(e)}. Trying secondary API.")
+        
+        try:
+            # Try secondary API
+            logger.info("Attempting to fetch data from secondary API")
+            data = fetch_data(secondary_headers)
+
+            if 'response' in data and data['response']:
+                matches = data['response']
+                api_source = 'secondary'
+                logger.info(f"Fetched {len(matches)} matches from secondary API")
+            else:
+                logger.error("No fixtures found in the secondary API response")
+
+        except requests.RequestException as e:
+            logger.error(f"Secondary API request failed: {str(e)}")
+
+    context = {
+        'matches': matches,
+        'api_source': api_source,
+        'api_football_key': settings.API_FOOTBALL_KEY,
+    }
+
     return render(request, 'previous_results.html', context)
 
-def match_details(request, match_id):
-    api_key = 'YOUR_API_KEY'
-    url = f'https://api.football-data.org/v4/matches/{match_id}'
-    headers = {'X-Auth-Token': api_key}
+def generate_fallback_fixture_ids():
+    # Generate some dummy fixture IDs
+    return list(range(1000, 1010))  # Returns [1000, 1001, ..., 1009]
 
-    response = requests.get(url, headers=headers)
-    match_data = response.json()
 
-    # Extract home and away stats
-    home_stats = match_data.get('homeTeam', {}).get('statistics', {})
-    away_stats = match_data.get('awayTeam', {}).get('statistics', {})
 
-    # Extract goal scorers
-    goal_scorers = []
-    for goal in match_data.get('goals', []):
-        scorer = {
-            'name': goal['scorer']['name'],
-            'minute': goal['minute'],
-            'team': 'home' if goal['team']['id'] == match_data['homeTeam']['id'] else 'away'
-        }
-        goal_scorers.append(scorer)
 
-    match_info = {
-        'date': formatted_date,
-        'competition': match_data['competition']['name'],
-        'home_team': match_data['homeTeam']['name'],
-        'away_team': match_data['awayTeam']['name'],
-        'home_score': match_data['score']['fullTime']['home'],
-        'away_score': match_data['score']['fullTime']['away'],
-        'home_stats': {
-            'possession': home_stats.get('ballPossession', 'N/A'),
-            'shots': home_stats.get('shots', 'N/A'),
-            'shots_on_target': home_stats.get('shotsOnGoal', 'N/A'),
-            'fouls': home_stats.get('fouls', 'N/A'),
-            'offsides': home_stats.get('offsides', 'N/A'),
-            'yellow_cards': home_stats.get('yellowCards', 'N/A'),
-            'red_cards': home_stats.get('redCards', 'N/A'),
-        },
-        'away_stats': {
-            'possession': away_stats.get('ballPossession', 'N/A'),
-            'shots': away_stats.get('shots', 'N/A'),
-            'shots_on_target': away_stats.get('shotsOnGoal', 'N/A'),
-            'fouls': away_stats.get('fouls', 'N/A'),
-            'offsides': away_stats.get('offsides', 'N/A'),
-            'yellow_cards': away_stats.get('yellowCards', 'N/A'),
-            'red_cards': away_stats.get('redCards', 'N/A'),
-        },
-        'goal_scorers': goal_scorers,
+
+def match_details(request, fixture_id):
+    api_key = settings.API_FOOTBALL_KEY
+    context = {
+        'fixture_id': fixture_id,
+        'api_football_key': api_key,
     }
-
-    return render(request, 'match_details.html', {'match_info': match_info})
+    return render(request, 'match_details.html', context)

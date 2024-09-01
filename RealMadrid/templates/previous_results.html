@@ -6,9 +6,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
-    <title>Real Madrid FC</title>
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Real Madrid FC - Previous Results</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uikit@3.21.6/dist/css/uikit.min.css" />
 
@@ -41,6 +41,7 @@
             text-decoration: none !important;
         }
     </style>
+    <script type="module" src="https://widgets.api-sports.io/2.0.3/widgets.js"></script>
 </head>
 <body class="bg-[#f3f5f8]">
 
@@ -72,7 +73,7 @@
         <div x-cloak :class="[isOpen ? 'translate-x-0 opacity-100 ' : 'opacity-0 -translate-x-full']" class="absolute inset-x-0 z-20 w-full px-6 py-4 transition-all duration-300 ease-in-out bg-white shadow-md lg:bg-transparent lg:shadow-none lg:mt-0 lg:p-0 lg:top-0 lg:relative lg:w-auto lg:opacity-100 lg:translate-x-0 lg:flex lg:items-center text-[#43526e]">
             <div class="flex flex-col lg:flex-row lg:space-x-4">
                 <a class="block lg:mx-6 hover:text-blue-500" href="{% url 'player_view' %}">Madridstas</a>
-                <a class="block lg:mx-6 hover:text-blue-500" href="{% url 'stadium_structure' %}">Tickets</a>
+                <a class="block lg:mx-6 hover:text-blue-500" href="{% url 'schedule' %}">Tickets</a>
                 <a class="block lg:mx-6 hover:text-blue-500" href="{% url 'store' %}">Store</a>
                 <a class="block lg:mx-6 hover:text-blue-500" href="#">Tour</a>
             </div>
@@ -112,66 +113,58 @@
     <hr>
 </section>
 
-
-
-
-
-
+<!-- Content Section -->
+<div class="container mx-auto px-4 py-8 mt-20">
+    <h1 class="text-3xl font-bold text-center mb-8">Previous Results</h1>
     
-    <!-- Content Section -->
-
-
-    <!-- JavaScript for Scroll Behavior -->
-    <script>
-        let lastScrollTop = 0;
-        const navbar = document.getElementById('navbar');
-
-        window.addEventListener('scroll', () => {
-            let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-
-            if (scrollTop > lastScrollTop) {
-                // Scroll down
-                navbar.style.transform = 'translateY(-100%)';
-            } else {
-                // Scroll up
-                navbar.style.transform = 'translateY(0)';
-            }
-            lastScrollTop = scrollTop;
-        });
-    </script>
-
-    <body class="bg-[#f3f5f8]">
-
-        <!-- Navbar Section -->
-        <!-- ... existing navbar code ... -->
-        
-        <!-- Content Section -->
-        <section class="container mx-auto mt-24 p-6">
-            <h1 class="text-3xl font-bold text-center mb-8">Previous Match Results</h1>
-        
-            {% for result in real_madrid_results %}
-            <div class="bg-white shadow-md rounded-lg overflow-hidden mb-6">
-                <!-- Display the date -->
-                <div class="bg-[#0b1c2c]  text-center text-white text-xl font-semibold p-4">
-                    {{ result.date }}
-                </div>
-                
-                <div class="p-4">
-                    <!-- Display the competition name -->
-                    <h2 class="text-lg  text-center font-semibold mb-4">{{ result.competition }}</h2>
-                    
-                    <div class="grid grid-cols-3 gap-4 items-center mb-4">
-                        <!-- Display the home team name -->
-                        <div class="text-right">{{ result.home_team }}</div>
-                        <!-- Display the score -->
-                        <div class="text-center bg-red-600 text-white font-bold rounded-md py-1">
-                            {{ result.home_score }} - {{ result.away_score }}
-                        </div>
-                        <!-- Display the away team name -->
-                        <div>{{ result.away_team }}</div>
-                    </div>
-                </div>
+    {% if fixture_ids %}
+        <p class="text-center mb-4">Displaying {{ fixture_ids|length }} matches</p>
+        {% for fixture_id in fixture_ids %}
+        <div class="match-result mb-8 bg-white shadow-lg rounded-lg overflow-hidden">
+            <div id="wg-api-football-game"
+                data-host="v3.football.api-sports.io"
+                data-key="{{ api_football_key }}"
+                data-id="{{ fixture_id }}"
+                data-theme=""
+                data-refresh="15"
+                data-show-errors="false"
+                data-show-logos="true">
             </div>
-            {% endfor %}
-        </section>
-        
+        </div>
+        {% endfor %}
+    {% else %}
+        <p class="text-center text-red-500">No results found. Please check the server logs for more information.</p>
+    {% endif %}
+
+    {% if api_source == 'fallback' %}
+        <p class="text-center text-yellow-500 mt-4">Note: Displaying fallback data due to API unavailability.</p>
+    {% endif %}
+</div>
+
+<!-- API-Football Widget Script -->
+<script
+    type="module"
+    src="https://widgets.api-sports.io/2.0.3/widgets.js">
+</script>
+
+<!-- JavaScript for Scroll Behavior -->
+<script>
+    let lastScrollTop = 0;
+    const navbar = document.getElementById('navbar');
+
+    window.addEventListener('scroll', () => {
+        let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+        if (scrollTop > lastScrollTop) {
+            // Scroll down
+            navbar.style.transform = 'translateY(-100%)';
+        } else {
+            // Scroll up
+            navbar.style.transform = 'translateY(0)';
+        }
+        lastScrollTop = scrollTop;
+    });
+</script>
+
+</body>
+</html>

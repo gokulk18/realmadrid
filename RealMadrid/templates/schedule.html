@@ -1,5 +1,4 @@
 {% load static %}
-{% load tz %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -153,39 +152,58 @@
 
     
     <!-- Content Section -->
-    <section class="container mx-auto mt-32 p-6">
-        <div class="max-w-2xl mx-auto">
-            <h2 class="text-4xl font-bold text-center mb-12 text-gray-800 bg-white py-4 rounded-lg shadow-md">Upcoming Home Match</h2>
-            
-            {% if upcoming_home_match %}
-                <div class="card rounded-lg shadow-lg p-8">
-                    <div class="flex items-center justify-between mb-6">
-                        <div class="flex items-center space-x-4">
-                            <img src="{% static 'madrid_images/real-madrid-cf-logo.png' %}" alt="Real Madrid" class="w-16 h-16">
-                            <span class="text-2xl font-semibold">{{ upcoming_home_match.home_team }}</span>
+    <section class="container mx-auto mt-24 p-6">
+        <h1 class="text-3xl font-bold text-center mb-8">Home Match Schedule</h1>
+
+        <!-- Upcoming Home Fixtures -->
+        <div class="bg-white rounded-lg shadow-xl overflow-hidden mb-12">
+            <div class="p-6">
+                <h2 class="text-3xl font-bold text-center mb-4 text-gray-800">Upcoming Home Fixtures</h2>
+                {% if fixtures %}
+                    {% for fixture in fixtures %}
+                        <div class="w-full bg-[#15204b] rounded-lg shadow-md overflow-hidden mb-6">
+                            <div class="p-8 flex flex-col items-center">
+                                <div class="text-white text-center mb-6">
+                                    <p class="text-2xl font-bold">{{ fixture.ist_date }}</p>
+                                    <p class="text-xl">{{ fixture.competition.name }}</p>
+                                </div>
+                                <div class="flex justify-between items-center w-full mb-6">
+                                    <div class="flex flex-col items-center">
+                                        <img src="{% static 'madrid_images/real-madrid-cf-logo.png' %}" alt="Real Madrid CF" class="w-20 h-20 mb-3">
+                                        <span class="text-base font-semibold text-white">Real Madrid CF</span>
+                                    </div>
+                                    <span class="text-3xl font-bold text-white">vs</span>
+                                    <div class="flex flex-col items-center">
+                                        <img src="{% static 'madrid_images/' %}{{ fixture.awayTeam.name|slugify }}.png" alt="{{ fixture.awayTeam.name }}" class="w-20 h-20 mb-3">
+                                        <span class="text-base font-semibold text-white">{{ fixture.awayTeam.name }}</span>
+                                    </div>
+                                </div>
+                                <div class="text-white text-center mb-6">
+                                    <p class="text-lg">Santiago Bernabéu Stadium</p>
+                                </div>
+                                {% if forloop.first %}
+                                    <a href="{% url 'stadium' match_id=fixture.match_id %}" class="bg-white text-[#15204b] font-bold py-2 px-6 rounded-full hover:bg-gray-200 transition duration-300">
+                                        Book Ticket
+                                    </a>
+                                {% endif %}
+                            </div>
                         </div>
-                        <span class="text-3xl font-bold text-gray-500">vs</span>
-                        <div class="flex items-center space-x-4">
-                            <span class="text-2xl font-semibold">{{ upcoming_home_match.away_team }}</span>
-                            <img src="{% static 'madrid_images/' %}{{ match.awayTeam.name|slugify }}.png" alt="{{ match.awayTeam.name }}" class="w-20 h-20 mb-3">
-                        </div>
-                    </div>
-                    <div class="text-center mb-6">
-                        <p class="text-xl text-gray-700">{{ upcoming_home_match.date }} at {{ upcoming_home_match.time }}</p>
-                        <p class="text-lg text-gray-600">{{ upcoming_home_match.stadium }}</p>
-                        <p class="text-lg text-blue-600 font-semibold">{{ upcoming_home_match.competition }}</p>
-                    </div>
-                    <div class="text-center">
-                        <a href="" class="btn-primary text-white font-bold py-3 px-8 rounded-full inline-block text-lg">
-                            Book Tickets
-                        </a>
-                    </div>
-                </div>
-            {% else %}
-                <p class="text-center text-2xl text-gray-700">No upcoming home matches scheduled at the moment.</p>
-            {% endif %}
+                    {% endfor %}
+                {% else %}
+                    <p class="text-center text-gray-600">No upcoming home fixtures found.</p>
+                {% endif %}
+            </div>
         </div>
     </section>
+
+    <style>
+        .hover-zoom {
+            transition: transform 0.3s ease-in-out;
+        }
+        .hover-zoom:hover {
+            transform: scale(1.1);
+        }
+    </style>
 
     <!-- JavaScript for Scroll Behavior -->
     <script>
