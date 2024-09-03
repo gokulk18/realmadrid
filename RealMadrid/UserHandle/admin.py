@@ -2,7 +2,7 @@ from django.contrib import admin
 from .models import (
     Users, Position, Player, News, Category, SubCategory, Item, ItemImage, ItemSize,
     Cart, CartItem, Wishlist, WishlistItem, Order, OrderItem, Payment, Shipping,
-    Stand, Section
+    Stand, Section, Match
 )
 
 class UsersAdmin(admin.ModelAdmin):
@@ -137,6 +137,25 @@ class StandAdmin(admin.ModelAdmin):
     list_display = ('id', 'name')
     search_fields = ('name',)
 
+class MatchAdmin(admin.ModelAdmin):
+    list_display = ('match_id', 'home_team', 'away_team', 'utc_date', 'ist_date', 'competition', 'status', 'venue')
+    list_filter = ('competition', 'status', 'home_team', 'away_team')
+    search_fields = ('match_id', 'home_team', 'away_team', 'competition')
+    date_hierarchy = 'utc_date'
+    readonly_fields = ('last_updated',)
+
+    fieldsets = (
+        (None, {
+            'fields': ('match_id', 'home_team', 'away_team', 'competition', 'status')
+        }),
+        ('Date and Time', {
+            'fields': ('utc_date', 'ist_date')
+        }),
+        ('Additional Info', {
+            'fields': ('venue', 'last_updated')
+        }),
+    )
+
 # Register the models with the admin site
 admin.site.register(Users, UsersAdmin)
 admin.site.register(Position, PositionAdmin)
@@ -157,3 +176,4 @@ admin.site.register(Shipping, ShippingAdmin)
 # Register the new models
 admin.site.register(Stand, StandAdmin)
 admin.site.register(Section, SectionAdmin)
+admin.site.register(Match, MatchAdmin)

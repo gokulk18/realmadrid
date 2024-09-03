@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.utils.crypto import get_random_string
 from django.core.validators import MinValueValidator
+from django.utils import timezone
 
 class Users(AbstractUser):
     name = models.CharField(max_length=255)
@@ -258,3 +259,20 @@ class Section(models.Model):
     def __str__(self):
         return f"{self.stand.name} - {self.name}"
 
+
+class Match(models.Model):
+    match_id = models.CharField(max_length=100, unique=True)
+    home_team = models.CharField(max_length=100)
+    away_team = models.CharField(max_length=100)
+    utc_date = models.DateTimeField()
+    ist_date = models.DateTimeField()
+    competition = models.CharField(max_length=100)
+    status = models.CharField(max_length=50)
+    venue = models.CharField(max_length=100, null=True, blank=True)
+    last_updated = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.home_team} vs {self.away_team} on {self.ist_date}"
+
+    class Meta:
+        ordering = ['utc_date']

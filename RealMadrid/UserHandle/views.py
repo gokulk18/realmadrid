@@ -42,6 +42,9 @@ from datetime import datetime
 import pytz
 from django.utils import timezone
 import http
+from .models import Match
+
+
 
 logger = logging.getLogger(__name__)
 
@@ -98,32 +101,23 @@ def payment_success(request):
     return render(request,'payment_success.html')
 
 
-def stadium(request, match_id):
-    # Fetch the match details using the match_id
-    api_key = 'dc93cd61f7a04a67be5652fc72195459'
-    url = f'https://api.football-data.org/v4/matches/{match_id}'
-    headers = {'X-Auth-Token': api_key}
-
-    response = requests.get(url, headers=headers)
-    match = response.json()
-    
-    # Fetch all stands with their related sections
-    stands = Stand.objects.prefetch_related('sections').all()
-
-    # Create a dictionary to store stands and their sections
-    stands_sections = {}
-    for stand in stands:
-        stands_sections[stand] = stand.sections.all()
-    
-    # Pass the match details, stands, and sections to the template
-    context = {
-        'match': match,
-        'stands_sections': stands_sections,
-    }
-    return render(request, 'stadium.html', context)
 
 
-def schedule(request):
+
+
+from django.shortcuts import render
+from django.utils.dateparse import parse_datetime
+from django.utils.timezone import make_aware
+import pytz
+import requests
+from .models import Stand
+from django.utils import timezone
+
+def stadium(request):
+    if request.method == 'POST':
+        return store_ticket_data(request)
+
+    # Fetch Real Madrid's matches
     api_key = 'dc93cd61f7a04a67be5652fc72195459'
     url = 'https://api.football-data.org/v4/teams/86/matches'  # Real Madrid's ID is 86
     headers = {'X-Auth-Token': api_key}
@@ -134,7 +128,7 @@ def schedule(request):
     # Convert UTC dates to IST and filter for upcoming home games
     ist_timezone = pytz.timezone('Asia/Kolkata')
     current_time = timezone.now()
-    upcoming_home_fixtures = []
+    upcoming_home_fixture = None
 
     for fixture in all_fixtures:
         utc_date = parse_datetime(fixture['utcDate'])
@@ -149,12 +143,96 @@ def schedule(request):
                 ist_date = utc_date.astimezone(ist_timezone)
                 # Format the date as a string
                 fixture['ist_date'] = ist_date.strftime("%a, %b %d, %Y, %I:%M %p IST")
-                # Add the match ID to the fixture dictionary
-                fixture['match_id'] = fixture['id']
-                upcoming_home_fixtures.append(fixture)
+                upcoming_home_fixture = fixture
+                break  # Stop after finding the first upcoming home match
 
-    # Sort upcoming fixtures by date
-    upcoming_home_fixtures.sort(key=lambda x: parse_datetime(x['utcDate']))
+    if not upcoming_home_fixture:
+        return render(request, 'stadium.html', {'error': 'No upcoming home matches found.'})
+
+    # Extract relevant information from the upcoming_home_fixture
+    match_info = {
+        'id': upcoming_home_fixture['id'],
+        'home_team': upcoming_home_fixture['homeTeam']['name'],
+        'away_team': upcoming_home_fixture['awayTeam']['name'],
+        'competition': upcoming_home_fixture['competition']['name'],
+        'match_day': upcoming_home_fixture['matchday'],
+        'kickoff_time': upcoming_home_fixture['ist_date'],
+    }
+
+    # Fetch all stands with their related sections
+    stands = Stand.objects.prefetch_related('sections').all()
+
+    # Create a dictionary to store stands and their sections
+    stands_sections = {}
+    for stand in stands:
+        stands_sections[stand] = stand.sections.all()
+    
+    # Pass the match details, stands, and sections to the template
+    context = {
+        'match': match_info,
+        'stands_sections': stands_sections,
+    }
+    return render(request, 'stadium.html', context)
+
+@csrf_exempt
+def store_ticket_data(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            request.session['ticket_data'] = {
+                'stand': data.get('stand'),
+                'section': data.get('section'),
+                'quantity': data.get('quantity'),
+                'price': data.get('price'),
+                'match_id': data.get('match_id'),
+                'match_details': data.get('match_details')  # Add this line
+            }
+            return JsonResponse({'success': True})
+        except json.JSONDecodeError:
+            return JsonResponse({'success': False, 'error': 'Invalid JSON data'})
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+
+
+def schedule(request):
+    api_key = 'dc93cd61f7a04a67be5652fc72195459'
+    url = 'https://api.football-data.org/v4/teams/86/matches'  # Real Madrid's ID is 86
+    headers = {'X-Auth-Token': api_key}
+
+    response = requests.get(url, headers=headers)
+    all_fixtures = response.json().get('matches', [])
+
+    ist_timezone = pytz.timezone('Asia/Kolkata')
+    current_time = timezone.now()
+
+    for fixture in all_fixtures:
+        utc_date = parse_datetime(fixture['utcDate'])
+        if utc_date and fixture['homeTeam']['name'] == 'Real Madrid CF':
+            if utc_date.tzinfo is None:
+                utc_date = make_aware(utc_date)
+            
+            if utc_date > current_time:
+                ist_date = utc_date.astimezone(ist_timezone)
+                
+                # Create or update the Match object in the database
+                Match.objects.update_or_create(
+                    match_id=fixture['id'],
+                    defaults={
+                        'home_team': fixture['homeTeam']['name'],
+                        'away_team': fixture['awayTeam']['name'],
+                        'utc_date': utc_date,
+                        'ist_date': ist_date,
+                        'competition': fixture['competition']['name'],
+                        'status': fixture['status'],
+                        'venue': fixture.get('venue'),
+                    }
+                )
+
+    # Fetch upcoming home fixtures from the database
+    upcoming_home_fixtures = Match.objects.filter(
+        home_team='Real Madrid CF',
+        utc_date__gt=current_time
+    ).order_by('utc_date')
 
     context = {
         'fixtures': upcoming_home_fixtures,
@@ -275,6 +353,26 @@ def admin_delete_section(request):
         return JsonResponse({'success': False})
 
 
+def ticket_to_cart(request):
+    if request.method == 'POST':
+        stand = request.POST.get('stand')
+        section = request.POST.get('section')
+        seats = int(request.POST.get('seats'))
+        ticket_price = float(request.POST.get('ticket_price'))
+        
+        total_price = seats * ticket_price
+        
+        # Store the selected tickets and total price in the session
+        request.session['cart'] = {
+            'stand': stand,
+            'section': section,
+            'seats': seats,
+            'ticket_price': ticket_price,
+            'total_price': total_price
+        }
+        
+        return redirect('ticket_checkout')
+    return JsonResponse({'error': 'Invalid request'}, status=400)
 
 
 
@@ -282,6 +380,80 @@ def admin_delete_section(request):
 
 
 
+
+
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.utils.dateparse import parse_datetime
+from django.utils.timezone import is_aware, make_aware
+import requests
+from .models import Users
+import pytz
+
+def ticket_checkout(request):
+    user_id = request.session.get('user_id')
+    user_email = None
+
+    if user_id:
+        try:
+            user = Users.objects.get(id=user_id)
+            user_email = user.email
+        except Users.DoesNotExist:
+            pass
+
+    ticket_data = request.session.get('ticket_data', {})
+    
+    if not ticket_data:
+        messages.error(request, "No ticket data found. Please select a ticket first.")
+        return redirect('stadium')
+
+    match_id = ticket_data.get('match_id')
+    match_details = None
+    if match_id:
+        api_key = 'dc93cd61f7a04a67be5652fc72195459'
+        url = f'https://api.football-data.org/v4/matches/{match_id}'
+        headers = {'X-Auth-Token': api_key}
+        response = requests.get(url, headers=headers)
+        if response.status_code == 200:
+            match_data = response.json()
+            utc_date = parse_datetime(match_data.get('utcDate', ''))
+            
+            if utc_date:
+                # Convert to IST
+                ist_timezone = pytz.timezone('Asia/Kolkata')
+                ist_date = utc_date.astimezone(ist_timezone)
+                
+                match_details = {
+                    'home_team': match_data['homeTeam']['name'],
+                    'away_team': match_data['awayTeam']['name'],
+                    'date': ist_date.strftime('%d %b %Y'),
+                    'time': ist_date.strftime('%I:%M %p'),  # 12-hour format with AM/PM
+                    'venue': match_data.get('venue', 'Venue not available'),
+                    'competition': match_data['competition']['name'],
+                }
+            else:
+                match_details = {
+                    'home_team': match_data['homeTeam']['name'],
+                    'away_team': match_data['awayTeam']['name'],
+                    'date': 'Date not available',
+                    'time': 'Time not available',
+                    'venue': match_data.get('venue', 'Venue not available'),
+                    'competition': match_data['competition']['name'],
+                }
+
+            request.session['match_details'] = match_details
+            request.session.modified = True
+
+    if not match_details:
+        match_details = request.session.get('match_details')
+
+    context = {
+        'ticket_data': ticket_data,
+        'match_details': match_details,
+        'user_id': user_id,
+        'user_email': user_email,
+    }
+    return render(request, 'ticket_checkout.html', context)
 
 
 

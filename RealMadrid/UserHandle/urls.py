@@ -6,7 +6,7 @@ from django.conf import settings
 
 urlpatterns = [
     # ... other url patterns ...
-    path('stadium/<int:match_id>/', views.stadium, name='stadium'),
+    path('stadium/', views.stadium, name='stadium'),    
     path('', views.index, name="index"),
     path('register', views.register, name="register"),
     path('login', views.login, name="login"),
@@ -36,8 +36,11 @@ urlpatterns = [
     path('payment_success/', views.payment_success, name='payment_success'),
     path('view_order/', views.view_order, name='view_order'),
     path('order_detail/<int:order_id>/', views.order_detail, name='order_detail'),
-    path('schedule/',views.schedule,name="schedule"),
+    path('schedule/', views.schedule, name='schedule'),
     path('match_details/<int:fixture_id>/', views.match_details, name='match_details'),
+    path('ticket_checkout/', views.ticket_checkout, name='ticket_checkout'),
+    path('ticket_to_cart/', views.ticket_to_cart, name='ticket_to_cart'),
+    path('store_ticket_data/', views.store_ticket_data, name='store_ticket_data'),
     
 
     path('admin_dashboard/',views.admin_dashboard,name="admin_dashboard"),

@@ -18,7 +18,7 @@
     <style>
         .hover-zoom:hover {
             transform: scale(1.05);
-            transition: transform 0.3s ease-in-out;
+            transition: transform 0.3s ease-in-out;x    
         }
         .uk-slider-container .uk-slidenav {
             color: white; /* Default color */
@@ -161,31 +161,27 @@
                 <h2 class="text-3xl font-bold text-center mb-4 text-gray-800">Upcoming Home Fixtures</h2>
                 {% if fixtures %}
                     {% for fixture in fixtures %}
-                        <div class="w-full bg-[#15204b] rounded-lg shadow-md overflow-hidden mb-6">
+                        <div class="fixture mb-8" style="background-color: #00004B;">
                             <div class="p-8 flex flex-col items-center">
                                 <div class="text-white text-center mb-6">
-                                    <p class="text-2xl font-bold">{{ fixture.ist_date }}</p>
-                                    <p class="text-xl">{{ fixture.competition.name }}</p>
+                                    <p class="text-2xl font-bold">{{ fixture.ist_date|date:"D, M d, Y, h:i A" }} IST</p>
+                                    <p class="text-xl">{{ fixture.competition }}</p>
                                 </div>
                                 <div class="flex justify-between items-center w-full mb-6">
                                     <div class="flex flex-col items-center">
                                         <img src="{% static 'madrid_images/real-madrid-cf-logo.png' %}" alt="Real Madrid CF" class="w-20 h-20 mb-3">
-                                        <span class="text-base font-semibold text-white">Real Madrid CF</span>
+                                        <span class="text-base font-semibold text-white">{{ fixture.home_team }}</span>
                                     </div>
                                     <span class="text-3xl font-bold text-white">vs</span>
                                     <div class="flex flex-col items-center">
-                                        <img src="{% static 'madrid_images/' %}{{ fixture.awayTeam.name|slugify }}.png" alt="{{ fixture.awayTeam.name }}" class="w-20 h-20 mb-3">
-                                        <span class="text-base font-semibold text-white">{{ fixture.awayTeam.name }}</span>
+                                        <img src="{% static 'madrid_images/' %}{{ fixture.away_team|slugify }}.png" alt="{{ fixture.away_team }}" class="w-20 h-20 mb-3">
+                                        <span class="text-base font-semibold text-white">{{ fixture.away_team }}</span>
                                     </div>
                                 </div>
                                 <div class="text-white text-center mb-6">
-                                    <p class="text-lg">Santiago Bernabéu Stadium</p>
+                                    <p class="text-lg">{{ fixture.venue|default:"Santiago Bernabéu Stadium" }}</p>
                                 </div>
-                                {% if forloop.first %}
-                                    <a href="{% url 'stadium' match_id=fixture.match_id %}" class="bg-white text-[#15204b] font-bold py-2 px-6 rounded-full hover:bg-gray-200 transition duration-300">
-                                        Book Ticket
-                                    </a>
-                                {% endif %}
+                                <a href="{% url 'stadium' %}?match_id={{ fixture.match_id }}" class="book-ticket-btn bg-white text-blue-600 font-bold py-2 px-4 rounded-full hover:bg-blue-100 transition duration-300">Book Ticket</a>
                             </div>
                         </div>
                     {% endfor %}
