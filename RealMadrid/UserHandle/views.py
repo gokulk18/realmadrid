@@ -43,6 +43,11 @@ import pytz
 from django.utils import timezone
 import http
 from .models import Match
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from .models import TicketOrder, TicketItem, SeatAvailability, Match, Stand, Section
+from django.shortcuts import get_object_or_404
+from django.db import transaction
 
 
 
@@ -113,66 +118,32 @@ import requests
 from .models import Stand
 from django.utils import timezone
 
-def stadium(request):
-    if request.method == 'POST':
-        return store_ticket_data(request)
+def stadium(request, match_id):
+    match = get_object_or_404(Match, match_id=match_id)
+    
+    # Use ist_date directly without formatting
+    kickoff_time = match.ist_date
 
-    # Fetch Real Madrid's matches
-    api_key = 'dc93cd61f7a04a67be5652fc72195459'
-    url = 'https://api.football-data.org/v4/teams/86/matches'  # Real Madrid's ID is 86
-    headers = {'X-Auth-Token': api_key}
-
-    response = requests.get(url, headers=headers)
-    all_fixtures = response.json().get('matches', [])
-
-    # Convert UTC dates to IST and filter for upcoming home games
-    ist_timezone = pytz.timezone('Asia/Kolkata')
-    current_time = timezone.now()
-    upcoming_home_fixture = None
-
-    for fixture in all_fixtures:
-        utc_date = parse_datetime(fixture['utcDate'])
-        if utc_date and fixture['homeTeam']['name'] == 'Real Madrid CF':
-            # Make the datetime aware if it's naive
-            if utc_date.tzinfo is None:
-                utc_date = make_aware(utc_date)
-            
-            # Only process if the fixture is in the future
-            if utc_date > current_time:
-                # Convert to IST
-                ist_date = utc_date.astimezone(ist_timezone)
-                # Format the date as a string
-                fixture['ist_date'] = ist_date.strftime("%a, %b %d, %Y, %I:%M %p IST")
-                upcoming_home_fixture = fixture
-                break  # Stop after finding the first upcoming home match
-
-    if not upcoming_home_fixture:
-        return render(request, 'stadium.html', {'error': 'No upcoming home matches found.'})
-
-    # Extract relevant information from the upcoming_home_fixture
-    match_info = {
-        'id': upcoming_home_fixture['id'],
-        'home_team': upcoming_home_fixture['homeTeam']['name'],
-        'away_team': upcoming_home_fixture['awayTeam']['name'],
-        'competition': upcoming_home_fixture['competition']['name'],
-        'match_day': upcoming_home_fixture['matchday'],
-        'kickoff_time': upcoming_home_fixture['ist_date'],
-    }
-
-    # Fetch all stands with their related sections
-    stands = Stand.objects.prefetch_related('sections').all()
-
-    # Create a dictionary to store stands and their sections
+    stands = Stand.objects.all()
     stands_sections = {}
     for stand in stands:
-        stands_sections[stand] = stand.sections.all()
-    
-    # Pass the match details, stands, and sections to the template
+        sections = Section.objects.filter(stand=stand)
+        stands_sections[stand] = sections
+
     context = {
-        'match': match_info,
+        'match': {
+            'id': match.match_id,
+            'home_team': match.home_team,
+            'away_team': match.away_team,
+            'competition': match.competition,
+            'kickoff_time': kickoff_time,  # Use the ist_date directly
+        },
         'stands_sections': stands_sections,
     }
+
     return render(request, 'stadium.html', context)
+
+
 
 @csrf_exempt
 def store_ticket_data(request):
@@ -390,70 +361,134 @@ import requests
 from .models import Users
 import pytz
 
+@login_required
+@require_POST
 def ticket_checkout(request):
-    user_id = request.session.get('user_id')
-    user_email = None
+    match_id = request.POST.get('match_id')
+    stand = request.POST.get('stand')
+    section = request.POST.get('section')
+    quantity = int(request.POST.get('quantity', 1))
+    price = float(request.POST.get('price', 0))
 
-    if user_id:
-        try:
-            user = Users.objects.get(id=user_id)
-            user_email = user.email
-        except Users.DoesNotExist:
-            pass
-
-    ticket_data = request.session.get('ticket_data', {})
-    
-    if not ticket_data:
-        messages.error(request, "No ticket data found. Please select a ticket first.")
-        return redirect('stadium')
-
-    match_id = ticket_data.get('match_id')
-    match_details = None
-    if match_id:
-        api_key = 'dc93cd61f7a04a67be5652fc72195459'
-        url = f'https://api.football-data.org/v4/matches/{match_id}'
-        headers = {'X-Auth-Token': api_key}
-        response = requests.get(url, headers=headers)
-        if response.status_code == 200:
-            match_data = response.json()
-            utc_date = parse_datetime(match_data.get('utcDate', ''))
-            
-            if utc_date:
-                # Convert to IST
-                ist_timezone = pytz.timezone('Asia/Kolkata')
-                ist_date = utc_date.astimezone(ist_timezone)
-                
-                match_details = {
-                    'home_team': match_data['homeTeam']['name'],
-                    'away_team': match_data['awayTeam']['name'],
-                    'date': ist_date.strftime('%d %b %Y'),
-                    'time': ist_date.strftime('%I:%M %p'),  # 12-hour format with AM/PM
-                    'venue': match_data.get('venue', 'Venue not available'),
-                    'competition': match_data['competition']['name'],
-                }
-            else:
-                match_details = {
-                    'home_team': match_data['homeTeam']['name'],
-                    'away_team': match_data['awayTeam']['name'],
-                    'date': 'Date not available',
-                    'time': 'Time not available',
-                    'venue': match_data.get('venue', 'Venue not available'),
-                    'competition': match_data['competition']['name'],
-                }
-
-            request.session['match_details'] = match_details
-            request.session.modified = True
-
-    if not match_details:
-        match_details = request.session.get('match_details')
+    # Fetch match details
+    match = Match.objects.get(match_id=match_id)
 
     context = {
-        'ticket_data': ticket_data,
-        'match_details': match_details,
-        'user_id': user_id,
-        'user_email': user_email,
+        'user_email': request.user.email,
+        'match_details': {
+            'home_team': match.home_team,
+            'away_team': match.away_team,
+            'date': match.ist_date.strftime('%d %B %Y'),
+            'competition': match.competition,
+        },
+        'ticket_data': {
+            'stand': stand,
+            'section': section,
+            'quantity': quantity,
+            'price': price,
+        },
     }
+
     return render(request, 'ticket_checkout.html', context)
+
+
+
+
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from .models import TicketOrder, TicketItem, SeatAvailability, Match, Stand, Section
+from django.shortcuts import get_object_or_404
+from django.db import transaction
+from django.core.exceptions import ObjectDoesNotExist
+import logging
+
+logger = logging.getLogger(__name__)
+
+@csrf_exempt
+@transaction.atomic
+def confirm_payment(request):
+    if request.method == 'POST':
+        # Extract data from the POST request
+        razorpay_payment_id = request.POST.get('razorpay_payment_id')
+        match_id = request.POST.get('match_id')
+        stand_name = request.POST.get('stand')
+        section_name = request.POST.get('section')
+        quantity = int(request.POST.get('quantity'))
+        price = float(request.POST.get('price'))
+
+        # Fetch user data from session
+        user_id = request.session.get('user_id')
+        if not user_id:
+            return JsonResponse({'success': False, 'error': 'User not logged in'}, status=401)
+        
+        try:
+            user = get_object_or_404(Users, id=user_id)
+            fullname = user.name
+            email = user.email
+            phone = user.phone
+        except Users.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'User not found'}, status=400)
+
+        logger.info(f"Received payment confirmation request for match_id: {match_id}")
+
+        try:
+            # Get related objects
+            match = Match.objects.get(match_id=match_id)
+            stand = Stand.objects.get(name=stand_name)
+            section = Section.objects.get(name=section_name, stand=stand)
+
+            # Create TicketOrder
+            order = TicketOrder.objects.create(
+                user=user,
+                match=match,
+                full_name=fullname,
+                email=email,
+                phone=phone,
+                total_price=price,
+                status='Confirmed',
+                is_paid=True
+            )
+            logger.info(f"Created order: {order.order_number}")
+
+            # Get or create SeatAvailability
+            seat_availability, created = SeatAvailability.objects.get_or_create(
+                match=match,
+                stand=stand,
+                section=section,
+                defaults={'last_assigned_seat': 0}
+            )
+
+            # Create TicketItems and assign seats
+            for _ in range(quantity):
+                seat_number = seat_availability.assign_seat()
+                if seat_number is None:
+                    raise ValueError('No seats available')
+
+                TicketItem.objects.create(
+                    order=order,
+                    stand=stand,
+                    section=section,
+                    seat_number=seat_number,
+                    price=price / quantity
+                )
+                logger.info(f"Created ticket item for order: {order.order_number}, seat: {seat_number}")
+
+            # If everything is successful, return success response
+            return JsonResponse({'success': True, 'order_number': order.order_number})
+
+        except ObjectDoesNotExist as e:
+            logger.error(f"ObjectDoesNotExist in confirm_payment: {str(e)}")
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+        except ValueError as e:
+            logger.error(f"ValueError in confirm_payment: {str(e)}")
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+        except Exception as e:
+            # If any error occurs, rollback the transaction and return error response
+            transaction.set_rollback(True)
+            logger.error(f"Unexpected error in confirm_payment: {str(e)}", exc_info=True)
+            return JsonResponse({'success': False, 'error': 'An unexpected error occurred'}, status=500)
+
+    return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=400)
 
 
 

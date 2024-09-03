@@ -150,16 +150,14 @@
                         <p class="text-red-600 font-semibold">{{ error }}</p>
                     {% else %}
                         <div class="match-details text-center">
-                            <h2>{{ match.home_team }} vs {{ match.away_team }}</h2>
-                            <p>Competition: {{ match.competition }}</p>
-                            {% if match.match_day %}
-                                <p>Match Day: {{ match.match_day }}</p>
-                            {% endif %}
-                            <p>Kickoff Time: {{ match.kickoff_time }}</p>
+                            <h2 class="text-2xl font-bold mb-2">{{ match.home_team }} vs {{ match.away_team }}</h2>
+                            <p class="text-lg mb-1">Competition: {{ match.competition }}</p>
+                            <p class="text-lg mb-1">Kickoff Time: {{ match.kickoff_time }}</p>
                         </div>
                     {% endif %}
                 </div>
             </div>
+
             <div class="relative mb-6">
                 <iframe 
                     id="stadium-iframe"
@@ -320,41 +318,37 @@
                 },
                 ticketToCart() {
                     const ticketData = {
+                        match_id: '{{ match.id }}',
                         stand: this.selectedStandName,
                         section: this.selectedSectionName,
                         quantity: this.quantity,
-                        price: this.totalPrice,
-                        match_id: '{{ match.id }}',
-                        match_details: {
-                            homeTeam: '{{ match.home_team }}',
-                            awayTeam: '{{ match.away_team }}',
-                            competition: '{{ match.competition }}',
-                            date: '{{ match.kickoff_time }}'
-                        }
+                        price: this.totalPrice
                     };
 
-                    fetch(window.location.href, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRFToken': getCookie('csrftoken')
-                        },
-                        body: JSON.stringify(ticketData)
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            // Store ticket data in session storage
-                            sessionStorage.setItem('ticketData', JSON.stringify(ticketData));
-                            window.location.href = `/ticket_checkout/?match_id={{ match.id }}`;
-                        } else {
-                            alert('Error storing ticket data. Please try again.');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        alert('An error occurred. Please try again.');
-                    });
+                    // Create a form and submit it to the server
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = '{% url "ticket_checkout" %}';
+
+                    // Add CSRF token
+                    const csrfToken = document.createElement('input');
+                    csrfToken.type = 'hidden';
+                    csrfToken.name = 'csrfmiddlewaretoken';
+                    csrfToken.value = getCookie('csrftoken');
+                    form.appendChild(csrfToken);
+
+                    // Add ticket data as hidden inputs
+                    for (const [key, value] of Object.entries(ticketData)) {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = key;
+                        input.value = value;
+                        form.appendChild(input);
+                    }
+
+                    // Append the form to the body and submit it
+                    document.body.appendChild(form);
+                    form.submit();
                 },
                 scrollToTicketContainer() {
                     setTimeout(() => {

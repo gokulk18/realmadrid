@@ -2,7 +2,7 @@ from django.contrib import admin
 from .models import (
     Users, Position, Player, News, Category, SubCategory, Item, ItemImage, ItemSize,
     Cart, CartItem, Wishlist, WishlistItem, Order, OrderItem, Payment, Shipping,
-    Stand, Section, Match
+    Stand, Section, Match, TicketOrder, TicketItem, SeatAvailability
 )
 
 class UsersAdmin(admin.ModelAdmin):
@@ -156,6 +156,27 @@ class MatchAdmin(admin.ModelAdmin):
         }),
     )
 
+class TicketItemInline(admin.TabularInline):
+    model = TicketItem
+    extra = 1
+
+class TicketOrderAdmin(admin.ModelAdmin):
+    list_display = ('order_number', 'full_name', 'email', 'phone', 'match', 'total_price', 'status', 'is_paid', 'created_at')
+    search_fields = ('order_number', 'full_name', 'email')
+    list_filter = ('status', 'is_paid', 'match')
+    inlines = [TicketItemInline]
+    readonly_fields = ('order_number',)
+
+class TicketItemAdmin(admin.ModelAdmin):
+    list_display = ('order', 'stand', 'section', 'seat_number', 'price')
+    list_filter = ('stand', 'section')
+    search_fields = ('order__order_number', 'order__full_name')
+
+class SeatAvailabilityAdmin(admin.ModelAdmin):
+    list_display = ('match', 'stand', 'section', 'last_assigned_seat')
+    list_filter = ('match', 'stand', 'section')
+    search_fields = ('match__match_id', 'stand__name', 'section__name')
+
 # Register the models with the admin site
 admin.site.register(Users, UsersAdmin)
 admin.site.register(Position, PositionAdmin)
@@ -177,3 +198,6 @@ admin.site.register(Shipping, ShippingAdmin)
 admin.site.register(Stand, StandAdmin)
 admin.site.register(Section, SectionAdmin)
 admin.site.register(Match, MatchAdmin)
+admin.site.register(TicketOrder, TicketOrderAdmin)
+admin.site.register(TicketItem, TicketItemAdmin)
+admin.site.register(SeatAvailability, SeatAvailabilityAdmin)

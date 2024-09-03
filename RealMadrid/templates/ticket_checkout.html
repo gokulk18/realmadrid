@@ -7,6 +7,8 @@
     <title>Ticket Checkout</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="//unpkg.com/alpinejs" defer></script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
         /* Reset styles */
         * {
@@ -252,6 +254,8 @@
             <div class="ticket-details">
                 <div class="ticket-info">
                     <p id="ticket-quantity">{{ ticket_data.quantity }} ticket{% if ticket_data.quantity > 1 %}s{% endif %}</p>
+                    <p>Stand: {{ ticket_data.stand }}</p>
+                    <p>Section: {{ ticket_data.section }}</p>
                 </div>
                 <div class="ticket-price">
                     <p id="ticket-price">₹{{ ticket_data.price }}</p>
@@ -275,11 +279,11 @@
                 </div>
                 <div class="booking-fee">
                     <p>Booking Fee</p>
-                    <p>₹29.57</p>
+                    <p>₹0</p>
                 </div>
                 <div class="total">
                     <p>Total</p>
-                    <p id="total-amount">₹{{ ticket_data.price|add:29.57 }}</p>
+                    <p id="total-amount">₹{{ ticket_data.price }}</p>
                 </div>
             </div>
         </div>
@@ -312,18 +316,141 @@
         </div>
         <div class="card">
             <div class="terms-conditions">
-                <input type="checkbox" id="terms-conditions" />
-                <label for="terms-conditions">I have read and accepted the terms and conditions</label>
+                <input type="checkbox" id="terms-checkbox">
+                <label for="terms-checkbox">I agree to the terms and conditions</label>
             </div>
             <div class="continue-btn">
-                <button>CONTINUE</button>
+                <button id="rzp-button">CONTINUE</button>
             </div>
         </div>
     </div>
 
     <!-- New content ends here -->
+
     <script>
-        // You can add any additional JavaScript here if needed
+    $(document).ready(function() {
+        function toggleContinueButton() {
+            var isValid = true;
+            var fullname = $('#fullname').val().trim();
+            var email = $('#email').val().trim();
+            var phone = $('#phone').val().trim();
+            var pincode = $('#pincode').val().trim();
+
+            if (fullname.length === 0 || email.length === 0 || phone.length === 0 || 
+                pincode.length === 0 || !validateEmail(email) || !validatePhone(phone) ||
+                !validatePincode(pincode)) {
+                isValid = false;
+            }
+
+            $('#rzp-button').prop('disabled', !isValid);
+            $('#rzp-button').css('opacity', isValid ? 1 : 0.5);
+        }
+
+        $('#fullname, #email, #phone, #pincode').keyup(toggleContinueButton);
+
+        function validateEmail(email) {
+            var re = /\S+@\S+\.\S+/;
+            return re.test(email);
+        }
+
+        function validatePhone(phone) {
+            var re = /^[6-9]\d{9}$/;
+            return re.test(phone);
+        }
+
+        function validatePincode(pincode) {
+            var re = /^\d{6}$/;
+            return re.test(pincode);
+        }
+
+        toggleContinueButton();
+
+        $('#rzp-button').click(function(e) {
+            e.preventDefault();
+
+            var formData = {
+                fullname: $('#fullname').val().trim(),
+                email: $('#email').val().trim(),
+                phone: $('#phone').val().trim(),
+                pincode: $('#pincode').val().trim(),
+                match_id: '{{ match_details.id }}',
+                stand: '{{ ticket_data.stand }}',
+                section: '{{ ticket_data.section }}',
+                quantity: '{{ ticket_data.quantity }}',
+                price: '{{ ticket_data.price }}'
+            };
+
+            $.ajax({
+                url: '/create_ticket_order/',
+                type: 'POST',
+                data: JSON.stringify(formData),
+                contentType: 'application/json',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                success: function(response) {
+                    var options = {
+                        "key": "{{ razorpay_key }}",
+                        "amount": response.amount,
+                        "currency": "INR",
+                        "name": "Real Madrid Tickets",
+                        "description": "Ticket Purchase",
+                        "order_id": response.order_id,
+                        "handler": function (response) {
+                            $.ajax({
+                                url: '/confirm_ticket_order/',
+                                type: 'POST',
+                                data: JSON.stringify({
+                                    'razorpay_payment_id': response.razorpay_payment_id,
+                                    'razorpay_order_id': response.razorpay_order_id,
+                                    'razorpay_signature': response.razorpay_signature
+                                }),
+                                contentType: 'application/json',
+                                headers: {
+                                    'X-CSRFToken': getCookie('csrftoken')
+                                },
+                                success: function(orderConfirmation) {
+                                    alert('Payment successful! Your tickets have been booked.');
+                                    window.location.href = '/ticket_confirmation/' + orderConfirmation.order_id + '/';
+                                },
+                                error: function() {
+                                    alert('There was an error confirming your order. Please contact support.');
+                                }
+                            });
+                        },
+                        "prefill": {
+                            "name": formData.fullname,
+                            "email": formData.email,
+                            "contact": formData.phone
+                        },
+                        "theme": {
+                            "color": "#032d7c"
+                        }
+                    };
+                    var rzp1 = new Razorpay(options);
+                    rzp1.open();
+                },
+                error: function() {
+                    alert('There was an error creating your order. Please try again.');
+                }
+            });
+        });
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    });
     </script>
 </body>
 </html>

@@ -276,3 +276,79 @@ class Match(models.Model):
 
     class Meta:
         ordering = ['utc_date']
+
+class TicketOrder(models.Model):
+    ORDER_STATUS_CHOICES = [
+        ('Pending', 'Pending'),
+        ('Confirmed', 'Confirmed'),
+        ('Cancelled', 'Cancelled')
+    ]
+
+    order_number = models.CharField(max_length=20, unique=True, editable=False)
+    user = models.ForeignKey(Users, on_delete=models.SET_NULL, null=True, blank=True)
+    match = models.ForeignKey(Match, on_delete=models.CASCADE)
+    full_name = models.CharField(max_length=100)
+    email = models.EmailField()
+    phone = models.CharField(max_length=20)
+    total_price = models.DecimalField(max_digits=10, decimal_places=2)
+    booking_fee = models.DecimalField(max_digits=6, decimal_places=2, null=True)
+    status = models.CharField(max_length=20, choices=ORDER_STATUS_CHOICES, default='Pending')
+    is_paid = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        if not self.order_number:
+            self.order_number = self.generate_order_number()
+        super().save(*args, **kwargs)
+
+    def generate_order_number(self):
+        return f"TKT-{get_random_string(16).upper()}"
+
+    def __str__(self):
+        return f"Ticket Order {self.order_number} for {self.full_name}"
+
+class TicketItem(models.Model):
+    order = models.ForeignKey(TicketOrder, related_name='tickets', on_delete=models.CASCADE)
+    stand = models.ForeignKey(Stand, on_delete=models.CASCADE)
+    section = models.ForeignKey(Section, on_delete=models.CASCADE)
+    seat_number = models.PositiveIntegerField(null=True, blank=True)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+
+    class Meta:
+        unique_together = ('order', 'stand', 'section', 'seat_number')
+
+    def save(self, *args, **kwargs):
+        if not self.seat_number:
+            seat_availability = SeatAvailability.objects.get(
+                match=self.order.match,
+                stand=self.stand,
+                section=self.section
+            )
+            assigned_seats = seat_availability.assign_seats(1)
+            self.seat_number = assigned_seats[0]
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"Ticket for {self.order.match} - {self.stand} {self.section} Seat {self.seat_number}"
+
+class SeatAvailability(models.Model):
+    match = models.ForeignKey(Match, on_delete=models.CASCADE)
+    stand = models.ForeignKey(Stand, on_delete=models.CASCADE)
+    section = models.ForeignKey(Section, on_delete=models.CASCADE)
+    last_assigned_seat = models.IntegerField(default=0)
+
+    def assign_seats(self, quantity):
+        total_seats = len(self.section.seats)  # Assuming Section.seats is a JSON list of seat numbers
+        if self.last_assigned_seat + quantity > total_seats:
+            raise ValueError(f'Not enough seats available. Only {total_seats - self.last_assigned_seat} seats left.')
+        
+        start_seat = self.last_assigned_seat + 1
+        end_seat = start_seat + quantity - 1
+        self.last_assigned_seat = end_seat
+        self.save()
+        
+        return list(range(start_seat, end_seat + 1))
+
+    def __str__(self):
+        return f"Seat Availability for {self.match} - {self.stand} {self.section}"
