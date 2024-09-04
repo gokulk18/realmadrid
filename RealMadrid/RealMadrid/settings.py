@@ -74,6 +74,7 @@ SOCIALACCOUNT_PROVIDERS = {
 }
 
 API_FOOTBALL_KEY = '98ee819a2d19a9d60b47a221819ff19c'
+RAZORPAY_KEY_ID='rzp_test_7FTQA5xPrTVrqk'
 
 AUTHENTICATION_BACKENDS = (
     # Needed to login by username in Django admin, regardless of `allauth`

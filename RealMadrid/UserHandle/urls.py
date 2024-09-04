@@ -41,9 +41,10 @@ urlpatterns = [
     path('ticket_checkout/', views.ticket_checkout, name='ticket_checkout'),
     path('ticket_to_cart/', views.ticket_to_cart, name='ticket_to_cart'),
     path('store_ticket_data/', views.store_ticket_data, name='store_ticket_data'),
-    path('create_ticket_order/', views.create_ticket_order, name='create_ticket_order'),
-    path('confirm_ticket_order/', views.confirm_ticket_order, name='confirm_ticket_order'),
-    
+    path('allocate_seats/', views.allocate_seats, name='allocate_seats'),
+
+
+
     
 
     path('admin_dashboard/',views.admin_dashboard,name="admin_dashboard"),
@@ -74,3 +75,4 @@ urlpatterns = [
 
     
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+

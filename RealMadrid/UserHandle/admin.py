@@ -2,7 +2,7 @@ from django.contrib import admin
 from .models import (
     Users, Position, Player, News, Category, SubCategory, Item, ItemImage, ItemSize,
     Cart, CartItem, Wishlist, WishlistItem, Order, OrderItem, Payment, Shipping,
-    Stand, Section, Match, TicketOrder, TicketItem, SeatAvailability
+    Stand, Section, Match, TicketOrder, TicketItem
 )
 
 class UsersAdmin(admin.ModelAdmin):
@@ -172,10 +172,6 @@ class TicketItemAdmin(admin.ModelAdmin):
     list_filter = ('stand', 'section')
     search_fields = ('order__order_number', 'order__full_name')
 
-class SeatAvailabilityAdmin(admin.ModelAdmin):
-    list_display = ('match', 'stand', 'section', 'last_assigned_seat')
-    list_filter = ('match', 'stand', 'section')
-    search_fields = ('match__match_id', 'stand__name', 'section__name')
 
 # Register the models with the admin site
 admin.site.register(Users, UsersAdmin)
@@ -200,4 +196,3 @@ admin.site.register(Section, SectionAdmin)
 admin.site.register(Match, MatchAdmin)
 admin.site.register(TicketOrder, TicketOrderAdmin)
 admin.site.register(TicketItem, TicketItemAdmin)
-admin.site.register(SeatAvailability, SeatAvailabilityAdmin)

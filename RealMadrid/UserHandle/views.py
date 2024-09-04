@@ -45,7 +45,7 @@ import http
 from .models import Match
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from .models import TicketOrder, TicketItem, SeatAvailability, Match, Stand, Section
+from .models import TicketOrder, TicketItem, Match, Stand, Section
 from django.shortcuts import get_object_or_404
 from django.db import transaction
 
@@ -349,146 +349,156 @@ def ticket_to_cart(request):
 
 
 
-
-
-
-
-from django.shortcuts import render, redirect
-from django.contrib import messages
-from django.utils.dateparse import parse_datetime
-from django.utils.timezone import is_aware, make_aware
-import requests
-from .models import Users
-import pytz
-
-@login_required
-@require_POST
-def ticket_checkout(request):
-    match_id = request.POST.get('match_id')
-    stand = request.POST.get('stand')
-    section = request.POST.get('section')
-    quantity = int(request.POST.get('quantity', 1))
-    price = float(request.POST.get('price', 0))
-
-    # Fetch match details
-    match = Match.objects.get(match_id=match_id)
-
-    context = {
-        'user_email': request.user.email,
-        'match_details': {
-            'home_team': match.home_team,
-            'away_team': match.away_team,
-            'date': match.ist_date.strftime('%d %B %Y'),
-            'competition': match.competition,
-        },
-        'ticket_data': {
-            'stand': stand,
-            'section': section,
-            'quantity': quantity,
-            'price': price,
-        },
-    }
-
-    return render(request, 'ticket_checkout.html', context)
-
-
-
-
+import json
+from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_http_methods
+from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from .models import TicketOrder, TicketItem, SeatAvailability, Match, Stand, Section
-from django.shortcuts import get_object_or_404
-from django.db import transaction
-from django.core.exceptions import ObjectDoesNotExist
+from .models import Match, Stand, Section
+from decimal import Decimal
 import logging
 
 logger = logging.getLogger(__name__)
 
-@csrf_exempt
-@transaction.atomic
-def confirm_payment(request):
+@login_required
+@require_http_methods(["GET", "POST"])
+def ticket_checkout(request):
     if request.method == 'POST':
-        # Extract data from the POST request
-        razorpay_payment_id = request.POST.get('razorpay_payment_id')
+        # Handle POST request (data coming directly from stadium page)
         match_id = request.POST.get('match_id')
-        stand_name = request.POST.get('stand')
-        section_name = request.POST.get('section')
-        quantity = int(request.POST.get('quantity'))
-        price = float(request.POST.get('price'))
+        stand = request.POST.get('stand')
+        section = request.POST.get('section')
+        quantity = int(request.POST.get('quantity', 1))
+        price = float(request.POST.get('price', 0))
+    else:
+        # Handle GET request (data should be in the session)
+        ticket_data = request.session.get('ticket_data', {})
+        match_id = ticket_data.get('match_id')
+        stand = ticket_data.get('stand')
+        section = ticket_data.get('section')
+        quantity = int(ticket_data.get('quantity', 1))
+        price = float(ticket_data.get('price', 0))
 
-        # Fetch user data from session
-        user_id = request.session.get('user_id')
-        if not user_id:
-            return JsonResponse({'success': False, 'error': 'User not logged in'}, status=401)
+    logger.info(f"Processing ticket checkout for match_id: {match_id}")
+
+    try:
+        # Fetch match details using match_id
+        match = get_object_or_404(Match, match_id=match_id)
         
-        try:
-            user = get_object_or_404(Users, id=user_id)
-            fullname = user.name
-            email = user.email
-            phone = user.phone
-        except Users.DoesNotExist:
-            return JsonResponse({'success': False, 'error': 'User not found'}, status=400)
+        context = {
+            'user_email': request.user.email,
+            'match_details': {
+                'match_id': match.match_id,
+                'home_team': match.home_team,
+                'away_team': match.away_team,
+                'date': match.ist_date.strftime('%d %B %Y'),
+                'competition': match.competition,
+            },
+            'ticket_data': {
+                'stand': stand,
+                'section': section,
+                'quantity': quantity,
+                'price': price,
+                'total_price': quantity * price,
+            },
+        }
+        return render(request, 'ticket_checkout.html', context)
+    except Match.DoesNotExist:
+        logger.error(f"Match with match_id {match_id} not found")
+        return render(request, 'ticket_checkout.html', {'error': 'Match not found'})
 
-        logger.info(f"Received payment confirmation request for match_id: {match_id}")
+from .models import Match, Section
+import random
 
-        try:
-            # Get related objects
+
+
+@csrf_exempt
+@require_POST
+def allocate_seats(request):
+    data = json.loads(request.body)
+    match_id = data['matchId']
+    stand_name = data['ticketStand']
+    section_name = data['ticketSection']
+    quantity = int(data['ticketQuantity'])
+    full_name = data['fullName']
+    email = data['email']
+    phone = data['phone']
+    total_price = Decimal(data['totalAmount'])
+
+    try:
+        with transaction.atomic():
             match = Match.objects.get(match_id=match_id)
             stand = Stand.objects.get(name=stand_name)
-            section = Section.objects.get(name=section_name, stand=stand)
+            section = Section.objects.get(stand=stand, name=section_name)
+
+            # Get all existing ticket items for this match, stand, and section
+            existing_tickets = TicketItem.objects.filter(
+                order__match=match,
+                stand=stand,
+                section=section
+            ).select_for_update()  # Lock these rows for update
+
+            # Get all occupied seat numbers
+            occupied_seats = set(ticket.seat_number for ticket in existing_tickets if ticket.seat_number is not None)
+
+            # Find available seats
+            all_seats = set(range(1, len(section.seats) + 1))
+            available_seats = list(all_seats - occupied_seats)
+            available_seats.sort()
+
+            if len(available_seats) < quantity:
+                return JsonResponse({'success': False, 'error': 'Not enough seats available'})
+
+            assigned_seats = available_seats[:quantity]
+
+            # Get user from session
+            user_id = request.session.get('user_id')
+            user = Users.objects.get(id=user_id) if user_id else None
 
             # Create TicketOrder
             order = TicketOrder.objects.create(
                 user=user,
                 match=match,
-                full_name=fullname,
+                full_name=full_name,
                 email=email,
                 phone=phone,
-                total_price=price,
-                status='Confirmed',
-                is_paid=True
-            )
-            logger.info(f"Created order: {order.order_number}")
-
-            # Get or create SeatAvailability
-            seat_availability, created = SeatAvailability.objects.get_or_create(
-                match=match,
-                stand=stand,
-                section=section,
-                defaults={'last_assigned_seat': 0}
+                total_price=total_price,
+                status='Pending',
+                is_paid=False
             )
 
-            # Create TicketItems and assign seats
-            for _ in range(quantity):
-                seat_number = seat_availability.assign_seat()
-                if seat_number is None:
-                    raise ValueError('No seats available')
-
-                TicketItem.objects.create(
+            # Create TicketItems
+            ticket_items = []
+            for seat in assigned_seats:
+                ticket_item = TicketItem(
                     order=order,
                     stand=stand,
                     section=section,
-                    seat_number=seat_number,
-                    price=price / quantity
+                    seat_number=seat,
+                    price=section.price
                 )
-                logger.info(f"Created ticket item for order: {order.order_number}, seat: {seat_number}")
+                ticket_items.append(ticket_item)
 
-            # If everything is successful, return success response
-            return JsonResponse({'success': True, 'order_number': order.order_number})
+            TicketItem.objects.bulk_create(ticket_items)
 
-        except ObjectDoesNotExist as e:
-            logger.error(f"ObjectDoesNotExist in confirm_payment: {str(e)}")
-            return JsonResponse({'success': False, 'error': str(e)}, status=400)
-        except ValueError as e:
-            logger.error(f"ValueError in confirm_payment: {str(e)}")
-            return JsonResponse({'success': False, 'error': str(e)}, status=400)
-        except Exception as e:
-            # If any error occurs, rollback the transaction and return error response
-            transaction.set_rollback(True)
-            logger.error(f"Unexpected error in confirm_payment: {str(e)}", exc_info=True)
-            return JsonResponse({'success': False, 'error': 'An unexpected error occurred'}, status=500)
+            return JsonResponse({
+                'success': True, 
+                'assigned_seats': assigned_seats,
+                'order_number': order.order_number
+            })
 
-    return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=400)
+    except (Match.DoesNotExist, Stand.DoesNotExist, Section.DoesNotExist) as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+    except Users.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'User not found'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': f"An unexpected error occurred: {str(e)}"})
+
+
+
+
+
+
 
 
 

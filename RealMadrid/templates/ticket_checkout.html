@@ -226,127 +226,141 @@
     <br>
     <br>
     <div class="container">
-        <div class="card">
-            <div class="">
-                <h2>Step 1</h2>
-                <p class="text-left text-bold">Logged in as: {{ user_email }}</p>
+        {% if error %}
+            <div class="card bg-red-100 border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                <strong class="font-bold">Error:</strong>
+                <span class="block sm:inline">{{ error }}</span>
             </div>
-        </div>
-        <div class="card">
-            <h2>Step 2</h2>
-            <p class="text-left text-bold text-black">Order Summary</p>
-            <div class="tickets">
-                {% if match_details %}
-                    <h3 id="match-details">
-                        {{ match_details.home_team }} vs {{ match_details.away_team }}
-                    </h3>
-                    <p id="match-date">
-                        {{ match_details.date }}
-                    </p>
-                    <p id="match-time">
-                        {{ match_details.time }}
-                    </p>
-                    <p id="match-competition">
-                        {{ match_details.competition }}
-                    </p>
-                {% endif %}
-            </div>
-            <div class="ticket-details">
-                <div class="ticket-info">
-                    <p id="ticket-quantity">{{ ticket_data.quantity }} ticket{% if ticket_data.quantity > 1 %}s{% endif %}</p>
-                    <p>Stand: {{ ticket_data.stand }}</p>
-                    <p>Section: {{ ticket_data.section }}</p>
+            {% if debug_info %}
+                <div class="card bg-yellow-100 border-yellow-400 text-yellow-700 px-4 py-3 rounded relative mt-4">
+                    <strong class="font-bold">Debug Information:</strong>
+                    <pre class="mt-2 whitespace-pre-wrap">{{ debug_info|pprint }}</pre>
                 </div>
-                <div class="ticket-price">
-                    <p id="ticket-price">₹{{ ticket_data.price }}</p>
+            {% endif %}
+        {% else %}
+            <div class="card">
+                <div class="">
+                    <h2>Step 1</h2>
+                    <p class="text-left text-bold">Logged in as: {{ user_email }}</p>
                 </div>
             </div>
-            <div class="add-tickets">
-                <button onclick="window.history.back();">Buy more tickets</button>
+            <div class="card">
+                <h2>Step 2</h2>
+                <p class="text-left text-bold text-black">Order Summary</p>
+                <div class="tickets">
+                    {% if match_details %}
+                        <h3 id="match-details">
+                            {{ match_details.home_team }} vs {{ match_details.away_team }}
+                        </h3>
+                        <p id="match-date">
+                            {{ match_details.date }}
+                        </p>
+                        <p id="match-competition">
+                            {{ match_details.competition }}
+                        </p>
+                    {% endif %}
+                </div>
+                <div class="ticket-details">
+                    <div class="ticket-info">
+                        <p id="ticket-quantity">{{ ticket_data.quantity }} ticket{% if ticket_data.quantity > 1 %}s{% endif %}</p>
+                        <p>Stand: {{ ticket_data.stand }}</p>
+                        <p>Section: {{ ticket_data.section }}</p>
+                        <p>Assigned Seats: {{ ticket_data.assigned_seats|default:"Not assigned" }}</p>
+                    </div>
+                    <div class="ticket-price">
+                        <p id="ticket-price">₹{{ ticket_data.price }}</p>
+                    </div>
+                </div>
+                <div class="add-tickets">
+                    <button onclick="window.history.back();">Buy more tickets</button>
+                </div>
+                <div class="discount-code">
+                    <p>Have a discount code?</p>
+                    <input type="text" placeholder="Enter Discount Code" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
+                    <button class="apply-btn">APPLY</button>
+                </div>
             </div>
-            <div class="discount-code">
-                <p>Have a discount code?</p>
-                <input type="text" placeholder="Enter Discount Code" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
-                <button class="apply-btn">APPLY</button>
-            </div>
-        </div>
-        <div class="card">
-            <h3>PAYMENT DETAILS</h3>
-            <div class="payment-details">
-                <div class="order-amount">
-                    <p>Order Amount</p>
-                    <p id="order-amount">₹{{ ticket_data.price }}</p>
-                </div>
-                <div class="booking-fee">
-                    <p>Booking Fee</p>
-                    <p>₹0</p>
-                </div>
-                <div class="total">
-                    <p>Total</p>
-                    <p id="total-amount">₹{{ ticket_data.price }}</p>
+            <div class="card">
+                <h3>PAYMENT DETAILS</h3>
+                <div class="payment-details">
+                    <div class="order-amount">
+                        <p>Order Amount</p>
+                        <p id="order-amount">₹{{ ticket_data.total_price }}</p>
+                    </div>
+                    <div class="booking-fee">
+                        <p>Booking Fee</p>
+                        <p>₹0</p>
+                    </div>
+                    <div class="total">
+                        <p>Total</p>
+                        <p id="total-amount">₹{{ ticket_data.total_price }}</p>
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="card">
-            <h2 class="text-xl font-semibold mb-4">Step 3</h2>
-            <p class="text-left text-bold text-black mb-4">Contact Details</p>
-            <form id="contact-form" class="space-y-4">
-                <div>
-                    <label for="fullname" class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-                    <input name="fullname" id="fullname" type="text" placeholder="Enter Full Name" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
-                    <span id="err_fullname" class="text-red-600 text-xs"></span>
-                </div>
-                <div>
-                    <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                    <input name="email" id="email" type="email" placeholder="Enter Email Address" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
-                    <span id="err_email" class="text-red-600 text-xs"></span>
-                </div>
-                <div>
-                    <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-                    <input name="phone" id="phone" type="tel" placeholder="Enter Phone Number" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
-                    <span id="err_phone" class="text-red-600 text-xs"></span>
-                </div>
-                <div>
-                    <label for="pincode" class="block text-sm font-medium text-gray-700 mb-1">Pincode</label>
-                    <input name="pincode" id="pincode" type="text" placeholder="Enter Pincode" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
-                    <span id="err_pincode" class="text-red-600 text-xs"></span>
-                </div>
-                <p class="text-sm text-gray-600 mt-2">E-tickets will be sent to this email address</p>
-            </form>
-        </div>
-        <div class="card">
-            <div class="terms-conditions">
-                <input type="checkbox" id="terms-checkbox">
-                <label for="terms-checkbox">I agree to the terms and conditions</label>
+            <div class="card">
+                <h2 class="text-xl font-semibold mb-4">Step 3</h2>
+                <p class="text-left text-bold text-black mb-4">Contact Details</p>
+                <form id="contact-form" class="space-y-4">
+                    <div>
+                        <label for="fullname" class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                        <input name="fullname" id="fullname" type="text" placeholder="Enter Full Name" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                        <span id="err_fullname" class="text-red-600 text-xs"></span>
+                    </div>
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                        <input name="email" id="email" type="email" placeholder="Enter Email Address" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                        <span id="err_email" class="text-red-600 text-xs"></span>
+                    </div>
+                    <div>
+                        <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                        <input name="phone" id="phone" type="tel" placeholder="Enter Phone Number" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                        <span id="err_phone" class="text-red-600 text-xs"></span>
+                    </div>
+                    <div>
+                        <label for="pincode" class="block text-sm font-medium text-gray-700 mb-1">Pincode</label>
+                        <input name="pincode" id="pincode" type="text" placeholder="Enter Pincode" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                        <span id="err_pincode" class="text-red-600 text-xs"></span>
+                    </div>
+                    <p class="text-sm text-gray-600 mt-2">E-tickets will be sent to this email address</p>
+                </form>
             </div>
-            <div class="continue-btn">
-                <button id="rzp-button">CONTINUE</button>
+            <div class="card">
+                <div class="terms-conditions">
+                    <input type="checkbox" id="terms-checkbox">
+                    <label for="terms-checkbox">I agree to the terms and conditions</label>
+                </div>
+                <div class="continue-btn">
+                    <button id="rzp-button">PROCEED TO PAYMENT</button>
+                </div>
             </div>
-        </div>
+        {% endif %}
     </div>
 
     <!-- New content ends here -->
 
     <script>
     $(document).ready(function() {
+        $.ajaxSetup({
+            headers: { "X-CSRFToken": '{{ csrf_token }}' }
+        });
+
         function toggleContinueButton() {
             var isValid = true;
             var fullname = $('#fullname').val().trim();
             var email = $('#email').val().trim();
             var phone = $('#phone').val().trim();
             var pincode = $('#pincode').val().trim();
+            var termsChecked = $('#terms-checkbox').is(':checked');
 
             if (fullname.length === 0 || email.length === 0 || phone.length === 0 || 
-                pincode.length === 0 || !validateEmail(email) || !validatePhone(phone) ||
-                !validatePincode(pincode)) {
+                pincode.length === 0 || !validateEmail(email) || !validatePhone(phone) || 
+                !validatePincode(pincode) || !termsChecked) {
                 isValid = false;
             }
 
             $('#rzp-button').prop('disabled', !isValid);
             $('#rzp-button').css('opacity', isValid ? 1 : 0.5);
         }
-
-        $('#fullname, #email, #phone, #pincode').keyup(toggleContinueButton);
 
         function validateEmail(email) {
             var re = /\S+@\S+\.\S+/;
@@ -363,93 +377,105 @@
             return re.test(pincode);
         }
 
+        $('#fullname').on('keyup', function() {
+            var fullname = $(this).val().trim();
+            if (fullname.length === 0) {
+                $('#err_fullname').text('Full name is required');
+            } else {
+                $('#err_fullname').text('');
+            }
+            toggleContinueButton();
+        });
+
+        $('#email').on('keyup', function() {
+            var email = $(this).val().trim();
+            if (email.length === 0) {
+                $('#err_email').text('Email is required');
+            } else if (!validateEmail(email)) {
+                $('#err_email').text('Please enter a valid email address');
+            } else {
+                $('#err_email').text('');
+            }
+            toggleContinueButton();
+        });
+
+        $('#phone').on('keyup', function() {
+            var phone = $(this).val().trim();
+            if (phone.length === 0) {
+                $('#err_phone').text('Phone number is required');
+            } else if (!validatePhone(phone)) {
+                $('#err_phone').text('Please enter a valid 10-digit phone number');
+            } else {
+                $('#err_phone').text('');
+            }
+            toggleContinueButton();
+        });
+
+        $('#pincode').on('keyup', function() {
+            var pincode = $(this).val().trim();
+            if (pincode.length === 0) {
+                $('#err_pincode').text('Pincode is required');
+            } else if (!validatePincode(pincode)) {
+                $('#err_pincode').text('Please enter a valid 6-digit pincode');
+            } else {
+                $('#err_pincode').text('');
+            }
+            toggleContinueButton();
+        });
+
+        $('#terms-checkbox').on('change', toggleContinueButton);
+
         toggleContinueButton();
 
         $('#rzp-button').click(function(e) {
             e.preventDefault();
 
-            var formData = {
-                fullname: $('#fullname').val().trim(),
+            if ($(this).prop('disabled')) {
+                alert('Please fill all required fields correctly before proceeding.');
+                return;
+            }
+
+            var orderData = {
+                matchId: '{{ match_details.match_id }}',
+                fullName: $('#fullname').val().trim(),
                 email: $('#email').val().trim(),
                 phone: $('#phone').val().trim(),
                 pincode: $('#pincode').val().trim(),
-                match_id: '{{ match_details.id }}',
-                stand: '{{ ticket_data.stand }}',
-                section: '{{ ticket_data.section }}',
-                quantity: '{{ ticket_data.quantity }}',
-                price: '{{ ticket_data.price }}'
+                ticketQuantity: {{ ticket_data.quantity }},
+                ticketStand: '{{ ticket_data.stand }}',
+                ticketSection: '{{ ticket_data.section }}',
+                ticketPrice: '{{ ticket_data.price }}',
+                totalAmount: '{{ ticket_data.total_price }}'
             };
 
+            // Make an AJAX call to allocate seats
             $.ajax({
-                url: '/create_ticket_order/',
+                url: '/allocate_seats/',
                 type: 'POST',
-                data: JSON.stringify(formData),
+                data: JSON.stringify(orderData),
                 contentType: 'application/json',
-                headers: {
-                    'X-CSRFToken': getCookie('csrftoken')
-                },
+                dataType: 'json',
                 success: function(response) {
-                    var options = {
-                        "key": "{{ razorpay_key }}",
-                        "amount": response.amount,
-                        "currency": "INR",
-                        "name": "Real Madrid Tickets",
-                        "description": "Ticket Purchase",
-                        "order_id": response.order_id,
-                        "handler": function (response) {
-                            $.ajax({
-                                url: '/confirm_ticket_order/',
-                                type: 'POST',
-                                data: JSON.stringify({
-                                    'razorpay_payment_id': response.razorpay_payment_id,
-                                    'razorpay_order_id': response.razorpay_order_id,
-                                    'razorpay_signature': response.razorpay_signature
-                                }),
-                                contentType: 'application/json',
-                                headers: {
-                                    'X-CSRFToken': getCookie('csrftoken')
-                                },
-                                success: function(orderConfirmation) {
-                                    alert('Payment successful! Your tickets have been booked.');
-                                    window.location.href = '/ticket_confirmation/' + orderConfirmation.order_id + '/';
-                                },
-                                error: function() {
-                                    alert('There was an error confirming your order. Please contact support.');
-                                }
-                            });
-                        },
-                        "prefill": {
-                            "name": formData.fullname,
-                            "email": formData.email,
-                            "contact": formData.phone
-                        },
-                        "theme": {
-                            "color": "#032d7c"
-                        }
-                    };
-                    var rzp1 = new Razorpay(options);
-                    rzp1.open();
+                    if (response.success) {
+                        orderData.assignedSeats = response.assigned_seats;
+                        orderData.orderNumber = response.order_number;
+                        alert("Seats allocated successfully!\n\nAssigned Seats: " + response.assigned_seats.join(", ") + "\n\nOrder Number: " + response.order_number);
+                        
+                        // Here you can proceed with payment processing
+                        // For example, you might want to redirect to a payment gateway or show a payment form
+                        // You can use the orderData object to pass necessary information to the payment process
+                        
+                        console.log("Order data:", orderData);
+                        // Implement your payment logic here
+                    } else {
+                        alert("Failed to allocate seats: " + response.error);
+                    }
                 },
                 error: function() {
-                    alert('There was an error creating your order. Please try again.');
+                    alert("An error occurred while allocating seats. Please try again.");
                 }
             });
         });
-
-        function getCookie(name) {
-            let cookieValue = null;
-            if (document.cookie && document.cookie !== '') {
-                const cookies = document.cookie.split(';');
-                for (let i = 0; i < cookies.length; i++) {
-                    const cookie = cookies[i].trim();
-                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
-                    }
-                }
-            }
-            return cookieValue;
-        }
     });
     </script>
 </body>

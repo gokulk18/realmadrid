@@ -318,37 +318,7 @@ class TicketItem(models.Model):
     class Meta:
         unique_together = ('order', 'stand', 'section', 'seat_number')
 
-    def save(self, *args, **kwargs):
-        if not self.seat_number:
-            seat_availability = SeatAvailability.objects.get(
-                match=self.order.match,
-                stand=self.stand,
-                section=self.section
-            )
-            assigned_seats = seat_availability.assign_seats(1)
-            self.seat_number = assigned_seats[0]
-        super().save(*args, **kwargs)
-
     def __str__(self):
         return f"Ticket for {self.order.match} - {self.stand} {self.section} Seat {self.seat_number}"
 
-class SeatAvailability(models.Model):
-    match = models.ForeignKey(Match, on_delete=models.CASCADE)
-    stand = models.ForeignKey(Stand, on_delete=models.CASCADE)
-    section = models.ForeignKey(Section, on_delete=models.CASCADE)
-    last_assigned_seat = models.IntegerField(default=0)
 
-    def assign_seats(self, quantity):
-        total_seats = len(self.section.seats)  # Assuming Section.seats is a JSON list of seat numbers
-        if self.last_assigned_seat + quantity > total_seats:
-            raise ValueError(f'Not enough seats available. Only {total_seats - self.last_assigned_seat} seats left.')
-        
-        start_seat = self.last_assigned_seat + 1
-        end_seat = start_seat + quantity - 1
-        self.last_assigned_seat = end_seat
-        self.save()
-        
-        return list(range(start_seat, end_seat + 1))
-
-    def __str__(self):
-        return f"Seat Availability for {self.match} - {self.stand} {self.section}"
