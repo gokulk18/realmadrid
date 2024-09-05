@@ -2,7 +2,7 @@ from django.contrib import admin
 from .models import (
     Users, Position, Player, News, Category, SubCategory, Item, ItemImage, ItemSize,
     Cart, CartItem, Wishlist, WishlistItem, Order, OrderItem, Payment, Shipping,
-    Stand, Section, Match, TicketOrder, TicketItem
+    Stand, Section, Match, TicketOrder, TicketItem, TicketPayment
 )
 
 class UsersAdmin(admin.ModelAdmin):
@@ -172,6 +172,25 @@ class TicketItemAdmin(admin.ModelAdmin):
     list_filter = ('stand', 'section')
     search_fields = ('order__order_number', 'order__full_name')
 
+class TicketPaymentAdmin(admin.ModelAdmin):
+    list_display = ('transaction_id', 'ticket_order', 'payment_method', 'amount_paid', 'status', 'created_at')
+    list_filter = ('status', 'payment_method', 'created_at')
+    search_fields = ('transaction_id', 'ticket_order__order_number', 'ticket_order__full_name')
+    readonly_fields = ('created_at',)
+
+    fieldsets = (
+        (None, {
+            'fields': ('ticket_order', 'transaction_id', 'payment_method', 'amount_paid', 'status')
+        }),
+        ('Timestamp', {
+            'fields': ('created_at',),
+        }),
+    )
+
+    def get_readonly_fields(self, request, obj=None):
+        if obj:  # editing an existing object
+            return self.readonly_fields + ('ticket_order', 'transaction_id')
+        return self.readonly_fields
 
 # Register the models with the admin site
 admin.site.register(Users, UsersAdmin)
@@ -196,3 +215,4 @@ admin.site.register(Section, SectionAdmin)
 admin.site.register(Match, MatchAdmin)
 admin.site.register(TicketOrder, TicketOrderAdmin)
 admin.site.register(TicketItem, TicketItemAdmin)
+admin.site.register(TicketPayment, TicketPaymentAdmin)

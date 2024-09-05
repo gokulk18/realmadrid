@@ -322,3 +322,26 @@ class TicketItem(models.Model):
         return f"Ticket for {self.order.match} - {self.stand} {self.section} Seat {self.seat_number}"
 
 
+
+class TicketPayment(models.Model):
+    PAYMENT_STATUS_CHOICES = [
+        ('Pending', 'Pending'),
+        ('Completed', 'Completed'),
+        ('Failed', 'Failed'),
+        ('Refunded', 'Refunded')
+    ]
+
+    ticket_order = models.OneToOneField('TicketOrder', on_delete=models.CASCADE)
+    payment_method = models.CharField(max_length=50)
+    transaction_id = models.CharField(max_length=100, unique=True)
+    amount_paid = models.DecimalField(max_digits=10, decimal_places=2)
+    status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES)
+    created_at = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return f"Payment {self.transaction_id} for Ticket Order {self.ticket_order.order_number}"
+
+    class Meta:
+        ordering = ['-created_at']
+
+

@@ -457,16 +457,7 @@
                 dataType: 'json',
                 success: function(response) {
                     if (response.success) {
-                        orderData.assignedSeats = response.assigned_seats;
-                        orderData.orderNumber = response.order_number;
-                        alert("Seats allocated successfully!\n\nAssigned Seats: " + response.assigned_seats.join(", ") + "\n\nOrder Number: " + response.order_number);
-                        
-                        // Here you can proceed with payment processing
-                        // For example, you might want to redirect to a payment gateway or show a payment form
-                        // You can use the orderData object to pass necessary information to the payment process
-                        
-                        console.log("Order data:", orderData);
-                        // Implement your payment logic here
+                        window.location.href = response.redirect_url;
                     } else {
                         alert("Failed to allocate seats: " + response.error);
                     }

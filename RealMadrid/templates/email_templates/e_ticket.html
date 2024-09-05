@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Ticket for Real Madrid Match</title>
+    <style>
+        body { font-family: 'Arial', sans-serif; background-color: #f0f0f0; margin: 0; padding: 20px; }
+        .ticket { background-color: white; border-radius: 15px; box-shadow: 0 0 20px rgba(0,0,0,0.1); max-width: 600px; margin: 0 auto; overflow: hidden; }
+        .header { background-color: #1a3c5a; color: white; padding: 20px; text-align: center; }
+        .header h1 { margin: 0; font-size: 24px; }
+        .logo { max-width: 100px; margin-bottom: 10px; }
+        .details { padding: 20px; }
+        .match-info { font-size: 18px; font-weight: bold; text-align: center; margin-bottom: 20px; }
+        .info-row { display: flex; justify-content: space-between; margin-bottom: 10px; }
+        .info-label { font-weight: bold; color: #1a3c5a; }
+        .seats { background-color: #f9f9f9; border-radius: 5px; padding: 10px; margin-top: 20px; }
+        .qr-code { text-align: center; margin-top: 20px; padding-bottom: 20px; }
+        .qr-code img { max-width: 150px; border: 1px solid #ddd; padding: 10px; }
+    </style>
+</head>
+<body>
+    <div class="ticket">
+        <div class="header">
+            <img src="https://example.com/real_madrid_logo.png" alt="Real Madrid Logo" class="logo">
+            <h1>Real Madrid Match E-Ticket</h1>
+        </div>
+        <div class="details">
+            <div class="match-info">{{ match.home_team }} vs {{ match.away_team }}</div>
+            <div class="info-row">
+                <span class="info-label">Date:</span>
+                <span>{{ match.ist_date|date:"F d, Y H:i" }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Name:</span>
+                <span>{{ full_name }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Order Number:</span>
+                <span>{{ order.order_number }}</span>
+            </div>
+            <div class="seats">
+                <div class="info-label">Seats:</div>
+                <ul>
+                    {% for ticket in ticket_items %}
+                        <li>Stand: {{ ticket.stand.name }}, Section: {{ ticket.section.name }}, Seat: {{ ticket.seat_number }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Total Price:</span>
+                <span>${{ order.total_price }}</span>
+            </div>
+        </div>
+        <div class="qr-code">
+            <img src="data:image/png;base64,{{ qr_code }}" alt="QR Code">
+        </div>
+    </div>
+</body>
+</html>

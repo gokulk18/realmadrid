@@ -42,6 +42,7 @@ urlpatterns = [
     path('ticket_to_cart/', views.ticket_to_cart, name='ticket_to_cart'),
     path('store_ticket_data/', views.store_ticket_data, name='store_ticket_data'),
     path('allocate_seats/', views.allocate_seats, name='allocate_seats'),
+    path('booking-success/<str:order_number>/', views.booking_success, name='booking_success'),
 
 
 

@@ -407,10 +407,31 @@ def ticket_checkout(request):
         logger.error(f"Match with match_id {match_id} not found")
         return render(request, 'ticket_checkout.html', {'error': 'Match not found'})
 
-from .models import Match, Section
+from .models import Match, Section,TicketPayment
 import random
 
 
+
+
+
+from django.db import transaction, OperationalError
+from time import sleep
+import random
+from django.core.mail import EmailMessage
+from django.template.loader import render_to_string
+from django.conf import settings
+import qrcode
+from io import BytesIO
+import base64
+import time
+
+from django.core.mail import EmailMessage
+from django.template.loader import render_to_string
+from django.conf import settings
+import qrcode
+from io import BytesIO
+import base64
+from django.urls import reverse
 
 @csrf_exempt
 @require_POST
@@ -481,10 +502,43 @@ def allocate_seats(request):
 
             TicketItem.objects.bulk_create(ticket_items)
 
+            # Generate QR code
+            qr = qrcode.QRCode(version=1, box_size=10, border=5)
+            qr.add_data(f"Order: {order.order_number}, Match: {match.home_team} vs {match.away_team}")
+            qr.make(fit=True)
+            img = qr.make_image(fill_color="black", back_color="white")
+            buffer = BytesIO()
+            img.save(buffer, format="PNG")
+            qr_image = base64.b64encode(buffer.getvalue()).decode()
+
+            # Prepare email content
+            context = {
+                'full_name': full_name,
+                'match': match,
+                'order': order,
+                'ticket_items': ticket_items,
+                'qr_code': qr_image,
+            }
+            email_html = render_to_string('email_templates/e_ticket.html', context)
+
+            # Send email
+            email = EmailMessage(
+                'Your E-Ticket for Real Madrid Match',
+                email_html,
+                settings.DEFAULT_FROM_EMAIL,
+                [email],
+            )
+            email.content_subtype = "html"
+            email.send()
+
+            # Generate URL for booking success page
+            success_url = reverse('booking_success', kwargs={'order_number': order.order_number})
+
             return JsonResponse({
                 'success': True, 
                 'assigned_seats': assigned_seats,
-                'order_number': order.order_number
+                'order_number': order.order_number,
+                'redirect_url': success_url
             })
 
     except (Match.DoesNotExist, Stand.DoesNotExist, Section.DoesNotExist) as e:
@@ -495,6 +549,18 @@ def allocate_seats(request):
         return JsonResponse({'success': False, 'error': f"An unexpected error occurred: {str(e)}"})
 
 
+
+
+def booking_success(request, order_number):
+    try:
+        order = TicketOrder.objects.get(order_number=order_number)
+        context = {
+            'order': order,
+        }
+        return render(request, 'booking_success.html', context)
+    except TicketOrder.DoesNotExist:
+        messages.error(request, "Order not found.")
+        return redirect('index')  # or wherever you want to redirect if the order is not found
 
 
 
