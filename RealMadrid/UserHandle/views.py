@@ -1863,89 +1863,28 @@ def check_email_availability(request):
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
 
-from django.conf import settings
-
-from django.conf import settings
-import requests
-
-import requests
-from django.shortcuts import render
-from django.conf import settings
-import logging
 
 
 import requests
-from django.shortcuts import render
 from django.conf import settings
-import logging
-
-logger = logging.getLogger(__name__)
 
 def previous_results(request):
-    url = "https://v3.football.api-sports.io/fixtures"
-    
-    primary_headers = {
-        'x-apisports-key': settings.API_FOOTBALL_KEY
-    }
-    secondary_headers = {
-        'x-apisports-key': '4d6bbab217dd9bdaf14a4203e9313bf1'
-    }
+    api_key = settings.API_FOOTBALL_KEY  # Ensure you have your API key in settings
+    url = 'https://api.football-data.org/v4/teams/86/matches'  # Real Madrid's ID is 86
+    headers = {'X-Auth-Token': api_key}
 
-    params = {
-        'team': 541,  # Real Madrid's team ID
-        'last': 10,   # Last 10 matches
-        'status': 'FT'  # Only finished matches
-    }
+    response = requests.get(url, headers=headers)
+    matches = response.json().get('matches', [])
 
-    matches = []
-    api_source = None
-
-    def fetch_data(headers):
-        response = requests.get(url, headers=headers, params=params)
-        response.raise_for_status()
-        return response.json()
-
-    try:
-        # Try primary API first
-        logger.info("Attempting to fetch data from primary API")
-        data = fetch_data(primary_headers)
-
-        if 'response' in data and data['response']:
-            matches = data['response']
-            api_source = 'primary'
-            logger.info(f"Fetched {len(matches)} matches from primary API")
-        else:
-            raise ValueError("No fixtures found in the primary API response")
-
-    except (requests.RequestException, ValueError) as e:
-        logger.warning(f"Primary API request failed: {str(e)}. Trying secondary API.")
-        
-        try:
-            # Try secondary API
-            logger.info("Attempting to fetch data from secondary API")
-            data = fetch_data(secondary_headers)
-
-            if 'response' in data and data['response']:
-                matches = data['response']
-                api_source = 'secondary'
-                logger.info(f"Fetched {len(matches)} matches from secondary API")
-            else:
-                logger.error("No fixtures found in the secondary API response")
-
-        except requests.RequestException as e:
-            logger.error(f"Secondary API request failed: {str(e)}")
+    # Filter for past matches
+    past_matches = [match for match in matches if match['status'] == 'FINISHED']
 
     context = {
-        'matches': matches,
-        'api_source': api_source,
-        'api_football_key': settings.API_FOOTBALL_KEY,
+        'past_matches': past_matches,
     }
-
+    
     return render(request, 'previous_results.html', context)
 
-def generate_fallback_fixture_ids():
-    # Generate some dummy fixture IDs
-    return list(range(1000, 1010))  # Returns [1000, 1001, ..., 1009]
 
 
 

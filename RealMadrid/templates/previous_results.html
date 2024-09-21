@@ -45,7 +45,6 @@
 </head>
 <body class="bg-[#f3f5f8]">
 
-
 <!-- Navbar Section -->
 <section class="bg-white dark:bg-white-900">
     <nav id="navbar" x-data="{ isOpen: false }" class="fixed inset-x-0 z-30 container p-6 mx-auto lg:flex lg:justify-between lg:items-center bg-white text-[#43526e] transition-transform duration-300 ease-in-out transform top-0">
@@ -117,28 +116,31 @@
 <div class="container mx-auto px-4 py-8 mt-20">
     <h1 class="text-3xl font-bold text-center mb-8">Previous Results</h1>
     
-    {% if fixture_ids %}
-        <p class="text-center mb-4">Displaying {{ fixture_ids|length }} matches</p>
-        {% for fixture_id in fixture_ids %}
-        <div class="match-result mb-8 bg-white shadow-lg rounded-lg overflow-hidden">
-            <div id="wg-api-football-game"
-                data-host="v3.football.api-sports.io"
-                data-key="{{ api_football_key }}"
-                data-id="{{ fixture_id }}"
-                data-theme=""
-                data-refresh="15"
-                data-show-errors="false"
-                data-show-logos="true">
-            </div>
-        </div>
-        {% endfor %}
-    {% else %}
-        <p class="text-center text-red-500">No results found. Please check the server logs for more information.</p>
-    {% endif %}
+    <div id="wg-api-football-game"
+         data-host="v3.football.api-sports.io"
+         data-key="98ee819a2d19a9d60b47a221819ff19c"  <!-- Replace with your actual API key -->
+         data-id="718243"  <!-- Replace with the actual match ID for Real Madrid -->
+         data-theme=""
+         data-refresh="15"
+         data-show-errors="false"
+         data-show-logos="true">
+    </div>
 
-    {% if api_source == 'fallback' %}
-        <p class="text-center text-yellow-500 mt-4">Note: Displaying fallback data due to API unavailability.</p>
-    {% endif %}
+    <!-- Display Past Matches -->
+    <div class="mt-8">
+        <h2 class="text-2xl font-semibold mb-4">Recent Matches</h2>
+        <ul class="list-disc pl-5">
+            {% for match in past_matches %}
+                <li>
+                    {{ match.homeTeam.name }} vs {{ match.awayTeam.name }} - 
+                    {{ match.score.fullTime.home }}:{{ match.score.fullTime.away }} 
+                    ({{ match.date|date:"Y-m-d H:i" }})
+                </li>
+            {% empty %}
+                <li>No recent matches found.</li>
+            {% endfor %}
+        </ul>
+    </div>
 </div>
 
 <!-- API-Football Widget Script -->
