@@ -172,7 +172,7 @@ def schedule(request):
 
     response = requests.get(url, headers=headers)
     all_fixtures = response.json().get('matches', [])
-
+ 
     ist_timezone = pytz.timezone('Asia/Kolkata')
     current_time = timezone.now()
 
@@ -1869,7 +1869,7 @@ import requests
 from django.conf import settings
 
 def previous_results(request):
-    api_key = settings.API_FOOTBALL_KEY  # Ensure you have your API key in settings
+    api_key = 'dc93cd61f7a04a67be5652fc72195459'
     url = 'https://api.football-data.org/v4/teams/86/matches'  # Real Madrid's ID is 86
     headers = {'X-Auth-Token': api_key}
 
@@ -1877,8 +1877,17 @@ def previous_results(request):
     matches = response.json().get('matches', [])
 
     # Filter for past matches
-    past_matches = [match for match in matches if match['status'] == 'FINISHED']
+    past_matches = [
+        {
+            'home_team': match['homeTeam']['name'],
+            'away_team': match['awayTeam']['name'],
+            'score': match['score'],
+            'utc_date': parse_datetime(match['utcDate']),
+        }
+        for match in matches if match['status'] == 'FINISHED'
+    ]
 
+    # Prepare context with past match details
     context = {
         'past_matches': past_matches,
     }

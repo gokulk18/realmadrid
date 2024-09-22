@@ -40,6 +40,50 @@
         a{
             text-decoration: none !important;
         }
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1530px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+        }
+        .date-header {
+            background-color: #00008B;
+            color: white;
+            padding: 10px;
+            font-weight: bold;
+        }
+        .league-header {
+            background-color: #f0f0f0;
+            padding: 5px;
+            font-weight: bold;
+        }
+        .match {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px solid #e0e0e0;
+            width: 100%; /* Ensure the match div spans the full width */
+            align-items: center; /* Align items vertically */
+        }
+        .score {
+            background-color: #FF0000;
+            color: white;
+            padding: 2px 5px;
+            font-weight: bold;
+            flex: 0 0 auto; /* Prevent score from stretching */
+            min-width: 50px; /* Set a minimum width for consistent alignment */
+            text-align: center; /* Center the score text */
+        }
+        .status {
+            font-size: 0.8em;
+            color: #666;
+            flex: 0 0 auto; /* Prevent status from stretching */
+            min-width: 30px; /* Set a minimum width for consistent alignment */
+            text-align: center; /* Center the status text */
+        }
     </style>
     <script type="module" src="https://widgets.api-sports.io/2.0.3/widgets.js"></script>
 </head>
@@ -116,26 +160,18 @@
 <div class="container mx-auto px-4 py-8 mt-20">
     <h1 class="text-3xl font-bold text-center mb-8">Previous Results</h1>
     
-    <div id="wg-api-football-game"
-         data-host="v3.football.api-sports.io"
-         data-key="98ee819a2d19a9d60b47a221819ff19c"  <!-- Replace with your actual API key -->
-         data-id="718243"  <!-- Replace with the actual match ID for Real Madrid -->
-         data-theme=""
-         data-refresh="15"
-         data-show-errors="false"
-         data-show-logos="true">
-    </div>
-
     <!-- Display Past Matches -->
     <div class="mt-8">
-        <h2 class="text-2xl font-semibold mb-4">Recent Matches</h2>
         <ul class="list-disc pl-5">
             {% for match in past_matches %}
-                <li>
-                    {{ match.homeTeam.name }} vs {{ match.awayTeam.name }} - 
-                    {{ match.score.fullTime.home }}:{{ match.score.fullTime.away }} 
-                    ({{ match.date|date:"Y-m-d H:i" }})
-                </li>
+                <div class="match mb-4"> <!-- Grouping match together with margin-bottom -->
+                    <span class="flex-1 text-left">{{ match.home_team }}</span>
+                    <span class="score">{{ match.score.fullTime.home }} - {{ match.score.fullTime.away }}</span>
+                    <span class="flex-1 text-right">{{ match.away_team }}</span>
+                </div>
+                {% if not forloop.last %} <!-- Add gap only if it's not the last match -->
+                    <div class="mb-4"></div> <!-- Empty div for spacing between matches -->
+                {% endif %}
             {% empty %}
                 <li>No recent matches found.</li>
             {% endfor %}
