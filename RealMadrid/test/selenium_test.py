@@ -58,7 +58,12 @@ def test_login():
         print("Clicked on the 'Add to Wishlist' button successfully!")
         time.sleep(5)
 
-
+        wishlist_link = WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((By.LINK_TEXT, "bookmarks"))
+        )
+        wishlist_link.click()
+        print("Clicked on the 'wishlist' link successfully!")
+        time.sleep(5)
 
 
         

@@ -43,7 +43,7 @@ urlpatterns = [
     path('store_ticket_data/', views.store_ticket_data, name='store_ticket_data'),
     path('allocate_seats/', views.allocate_seats, name='allocate_seats'),
     path('booking-success/<str:order_number>/', views.booking_success, name='booking_success'),
-
+    path('custom_jersey/',views.custom_jersey,name='custom_jersey'),
 
 
     

@@ -42,6 +42,20 @@
             padding: 1rem;
             margin-top: 1rem;
         }
+        .ticket-card {
+            border: none;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+        .ticket-card:hover {
+            transform: translateY(-5px);
+        }
+        .ticket-card .card-header {
+            border-radius: 10px 10px 0 0;
+        }
+        .ticket-info p {
+            margin-bottom: 0.5rem;
+        }
     </style>
 </head>
 <body>
@@ -55,21 +69,47 @@
                     
                     <div class="ticket-details text-left">
                         <h5 class="mb-3">Order Details</h5>
-                        <p><strong>Order Number:</strong> {{ order.order_number }}</p>
-                        <p><strong>Match:</strong> {{ order.match.home_team }} vs {{ order.match.away_team }}</p>
-                        <p><strong>Date:</strong> {{ order.match.ist_date|date:"F d, Y H:i" }}</p>
-                        <p><strong>Total Price:</strong> ${{ order.total_price }}</p>
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p><strong>Order Number:</strong> {{ order.order_number }}</p>
+                                        <p><strong>Match:</strong> {{ match_details.home_team }} vs {{ match_details.away_team }}</p>
+                                        <p><strong>Date:</strong> {{ match_details.date }}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p><strong>Time:</strong> {{ match_details.time }}</p>
+                                        <p><strong>Venue:</strong> {{ match_details.venue }}</p>
+                                        <p><strong>Total Price:</strong> ${{ order.total_price }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         
-                        <h5 class="mt-4 mb-3">Tickets</h5>
-                        <ul class="list-group">
-                            {% for ticket in order.ticket_items.all %}
-                            <li class="list-group-item">
-                                Stand: {{ ticket.stand.name }}, 
-                                Section: {{ ticket.section.name }}, 
-                                Seat: {{ ticket.seat_number }}
-                            </li>
-                            {% endfor %}
-                        </ul>
+                        <h5 class="mt-4 mb-3">Ticket Details</h5>
+                        {% if ticket_items %}
+                            <p><strong>Total Tickets:</strong> {{ total_tickets }}</p>
+                            <div class="row">
+                                {% for ticket in ticket_items %}
+                                <div class="col-md-6 mb-3">
+                                    <div class="card ticket-card">
+                                        <div class="card-header bg-primary text-white">
+                                            <h6 class="card-title mb-0">Ticket {{ forloop.counter }}</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="ticket-info">
+                                                <p><i class="fas fa-chair mr-2"></i><strong>Stand:</strong> {{ ticket.stand.name }}</p>
+                                                <p><i class="fas fa-map-marker-alt mr-2"></i><strong>Section:</strong> {{ ticket.section.name }}</p>
+                                                <p><i class="fas fa-ticket-alt mr-2"></i><strong>Seat:</strong> {{ ticket.seat_number }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p>No ticket details available.</p>
+                        {% endif %}
                     </div>
                     
                     <p class="mt-4 mb-4">

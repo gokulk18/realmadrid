@@ -349,20 +349,24 @@ def ticket_to_cart(request):
 
 
 
-import json
-from django.contrib.auth.decorators import login_required
-from django.views.decorators.http import require_http_methods
-from django.shortcuts import render, get_object_or_404
-from django.http import JsonResponse
-from .models import Match, Stand, Section
-from decimal import Decimal
+
+
 import logging
+from django.shortcuts import render, get_object_or_404
+from django.views.decorators.http import require_http_methods
+from django.http import JsonResponse
+from .models import Users, Match
 
 logger = logging.getLogger(__name__)
 
-@login_required
 @require_http_methods(["GET", "POST"])
 def ticket_checkout(request):
+    user_id = request.session.get('user_id')
+    if not user_id:
+        return JsonResponse({'error': 'User not logged in'}, status=401)
+
+    user = get_object_or_404(Users, id=user_id)
+
     if request.method == 'POST':
         # Handle POST request (data coming directly from stadium page)
         match_id = request.POST.get('match_id')
@@ -386,7 +390,7 @@ def ticket_checkout(request):
         match = get_object_or_404(Match, match_id=match_id)
         
         context = {
-            'user_email': request.user.email,
+            'user_email': user.email,  # Use the email from the Users model
             'match_details': {
                 'match_id': match.match_id,
                 'home_team': match.home_team,
@@ -407,14 +411,13 @@ def ticket_checkout(request):
         logger.error(f"Match with match_id {match_id} not found")
         return render(request, 'ticket_checkout.html', {'error': 'Match not found'})
 
-from .models import Match, Section,TicketPayment
-import random
 
 
 
 
 
-from django.db import transaction, OperationalError
+
+from django.db import transaction
 from time import sleep
 import random
 from django.core.mail import EmailMessage
@@ -424,6 +427,7 @@ import qrcode
 from io import BytesIO
 import base64
 import time
+from decimal import Decimal  # Add this import
 
 from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
@@ -553,19 +557,32 @@ def allocate_seats(request):
 
 def booking_success(request, order_number):
     try:
-        order = TicketOrder.objects.get(order_number=order_number)
+        order = get_object_or_404(TicketOrder, order_number=order_number)
+        ticket_items = TicketItem.objects.filter(order=order)
+        
         context = {
             'order': order,
+            'ticket_items': ticket_items,
+            'total_tickets': ticket_items.count(),
+            'match_details': {
+                'home_team': order.match.home_team,
+                'away_team': order.match.away_team,
+                'date': order.match.ist_date.strftime('%d %B %Y'),
+                'time': order.match.ist_date.strftime('%I:%M %p'),
+                'venue': order.match.venue,
+            }
         }
         return render(request, 'booking_success.html', context)
     except TicketOrder.DoesNotExist:
         messages.error(request, "Order not found.")
-        return redirect('index')  # or wherever you want to redirect if the order is not found
+        return redirect('index')
 
 
 
 
-
+def custom_jersey(request):
+    categories = Category.objects.all()  # Fetch all categories
+    return render(request, 'custom_jersey.html', {'categories': categories})  # Pass categories to the template
 
 
     
@@ -1168,9 +1185,53 @@ def admin_update_player(request, player_id):
     }
     return render(request, 'admin_update_player.html', context)
 
+
+from django.shortcuts import render
+from django.utils import timezone
+from django.db.models import Sum, Count
+from django.views.decorators.cache import never_cache
+from .models import Order, Payment, Users, Item, TicketOrder
+from datetime import datetime
+
 @never_cache
 def admin_dashboard(request):
-    return render (request,'admin_dashboard.html')
+    # Get current date and 30 days ago date
+    today = timezone.now()
+    thirty_days_ago = today - timezone.timedelta(days=30)
+
+    # Total Sales (last 30 days)
+    total_sales = Order.objects.filter(created_at__gte=thirty_days_ago).aggregate(
+        total=Sum('total'))['total'] or 0
+
+    # Revenue (last 30 days)
+    revenue = Payment.objects.filter(created_at__gte=thirty_days_ago, status='Completed').aggregate(
+        total=Sum('amount_paid'))['total'] or 0
+
+    # New Customers (last 30 days)
+    new_customers = Users.objects.filter(date_joined__gte=thirty_days_ago).count()
+
+    # Top Selling Products
+    top_products = Item.objects.annotate(
+        total_quantity=Sum('orderitem__quantity')
+    ).order_by('-total_quantity')[:5]
+
+    # Recent Orders
+    recent_orders = Order.objects.order_by('-created_at')[:5]
+
+    # Ticket Sales
+    ticket_sales = TicketOrder.objects.filter(created_at__gte=thirty_days_ago).aggregate(
+        total=Sum('total_price'))['total'] or 0
+
+    context = {
+        'total_sales': total_sales,
+        'revenue': revenue,
+        'new_customers': new_customers,
+        'top_products': top_products,
+        'recent_orders': recent_orders,
+        'ticket_sales': ticket_sales,
+    }
+
+    return render(request, 'admin_dashboard.html', context)
 
 def admin_add_category(request):
     if request.method == 'POST':
