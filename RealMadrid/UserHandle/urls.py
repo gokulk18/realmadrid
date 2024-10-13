@@ -44,6 +44,7 @@ urlpatterns = [
     path('allocate_seats/', views.allocate_seats, name='allocate_seats'),
     path('booking-success/<str:order_number>/', views.booking_success, name='booking_success'),
     path('custom_jersey/',views.custom_jersey,name='custom_jersey'),
+    path('generate-report/<int:order_id>/', views.generate_report, name='generate_report'),
 
 
     

@@ -414,9 +414,12 @@
                             <div class="text-sm text-gray-600">
                                 Status: <span class="font-semibold {% if order.status == 'Delivered' %}text-green-600{% elif order.status == 'Processing' %}text-blue-600{% else %}text-yellow-600{% endif %}">{{ order.status }}</span>
                             </div>
-                            <div class="mt-4">
+                            <div class="mt-4 flex justify-between">
                                 <a href="{% url 'order_detail' order.id %}" class="inline-block bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-300">
                                     View Details
+                                </a>
+                                <a href="{% url 'generate_report' order.id %}" class="inline-block bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition duration-300">
+                                    Generate Bill
                                 </a>
                             </div>
                         </div>

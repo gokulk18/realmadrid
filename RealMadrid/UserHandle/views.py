@@ -1187,9 +1187,140 @@ def admin_update_player(request, player_id):
 
 
 
+from django.http import HttpResponse
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from reportlab.lib import colors
+from reportlab.lib.units import inch
+
+def generate_report(request, order_id):
+    order = Order.objects.get(id=order_id)
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="order_{order_id}.pdf"'
+
+    p = canvas.Canvas(response, pagesize=letter)
+
+    # Set up some margins
+    left_margin = 50
+    right_margin = 550
+    top_margin = 750
+    bottom_margin = 50
+
+    # Add a logo or placeholder (optional)
+    p.setFont("Helvetica-Bold", 24)
+    p.drawString(left_margin, top_margin, "Real Madrid Store")  # Placeholder for the logo
+    p.setFont("Helvetica", 16)
+    p.drawString(left_margin, top_margin - 30, "Invoice")
+
+    # Invoice information box
+    p.setFont("Helvetica", 12)
+    p.setLineWidth(0.5)
+    p.rect(left_margin, top_margin - 80, 500, 60, stroke=1, fill=0)
+    p.drawString(left_margin + 10, top_margin - 60, f"Order Number: {order.order_number}")
+    p.drawString(left_margin + 10, top_margin - 75, f"Order Date: {order.created_at.strftime('%d %B %Y')}")
+    p.drawString(right_margin - 200, top_margin - 60, f"Customer Name: {order.full_name}")
+    p.drawString(right_margin - 200, top_margin - 75, f"Email: {order.email}")
+
+    # Add a line break
+    p.line(left_margin, top_margin - 90, right_margin, top_margin - 90)
+
+    # Shipping and Billing Info
+    p.setFont("Helvetica-Bold", 14)
+    p.drawString(left_margin, top_margin - 110, "Billing Information")
+    p.setFont("Helvetica", 12)
+    p.drawString(left_margin, top_margin - 130, f"Phone: {order.phone}")
+    p.drawString(left_margin, top_margin - 150, "Shipping Address:")
+
+    # Table headers with background color and better spacing
+    p.setFont("Helvetica-Bold", 12)
+    p.setFillColor(colors.lightgrey)
+    p.rect(left_margin, top_margin - 190, 500, 20, fill=1)  # Background for the header row
+    p.setFillColor(colors.black)
+    p.drawString(left_margin + 10, top_margin - 185, "Item")
+    p.drawString(left_margin + 250, top_margin - 185, "Quantity")
+    p.drawString(left_margin + 350, top_margin - 185, "Price (€)")
+    p.drawString(left_margin + 450, top_margin - 185, "Total (€)")
+
+    # Add items to the bill with alternating row colors
+    y_position = top_margin - 210
+    row_alternate = False
+    max_item_width = 230
+
+    def wrap_text(text, max_width, canvas):
+        """Helper function to wrap text into multiple lines if it exceeds the max width."""
+        words = text.split(' ')
+        lines = []
+        current_line = ""
+        
+        for word in words:
+            test_line = f"{current_line} {word}".strip()
+            if canvas.stringWidth(test_line, "Helvetica", 12) <= max_width:
+                current_line = test_line
+            else:
+                lines.append(current_line)
+                current_line = word
+        lines.append(current_line)  # Append the last line
+        return lines
+
+    for item in order.items.all():
+        if row_alternate:
+            p.setFillColor(colors.whitesmoke)  # Alternating row color
+            p.rect(left_margin, y_position, 500, 20, fill=1)
+        else:
+            p.setFillColor(colors.white)
+        row_alternate = not row_alternate
+
+        p.setFillColor(colors.black)
+        p.setFont("Helvetica", 12)
+        
+        # Wrap the item name if necessary
+        item_lines = wrap_text(item.item.name, max_item_width, p)
+
+        for line in item_lines:
+            p.drawString(left_margin + 10, y_position + 5, line)
+            y_position -= 15
+        
+        p.drawString(left_margin + 260, y_position + 15, str(item.quantity))
+        p.drawString(left_margin + 360, y_position + 15, f"{item.price:.2f}")
+        p.drawString(left_margin + 460, y_position + 15, f"{item.price * item.quantity:.2f}")
+        
+        y_position -= 5  # Adjust for line height
+    
+    # Total Amount
+    p.setLineWidth(1)
+    p.line(left_margin, y_position - 10, right_margin, y_position - 10)
+    y_position -= 20
+    p.setFont("Helvetica-Bold", 12)
+    p.drawString(left_margin + 350, y_position, "Total Amount:")
+    p.drawString(left_margin + 460, y_position, f"€{order.total:.2f}")
+
+    # Footer with some info
+    p.setFont("Helvetica", 10)
+    p.drawString(left_margin, y_position - 40, "Thank you for your purchase!")
+    p.drawString(left_margin, y_position - 55, "For any inquiries, contact us at support@yourwebsite.com")
+    p.drawString(left_margin, y_position - 70, "Your Company Name | Your Address | Your Contact Info")
+
+    # Draw a border around the invoice
+    p.setLineWidth(1)
+    p.rect(left_margin, bottom_margin, 500, top_margin - 150, stroke=1, fill=0)
+
+    # Finalize the page
+    p.showPage()
+    p.save()
+
+    return response
+
+
+
+
+
+
+
+
 from django.shortcuts import render, get_object_or_404
-from .models import Match, TicketItem
+from .models import Match, TicketItem, Stand, Section  # Ensure Stand and Section are imported
 from django.utils import timezone
+from django.db.models import Count  # Add this import for aggregation
 
 def admin_ticket_stats(request):
     # Fetch only home matches for Real Madrid
@@ -1197,6 +1328,7 @@ def admin_ticket_stats(request):
     selected_match = None
     tickets_sold = 0
     total_seats = 0
+    stand_booking_data = {}  # Dictionary to hold booking data for stands
 
     if request.method == 'POST':
         match_id = request.POST.get('match_id')
@@ -1209,10 +1341,18 @@ def admin_ticket_stats(request):
             for section in sections:
                 total_seats += len(section.seats)  # Assuming seats are stored as a list in JSONField
 
+            # Calculate tickets sold for the selected match and aggregate by stand
+            tickets_sold_for_stand = TicketItem.objects.filter(order__match=selected_match, stand=stand).count()
+            stand_booking_data[stand.name] = tickets_sold_for_stand  # Store tickets sold for each stand
+
         # Calculate tickets sold for the selected match
         tickets_sold = TicketItem.objects.filter(order__match=selected_match).count()
 
     tickets_available = total_seats - tickets_sold
+
+    # Prepare data for graph (e.g., bar chart)
+    stand_names = list(stand_booking_data.keys())
+    tickets_sold_counts = list(stand_booking_data.values())
 
     context = {
         'matches': matches,
@@ -1220,6 +1360,8 @@ def admin_ticket_stats(request):
         'tickets_sold': tickets_sold,
         'total_seats': total_seats,
         'tickets_available': tickets_available,
+        'stand_names': stand_names,  # Pass stand names for graph
+        'tickets_sold_counts': tickets_sold_counts,  # Pass ticket counts for graph
     }
     return render(request, 'admin_ticket_stats.html', context)
 
