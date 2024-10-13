@@ -1,276 +1,88 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Custom Jersey Designer</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.7/dat.gui.min.js"></script>
+    <title>Real Madrid T-shirt Customization</title>
     <style>
-        #jersey-canvas {
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f8f8f8;
+        }
+
+        #tshirt-container {
             width: 100%;
-            height: 400px;
-            border: 1px solid #ccc;
+            max-width: 400px;
+            height: 500px;
+            margin: 50px auto;
+            position: relative;
+        }
+
+        /* T-shirt image */
+        #tshirt-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1; /* Ensures it is above the color overlay */
+        }
+
+        /* Overlay to apply color filter */
+        #tshirt-overlay {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            background-color: transparent; /* Initial color is transparent */
+            mix-blend-mode: multiply; /* Blend mode to allow color changing */
+            z-index: 2; /* Ensures it is above the T-shirt image */
+        }
+
+        #controls {
+            margin-top: 20px;
+        }
+
+        #controls input {
+            padding: 10px;
+            margin: 5px;
         }
     </style>
 </head>
-<body class="bg-gray-100">
-    <div class="container mx-auto px-4 py-8">
-        <h2 class="text-2xl font-bold mb-6">Design Your Custom Jersey</h2>
-        
-        <div class="flex flex-wrap -mx-4">
-            <!-- 3D Jersey Preview -->
-            <div class="w-full md:w-1/2 px-4 mb-8">
-                <div id="jersey-canvas"></div>
-            </div>
+<body>
 
-            <!-- Customization Controls -->
-            <div class="w-full md:w-1/2 px-4">
-                <div class="mb-4">
-                    <label class="block mb-2 font-bold">Jersey Color</label>
-                    <div id="jersey-color-picker" class="flex space-x-2"></div>
-                </div>
+<div id="tshirt-container">
+    <!-- T-shirt image -->
+    <img id="tshirt-img" src="{% static 'madrid_images/custom_design.jpg' %}" alt="T-shirt Image">
+    <!-- Overlay to change the color -->
+    <div id="tshirt-overlay"></div>
+</div>
 
-                <div class="mb-4">
-                    <label for="name" class="block mb-2 font-bold">Name</label>
-                    <input type="text" id="name" class="w-full border rounded px-3 py-2">
-                </div>
+<!-- Controls for customization -->
+<div id="controls">
+    <h3>Customize Your T-shirt Color</h3>
 
-                <div class="mb-4">
-                    <label for="number" class="block mb-2 font-bold">Number</label>
-                    <input type="number" id="number" class="w-full border rounded px-3 py-2">
-                </div>
-
-                <div class="mb-4">
-                    <label class="block mb-2 font-bold">Text Color</label>
-                    <div id="text-color-picker" class="flex space-x-2"></div>
-                </div>
-
-                <div class="mb-4">
-                    <label for="design" class="block mb-2 font-bold">Jersey Design</label>
-                    <select id="design" class="w-full border rounded px-3 py-2">
-                        <option value="plain">Plain</option>
-                        <option value="striped">Striped</option>
-                        <option value="checkered">Checkered</option>
-                    </select>
-                </div>
-
-                <button id="add-to-cart" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-                    Add to Cart
-                </button>
-            </div>
-        </div>
+    <!-- Color Picker -->
+    <div>
+        <label for="color">Choose T-shirt Color: </label>
+        <input type="color" id="color" value="#ff0000" onchange="changeTshirtColor()">
     </div>
+</div>
 
-    <script>
-        let scene, camera, renderer, jersey, torso, arms, head;
-        let jerseyTexture, nameTexture, numberTexture;
-        const jerseyColors = ['#ffffff', '#ff0000', '#0000ff', '#000000', '#00ff00'];
-        const textColors = ['#ffffff', '#000000', '#ffd700', '#c0c0c0', '#ff0000'];
+<script>
+    // Function to update the overlay color of the T-shirt
+    function changeTshirtColor() {
+        const color = document.getElementById('color').value;
+        const overlay = document.getElementById('tshirt-overlay');
 
-        const customization = {
-            jerseyColor: '#ffffff',
-            name: '',
-            number: '',
-            textColor: '#000000',
-            design: 'plain'
-        };
+        // Set the background color of the overlay to the selected color
+        overlay.style.backgroundColor = color;
+    }
+</script>
 
-        function init() {
-            scene = new THREE.Scene();
-            camera = new THREE.PerspectiveCamera(75, 400 / 400, 0.1, 1000);
-            renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(400, 400);
-            document.getElementById('jersey-canvas').appendChild(renderer.domElement);
-
-            // Create a human-like figure
-            createHumanFigure();
-
-            // Add lighting
-            const light = new THREE.PointLight(0xffffff, 1, 100);
-            light.position.set(0, 0, 10);
-            scene.add(light);
-
-            const ambientLight = new THREE.AmbientLight(0x404040);
-            scene.add(ambientLight);
-
-            camera.position.z = 5;
-
-            animate();
-            setupGUI();
-        }
-
-        function createHumanFigure() {
-            // Torso
-            const torsoGeometry = new THREE.CylinderGeometry(0.7, 0.5, 2, 32);
-            jerseyTexture = new THREE.CanvasTexture(createJerseyTexture());
-            const torsoMaterial = new THREE.MeshPhongMaterial({ map: jerseyTexture });
-            torso = new THREE.Mesh(torsoGeometry, torsoMaterial);
-            scene.add(torso);
-
-            // Arms
-            const armGeometry = new THREE.CylinderGeometry(0.2, 0.2, 1.5, 32);
-            arms = new THREE.Group();
-            const leftArm = new THREE.Mesh(armGeometry, torsoMaterial);
-            leftArm.position.set(-0.9, 0, 0);
-            leftArm.rotation.z = Math.PI / 6;
-            arms.add(leftArm);
-
-            const rightArm = new THREE.Mesh(armGeometry, torsoMaterial);
-            rightArm.position.set(0.9, 0, 0);
-            rightArm.rotation.z = -Math.PI / 6;
-            arms.add(rightArm);
-
-            scene.add(arms);
-
-            // Head
-            const headGeometry = new THREE.SphereGeometry(0.4, 32, 32);
-            const headMaterial = new THREE.MeshPhongMaterial({ color: 0xffd700 });
-            head = new THREE.Mesh(headGeometry, headMaterial);
-            head.position.set(0, 1.4, 0);
-            scene.add(head);
-
-            // Name and number textures
-            nameTexture = new THREE.CanvasTexture(createTextTexture('name'));
-            numberTexture = new THREE.CanvasTexture(createTextTexture('number'));
-        }
-
-        function createJerseyTexture() {
-            const canvas = document.createElement('canvas');
-            canvas.width = 512;
-            canvas.height = 512;
-            const ctx = canvas.getContext('2d');
-
-            // Fill with jersey color
-            ctx.fillStyle = customization.jerseyColor;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // Add design if not plain
-            if (customization.design !== 'plain') {
-                addDesignToTexture(ctx, canvas.width, canvas.height);
-            }
-
-            return canvas;
-        }
-
-        function createTextTexture(type) {
-            const canvas = document.createElement('canvas');
-            canvas.width = 256;
-            canvas.height = 256;
-            const ctx = canvas.getContext('2d');
-
-            ctx.fillStyle = customization.textColor;
-            ctx.font = type === 'name' ? '40px Arial' : '80px Arial';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(type === 'name' ? customization.name : customization.number, 128, 128);
-
-            return canvas;
-        }
-
-        function addDesignToTexture(ctx, width, height) {
-            ctx.fillStyle = customization.textColor;
-            if (customization.design === 'striped') {
-                for (let i = 0; i < height; i += 20) {
-                    ctx.fillRect(0, i, width, 10);
-                }
-            } else if (customization.design === 'checkered') {
-                const squareSize = 40;
-                for (let i = 0; i < width; i += squareSize) {
-                    for (let j = 0; j < height; j += squareSize) {
-                        if ((i / squareSize + j / squareSize) % 2 === 0) {
-                            ctx.fillRect(i, j, squareSize, squareSize);
-                        }
-                    }
-                }
-            }
-        }
-
-        function animate() {
-            requestAnimationFrame(animate);
-            torso.rotation.y += 0.01;
-            arms.rotation.y += 0.01;
-            head.rotation.y += 0.01;
-            renderer.render(scene, camera);
-        }
-
-        function setupGUI() {
-            const colorPickers = {
-                jersey: document.getElementById('jersey-color-picker'),
-                text: document.getElementById('text-color-picker')
-            };
-
-            for (const type in colorPickers) {
-                const colors = type === 'jersey' ? jerseyColors : textColors;
-                colors.forEach(color => {
-                    const button = document.createElement('button');
-                    button.className = 'w-8 h-8 rounded-full';
-                    button.style.backgroundColor = color;
-                    button.onclick = () => updateColor(type, color);
-                    colorPickers[type].appendChild(button);
-                });
-            }
-
-            document.getElementById('name').oninput = updateName;
-            document.getElementById('number').oninput = updateNumber;
-            document.getElementById('design').onchange = updateDesign;
-            document.getElementById('add-to-cart').onclick = addToCart;
-        }
-
-        function updateColor(type, color) {
-            if (type === 'jersey') {
-                customization.jerseyColor = color;
-                jerseyTexture.needsUpdate = true;
-            } else {
-                customization.textColor = color;
-                nameTexture.needsUpdate = true;
-                numberTexture.needsUpdate = true;
-            }
-            updateJerseyTexture();
-        }
-
-        function updateName() {
-            customization.name = this.value;
-            nameTexture.needsUpdate = true;
-            updateJerseyTexture();
-        }
-
-        function updateNumber() {
-            customization.number = this.value;
-            numberTexture.needsUpdate = true;
-            updateJerseyTexture();
-        }
-
-        function updateDesign() {
-            customization.design = this.value;
-            updateJerseyTexture();
-        }
-
-        function updateJerseyTexture() {
-            const newTexture = createJerseyTexture();
-            jerseyTexture.image = newTexture;
-            jerseyTexture.needsUpdate = true;
-
-            const newNameTexture = createTextTexture('name');
-            nameTexture.image = newNameTexture;
-            nameTexture.needsUpdate = true;
-
-            const newNumberTexture = createTextTexture('number');
-            numberTexture.image = newNumberTexture;
-            numberTexture.needsUpdate = true;
-        }
-
-        function addToCart() {
-            console.log('Adding to cart:', customization);
-            // Implement your cart logic here
-        }
-
-        init();
-    </script>
 </body>
 </html>

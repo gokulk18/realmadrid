@@ -1186,52 +1186,130 @@ def admin_update_player(request, player_id):
     return render(request, 'admin_update_player.html', context)
 
 
-from django.shortcuts import render
+
+from django.shortcuts import render, get_object_or_404
+from .models import Match, TicketItem
 from django.utils import timezone
+
+def admin_ticket_stats(request):
+    # Fetch only home matches for Real Madrid
+    matches = Match.objects.filter(home_team='Real Madrid CF', utc_date__gt=timezone.now())
+    selected_match = None
+    tickets_sold = 0
+    total_seats = 0
+
+    if request.method == 'POST':
+        match_id = request.POST.get('match_id')
+        selected_match = get_object_or_404(Match, match_id=match_id)
+
+        # Calculate total seats available for the selected match
+        total_seats = 0
+        for stand in Stand.objects.all():
+            sections = Section.objects.filter(stand=stand)
+            for section in sections:
+                total_seats += len(section.seats)  # Assuming seats are stored as a list in JSONField
+
+        # Calculate tickets sold for the selected match
+        tickets_sold = TicketItem.objects.filter(order__match=selected_match).count()
+
+    tickets_available = total_seats - tickets_sold
+
+    context = {
+        'matches': matches,
+        'selected_match': selected_match,
+        'tickets_sold': tickets_sold,
+        'total_seats': total_seats,
+        'tickets_available': tickets_available,
+    }
+    return render(request, 'admin_ticket_stats.html', context)
+
+
+
 from django.db.models import Sum, Count
+from django.db.models.functions import TruncDate
+from datetime import timedelta
+from django.utils import timezone
 from django.views.decorators.cache import never_cache
-from .models import Order, Payment, Users, Item, TicketOrder
-from datetime import datetime
+from django.shortcuts import render
+
+from .models import TicketItem, Match, TicketOrder, Section, Stand  # Ensure these models are imported
 
 @never_cache
 def admin_dashboard(request):
-    # Get current date and 30 days ago date
-    today = timezone.now()
-    thirty_days_ago = today - timezone.timedelta(days=30)
+    # Date range for charts (last 30 days)
+    end_date = timezone.now().date()
+    start_date = end_date - timedelta(days=30)
 
-    # Total Sales (last 30 days)
-    total_sales = Order.objects.filter(created_at__gte=thirty_days_ago).aggregate(
-        total=Sum('total'))['total'] or 0
+    # Get total sales (all time)
+    total_sales = Order.objects.aggregate(total=Sum('total'))['total'] or 0
 
-    # Revenue (last 30 days)
-    revenue = Payment.objects.filter(created_at__gte=thirty_days_ago, status='Completed').aggregate(
-        total=Sum('amount_paid'))['total'] or 0
+    # Get total revenue (all time)
+    revenue = Payment.objects.filter(status='Completed').aggregate(total=Sum('amount_paid'))['total'] or 0
 
     # New Customers (last 30 days)
-    new_customers = Users.objects.filter(date_joined__gte=thirty_days_ago).count()
+    new_customers = Users.objects.filter(date_joined__gte=start_date).count()
 
-    # Top Selling Products
+    # Top Selling Products (by quantity)
     top_products = Item.objects.annotate(
         total_quantity=Sum('orderitem__quantity')
     ).order_by('-total_quantity')[:5]
 
-    # Recent Orders
-    recent_orders = Order.objects.order_by('-created_at')[:5]
+    # Prepare data for product sales comparison chart (number of items sold)
+    product_sales = Item.objects.annotate(total_quantity=Count('orderitem__quantity')).order_by('-total_quantity')[:10]
+    product_names = [item.name for item in product_sales]
+    product_sales_data = [item.total_quantity for item in product_sales]
 
-    # Ticket Sales
-    ticket_sales = TicketOrder.objects.filter(created_at__gte=thirty_days_ago).aggregate(
-        total=Sum('total_price'))['total'] or 0
 
+    # Fetch upcoming matches
+    upcoming_matches = Match.objects.filter(utc_date__gt=timezone.now()).order_by('utc_date')
+
+    # Prepare data for tickets sold and available for each upcoming match
+    match_ticket_data = []
+    for match in upcoming_matches:
+        tickets_sold = TicketItem.objects.filter(order__match=match).count()
+
+        # Calculate total tickets from all sections related to the venue of the match
+        total_tickets = 0
+        stands = Stand.objects.filter(name=match.venue)  # Assuming the venue name matches the stand name
+        for stand in stands:
+            sections = Section.objects.filter(stand=stand)
+            for section in sections:
+                total_tickets += len(section.seats)  # Assuming seats are stored as a JSON list
+
+        tickets_available = total_tickets - tickets_sold
+
+        match_ticket_data.append({
+            'match_id': match.match_id,
+            'home_team': match.home_team,
+            'away_team': match.away_team,
+            'tickets_sold': tickets_sold,
+            'tickets_available': tickets_available,
+        })
+
+    # Prepare data for the pie chart
+    pie_chart_data = []
+    for match in match_ticket_data:
+        pie_chart_data.append({
+            'match': f"{match['home_team']} vs {match['away_team']}",
+            'sold': match['tickets_sold'],
+            'available': match['tickets_available'],
+        })
+
+    # Context to pass to the template
     context = {
         'total_sales': total_sales,
         'revenue': revenue,
         'new_customers': new_customers,
         'top_products': top_products,
-        'recent_orders': recent_orders,
-        'ticket_sales': ticket_sales,
+        'product_names': product_names,
+        'product_sales_data': product_sales_data,
+        'match_ticket_data': match_ticket_data,
+        'upcoming_matches': upcoming_matches,
+        'pie_chart_data': pie_chart_data,  # Add pie chart data to context
     }
 
     return render(request, 'admin_dashboard.html', context)
+
 
 def admin_add_category(request):
     if request.method == 'POST':

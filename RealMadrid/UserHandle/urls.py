@@ -67,7 +67,7 @@ urlpatterns = [
     path('admin_stadium/',views.admin_stadium,name="admin_stadium"),
     path('admin_add_subsection/',views.admin_add_subsection,name="admin_add_subsection"),
     path('admin_delete_section/',views.admin_delete_section,name='admin_delete_section'),
-
+    path('admin_ticket_stats/',views.admin_ticket_stats,name='admin_ticket_stats'),
 
 
 

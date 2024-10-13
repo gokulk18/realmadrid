@@ -1,0 +1,281 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="canonical" href="index.html">
+    <meta name="description" content="Awesome responsive dashboard build with Tailwind CSS &amp; AlpineJS.">
+    
+    <title>Admin Dashboard</title>
+
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+
+    <link rel="icon" type="image/svg+xml" href="assets/images/logo.svg">
+
+    <script defer src="{% static 'js/main.js' %}"></script>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<style>
+.tabs {
+display: flex;
+border-bottom: 2px solid #ccc;
+}
+.tab {
+    font-family: RMNeue, Arial, Helvetica; /* Font family */
+
+font-size: 1rem;
+font-weight: 500;
+color: #5E6A83;
+padding: 10px 20px;
+cursor: pointer;
+text-decoration: none;
+border-bottom: 2px solid transparent;
+transition: color 0.3s, border-bottom-color 0.3s;
+}
+.tab:hover {
+color: #000;
+}
+.tab.active {
+color: #3b82f6;
+border-bottom-color: #3b82f6;
+}
+.tab-content {
+display: none;
+padding: 20px;
+}
+.tab-content.active {
+display: block;
+}
+
+</style>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var navLinks = document.querySelectorAll('.navbar-nav .nav-link');
+        
+        navLinks.forEach(function(link) {
+            link.addEventListener('click', function() {
+                navLinks.forEach(function(navLink) {
+                    navLink.classList.remove('active');
+                });
+                this.classList.add('active');
+            });
+        });
+    });
+    
+
+
+</script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+
+<body class="overflow-hidden">
+    <div x-data="{ sidebarOpen: false }" class="relative flex h-screen text-gray-800 bg-white font-roboto">
+        <div x-cloak :class="sidebarOpen ? 'block' : 'hidden'" @click="sidebarOpen = false" class="fixed inset-0 z-20 transition-opacity bg-black opacity-50 lg:hidden"></div>
+
+<div x-cloak :class="sidebarOpen ? 'translate-x-0 ease-in' : '-translate-x-full ease-out'" class="fixed inset-y-0 left-0 z-30 w-64 px-4 overflow-y-auto transition duration-200 transform bg-white border-r border-gray-100 lg:translate-x-0 lg:relative lg:inset-0 ">
+<div class="flex items-center mt-8">
+    <!-- Logo Image -->
+    <img class="w-auto h-12" src="{% static 'madrid_images/real-madrid-logo.png' %}" alt="Real Madrid Logo">
+    
+    <!-- Text next to the Logo -->
+    <span class="ml-3 font-medium capitalize text-lg flex items-center" style="margin-top: 10px;margin-left: 11px;">Real Madrid FC</span>
+</div>
+
+    <hr class="my-6 border-gray-100">
+
+    <nav class="space-y-8">
+        <div class="space-y-4">    
+            <a class="flex items-center px-4 py-2 text-gray-600 transition-colors duration-200 transform bg-gray-200 rounded-lg bg-opacity-50 rounded-lg hover:text-gray-600 hover:bg-gray-100 bg-opacity-40 " href="{% url 'admin_dashboard' %}">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+    
+                <span class="mx-3 font-m capitalize">Dashboard</span>
+            </a>
+    
+            <a class="flex items-center px-4 py-2 text-gray-500 transition-colors duration-300 transform rounded-lg hover:text-gray-600 hover:bg-gray-100 bg-opacity-40" href="{% url 'admin_squad_list' %}">
+                <span class="material-symbols-outlined">
+                    groups
+                    </span>
+    
+                <span class="mx-3 font-medium capitalize active">Squad</span>
+            </a>        
+            <a class="flex items-center px-4 py-2 text-gray-500 transition-colors duration-300 transform " href="{% url 'admin_show_news' %}">
+                <span class="material-symbols-outlined">
+                    newspaper
+                    </span>                    
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+    
+                <span class="mx-3 font-medium capitalize active">News</span>
+            </a>   
+            <a class="flex items-center px-4 py-2 text-gray-500 transition-colors duration-300 transform rounded-lg hover:text-gray-600 hover:bg-gray-100 bg-opacity-40 " href="{% url 'admin_view_store' %}">
+                <span class="material-symbols-outlined">
+                    shopping_bag
+                    </span>
+    
+                <span class="mx-3 font-medium capitalize active">Store</span>
+            </a>
+            <a class="flex items-center px-4 py-2 text-gray-500 transition-colors duration-300 transform rounded-lg hover:text-gray-600 hover:bg-gray-100 bg-opacity-40 " href="{% url 'admin_view_orders' %}">
+                <span class="material-symbols-outlined">
+                    shopping_bag
+                    </span>
+    
+                <span class="mx-3 font-medium capitalize active">orders</span>
+            </a>
+            
+            <a class="flex items-center px-4 py-2 text-gray-500 transition-colors duration-300 transform rounded-lg hover:text-gray-600 hover:bg-gray-100 bg-opacity-40 " href="{% url 'admin_stadium' %}">
+                <span class="material-symbols-outlined">
+                    stadium
+                    </span>
+    
+                <span class="mx-3 font-medium capitalize active">Stadium</span>
+            </a>
+            <a class="flex items-center px-4 py-2 text-gray-500 transition-colors duration-300 transform rounded-lg hover:text-gray-600 hover:bg-gray-100 bg-opacity-40 " href="{% url 'admin_ticket_stats' %}">
+                <span class="material-symbols-outlined">
+                    stadium
+                    </span>
+    
+                <span class="mx-3 font-medium capitalize active">Tickets Stats</span>
+            </a>
+
+        </div>
+    </nav>
+</div>
+        <div class="flex flex-col flex-1 overflow-hidden bg-gray-100">
+            <header class="bg-white border-b border-gray-100">
+    <div class="flex items-center justify-between px-4 py-4 sm:px-6">
+        <div class="flex items-center">
+            <button @click="sidebarOpen = !sidebarOpen" class="text-gray-500 lg:hidden focus:outline-none">
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4 6H20M4 12H20M4 18H11" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+            </button>
+    
+            <div class="relative" x-data="{ search: '' }" @click.away="search = ''">
+    <div class="relative mx-4 lg:mx-0">
+        <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+            <svg class="w-5 h-5 text-gray-400" viewBox="0 0 24 24" fill="none">
+                <path d="M21 21L15 15M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
+        </span>
+    
+        <input x-model="search" type="text" class="w-32 h-10 py-2 pl-10 pr-4 text-gray-700 placeholder-gray-400 transition-all duration-150 bg-white border border-gray-200 rounded-md focus:w-44 sm:w-64 sm:focus:w-80 focus:border-indigo-400 focus:outline-none focus:ring focus:ring-indigo-300 focus:ring-opacity-40" placeholder="Find anything...">
+    </div>
+
+    <div class="absolute right-0 z-20 w-full py-2 mt-2 space-y-4 overflow-hidden bg-white rounded-md shadow-xl"
+        x-show="search.length > 0" 
+        x-cloak 
+        x-transition:enter="transition ease-out duration-100 transform"
+        x-transition:enter-start="opacity-0 scale-95" 
+        x-transition:enter-end="opacity-100 scale-100"
+        x-transition:leave="transition ease-in duration-75 transform"
+        x-transition:leave-start="opacity-100 scale-100" 
+        x-transition:leave-end="opacity-0 scale-95"
+    >
+    </div>
+</div>        </div>
+    
+        <div class="flex items-center">
+        
+    
+            <div x-data="{ dropdownOpen: false }" class="relative inline-block">
+                <button @click="dropdownOpen = ! dropdownOpen" class="relative z-10 flex items-center flex-shrink-0 text-sm text-gray-600 focus:outline-none">
+                    <img class="flex  w-8 h-8 " src="{% static 'madrid_images/real-madrid-logo.png' %}" alt="Real Madrid Logo">
+                </button>
+    
+                <div class="absolute right-0 z-20 w-56 py-2 mt-2 overflow-hidden bg-white rounded-md shadow-xl rtl:right-auto rtl:left-0"
+                    x-show="dropdownOpen" 
+                    x-cloak 
+                    x-transition:enter="transition ease-out duration-100 transform"
+                    x-transition:enter-start="opacity-0 scale-95" 
+                    x-transition:enter-end="opacity-100 scale-100"
+                    x-transition:leave="transition ease-in duration-75 transform"
+                    x-transition:leave-start="opacity-100 scale-100" 
+                    x-transition:leave-end="opacity-0 scale-95"
+                    @click.away="dropdownOpen = false"
+                >
+                    <a href="profile.html" class="flex items-center p-3 -mt-2 text-sm text-gray-600 transition-colors duration-200 transform hover:bg-gray-100">
+                        <img class="flex mx-1 full w-9 h-9" src="{% static 'madrid_images/real-madrid-logo.png' %}" alt="Real Madrid Logo" >
+                        <div class="mx-1">
+                            {% comment %} <h1 class="text-sm font-semibold text-gray-700">John Doe</h1>
+                            <p class="text-sm text-gray-500">johndoe@example.com</p> {% endcomment %}
+                        </div>
+                    </a>
+    
+                    <hr class="border-gray-200 ">
+                    
+                    {% comment %} <a href="profile.html" class="block px-4 py-2 text-sm text-gray-600 capitalize transition-colors duration-200 transform hover:bg-gray-100">
+                        Profile
+                    </a>
+                    
+                    <a href="profile.html" class="block px-4 py-2 text-sm text-gray-600 capitalize transition-colors duration-200 transform hover:bg-gray-100">
+                        Settings
+                    </a> {% endcomment %}
+    
+                    <a href="{% url 'logout' %}" class="block px-4 py-2 text-sm text-gray-600 capitalize transition-colors duration-200 transform hover:bg-gray-100">
+                        Sign Out
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+    <h1 class="text-2xl font-bold text-center my-4 text-gray-800">Admin Ticket Stats</h1>
+    <div class="max-w-4xl mx-auto p-6 bg-white shadow-lg rounded-lg border border-gray-200">
+        <form method="POST" class="mb-4">
+            {% csrf_token %}
+            <label for="match" class="block text-lg font-medium mb-2 text-gray-700">Select Match:</label>
+            <select name="match_id" id="match" required class="border border-gray-300 rounded-md p-2 w-full focus:ring-2 focus:ring-blue-500">
+                <option value="">--Select a Match--</option>
+                {% for match in matches %}
+                    <option value="{{ match.match_id }}" {% if selected_match and selected_match.match_id == match.match_id %}selected{% endif %}>
+                        {{ match.home_team }} vs {{ match.away_team }} on {{ match.ist_date }}
+                    </option>
+                {% endfor %}
+            </select>
+            <div class="flex justify-center">
+                <button type="submit" class="mt-4 btn btn-primary bg-primary text-white font-semibold py-2 px-6 rounded-lg shadow-lg hover:bg-blue-600 transition duration-200" style="border: 2px solid #1D4ED8;background: royalblue;">Show Stats</button>
+            </div>
+        {% if selected_match %}
+            <h2 class="text-xl font-semibold mb-4 text-gray-800">Ticket Stats for {{ selected_match.home_team }} vs {{ selected_match.away_team }}</h2>
+            <canvas id="ticketChart" style="max-width: 600px; max-height: 400px; margin: auto;"></canvas>
+            <script>
+                const ctx = document.getElementById('ticketChart').getContext('2d');
+                const ticketsSold = {{ tickets_sold }};
+                const totalSeats = {{ total_seats }};
+                const ticketsAvailable = totalSeats - ticketsSold; // Calculate available tickets
+                const ticketChart = new Chart(ctx, {
+                    type: 'pie', // Use 'pie' chart type
+                    data: {
+                        labels: ['Tickets Sold', 'Tickets Available'],
+                        datasets: [{
+                            data: [ticketsSold, ticketsAvailable],
+                            backgroundColor: ['#FF6384', '#36A2EB'],
+                            borderWidth: 1,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                            },
+                            title: {
+                                display: true,
+                                text: 'Tickets Sold vs Available'
+                            }
+                        }
+                    }
+                });
+            </script>
+        {% else %}
+            <h2 class="text-xl font-semibold mb-4 text-gray-600">Please select a match to view ticket stats.</h2>
+        {% endif %}
+    </div>
+</body>
+</html>
