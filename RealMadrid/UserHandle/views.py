@@ -659,7 +659,6 @@ def view_order(request):
         return redirect('login')
 
 
-
 def checkout(request):
     user_id = request.session.get('user_id')
     if not user_id:
@@ -669,6 +668,20 @@ def checkout(request):
     user = Users.objects.get(id=user_id)
     cart = Cart.objects.get(user=user)
     cart_items = CartItem.objects.filter(cart=cart).select_related('item')
+
+    # Fetch the last order's address for the user
+    last_order = Order.objects.filter(user=user).order_by('-created_at').first()
+    last_address = {
+        'full_name': last_order.full_name if last_order else '',
+        'phone': last_order.phone if last_order else '',
+        'email': last_order.email if last_order else '',  # Add email here
+        'address': last_order.address if last_order else '',
+        'apartment': last_order.apartment if last_order else '',
+        'country': last_order.country if last_order else '',
+        'state': last_order.state if last_order else '',
+        'city': last_order.city if last_order else '',
+        'zipcode': last_order.zipcode if last_order else '',
+    }
 
     if request.method == 'POST':
         try:
@@ -688,15 +701,15 @@ def checkout(request):
                     # Create Order
                     order = Order.objects.create(
                         user=user,
-                        full_name=details.get('fullname'),
+                        full_name=details.get('fullname', last_address['full_name']),
                         email=details.get('email'),
-                        phone=details.get('phone'),
-                        address=details.get('address'),
-                        apartment=details.get('apartment'),
-                        country=details.get('country'),
-                        state=details.get('state'),
-                        city=details.get('city'),
-                        zipcode=details.get('zipcode'),
+                        phone=details.get('phone', last_address['phone']),
+                        address=details.get('address', last_address['address']),
+                        apartment=details.get('apartment', last_address['apartment']),
+                        country=details.get('country', last_address['country']),
+                        state=details.get('state', last_address['state']),
+                        city=details.get('city', last_address['city']),
+                        zipcode=details.get('zipcode', last_address['zipcode']),
                         total=sum(item.item.price * item.quantity for item in cart_items),
                         status='Processing',
                         is_paid=True
@@ -774,11 +787,9 @@ def checkout(request):
                 }
                 for item in cart_items
             ],
+            'last_address': last_address,  # Pass the last address to the template
         }
         return render(request, 'checkout.html', context)
-
-
-
 
 
 

@@ -1,88 +1,77 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Real Madrid T-shirt Customization</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            background-color: #f8f8f8;
-        }
 
-        #tshirt-container {
-            width: 100%;
-            max-width: 400px;
-            height: 500px;
-            margin: 50px auto;
-            position: relative;
-        }
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Jersey Customization</title>
+        <script type="module">
+            import * as THREE from 'https://cdn.skypack.dev/three@0.134.0/build/three.module.js';
+            import { GLTFLoader } from 'https://cdn.skypack.dev/three@0.134.0/examples/jsm/loaders/GLTFLoader.js';
+            import { OrbitControls } from 'https://cdn.skypack.dev/three@0.134.0/examples/jsm/controls/OrbitControls.js';
 
-        /* T-shirt image */
-        #tshirt-img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            position: absolute;
-            top: 0;
-            left: 0;
-            z-index: 1; /* Ensures it is above the color overlay */
-        }
+            // Initialize scene, camera, and renderer
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({ alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setClearColor(0xffffff, 1); // Set background color to white
+            document.getElementById('canvas-container').appendChild(renderer.domElement);
 
-        /* Overlay to apply color filter */
-        #tshirt-overlay {
-            width: 100%;
-            height: 100%;
-            position: absolute;
-            top: 0;
-            left: 0;
-            background-color: transparent; /* Initial color is transparent */
-            mix-blend-mode: multiply; /* Blend mode to allow color changing */
-            z-index: 2; /* Ensures it is above the T-shirt image */
-        }
+            // Add lighting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 1); // Soft white light
+            scene.add(ambientLight);
 
-        #controls {
-            margin-top: 20px;
-        }
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 1); // Directional light
+            directionalLight.position.set(5, 5, 5); // Position the light
+            scene.add(directionalLight);
 
-        #controls input {
-            padding: 10px;
-            margin: 5px;
-        }
-    </style>
-</head>
-<body>
+            const pointLight = new THREE.PointLight(0xffffff, 1, 100); // Add a point light
+            pointLight.position.set(10, 10, 10); // Position the light
+            scene.add(pointLight);
 
-<div id="tshirt-container">
-    <!-- T-shirt image -->
-    <img id="tshirt-img" src="{% static 'madrid_images/custom_design.jpg' %}" alt="T-shirt Image">
-    <!-- Overlay to change the color -->
-    <div id="tshirt-overlay"></div>
-</div>
+            // Add OrbitControls
+            const controls = new OrbitControls(camera, renderer.domElement);
 
-<!-- Controls for customization -->
-<div id="controls">
-    <h3>Customize Your T-shirt Color</h3>
+            // Load the jersey model
+            const loader = new GLTFLoader();
+            loader.load('{% static "3d/basketball_jersey/scene.gltf" %}', function (gltf) {
+                const model = gltf.scene;
+                model.scale.set(0.5, 0.5, 0.5); // Scale down the model
+                model.position.set(0, 0, 0); // Center the model
+                scene.add(model);
 
-    <!-- Color Picker -->
-    <div>
-        <label for="color">Choose T-shirt Color: </label>
-        <input type="color" id="color" value="#ff0000" onchange="changeTshirtColor()">
-    </div>
-</div>
+                // Optional: Apply a basic material to ensure visibility
+                model.traverse((child) => {
+                    if (child.isMesh) {
+                        child.material = new THREE.MeshStandardMaterial({ color: 0xffffff }); // Apply a basic white material
+                    }
+                });
 
-<script>
-    // Function to update the overlay color of the T-shirt
-    function changeTshirtColor() {
-        const color = document.getElementById('color').value;
-        const overlay = document.getElementById('tshirt-overlay');
+                camera.position.set(0, 1, 5); // Adjust the camera position
+                animate();
+            }, undefined, function (error) {
+                console.error('An error occurred while loading the model:', error);
+            });
 
-        // Set the background color of the overlay to the selected color
-        overlay.style.backgroundColor = color;
-    }
-</script>
+            function animate() {
+                requestAnimationFrame(animate);
+                controls.update(); // Update controls
+                renderer.render(scene, camera);
+            }
 
-</body>
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+        </script>
+    </head>
+
+    <body>
+        <div id="canvas-container"></div>
+    </body>
+
 </html>

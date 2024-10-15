@@ -2,7 +2,7 @@ from django.contrib import admin
 from .models import (
     Users, Position, Player, News, Category, SubCategory, Item, ItemImage, ItemSize,
     Cart, CartItem, Wishlist, WishlistItem, Order, OrderItem, Payment, Shipping,
-    Stand, Section, Match, TicketOrder, TicketItem, TicketPayment
+    Stand, Section, Match, TicketOrder, TicketItem, TicketPayment 
 )
 
 class UsersAdmin(admin.ModelAdmin):
@@ -191,6 +191,13 @@ class TicketPaymentAdmin(admin.ModelAdmin):
         if obj:  # editing an existing object
             return self.readonly_fields + ('ticket_order', 'transaction_id')
         return self.readonly_fields
+
+
+
+
+
+
+
 
 # Register the models with the admin site
 admin.site.register(Users, UsersAdmin)
