@@ -47,6 +47,12 @@ urlpatterns = [
     path('generate-report/<int:order_id>/', views.generate_report, name='generate_report'),
 
 
+
+
+
+    path('trainer_index/',views.trainer_index, name='trainer_index'),
+    path('trainer_test/',views.trainer_test, name='trainer_test'),
+
     
 
     path('admin_dashboard/',views.admin_dashboard,name="admin_dashboard"),

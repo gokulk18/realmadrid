@@ -165,6 +165,14 @@ def store_ticket_data(request):
 
 
 
+def trainer_index(request):
+    return render(request,'trainer_index.html')
+
+
+def trainer_test(request):
+    return render(request,'trainer_test.html')
+
+
 def schedule(request):
     api_key = 'dc93cd61f7a04a67be5652fc72195459'
     url = 'https://api.football-data.org/v4/teams/86/matches'  # Real Madrid's ID is 86

@@ -388,7 +388,7 @@
             <h3 x-text="item.name" class="font-semibold mb-1"></h3>
             <p x-text="'Size: ' + item.size" class="text-sm text-gray-600 mb-2"></p>
             <template x-if="!item.outOfStock">
-                <p x-text="'€' + (item.price * item.quantity).toFixed(2)" class="font-semibold mb-2"></p>
+                <p x-text="'&#x20b9;' + (item.price * item.quantity).toFixed(2)" class="font-semibold mb-2"></p>
             </template>
             <div class="flex items-center justify-between">
                 <template x-if="!item.outOfStock">

@@ -393,7 +393,7 @@
             <h3 x-text="item.name" class="font-semibold mb-1"></h3>
             <p x-text="'Size: ' + item.size" class="text-sm text-gray-600 mb-2"></p>
             <template x-if="!item.outOfStock">
-                <p x-text="'€' + (item.price * item.quantity).toFixed(2)" class="font-semibold mb-2"></p>
+                <p x-text="'&#x20b9;' + (item.price * item.quantity).toFixed(2)" class="font-semibold mb-2"></p>
             </template>
             <div class="flex items-center justify-between">
                 <template x-if="!item.outOfStock">
@@ -421,7 +421,7 @@
                                     <div class="mt-6">
                                         <div class="flex justify-between mb-2">
                                             <span class="font-semibold">Subtotal</span>
-                                            <span x-text="'€' + cartTotal" class="font-semibold"></span>
+                                            <span x-text="'&#x20b9;' + cartTotal" class="font-semibold"></span>
                                         </div>
                                         <div class="flex justify-between mb-4">
                                             <span>Shipping</span>
@@ -578,7 +578,7 @@
                 <p class="text-gray-600">{{ item.description }}</p>
             </div>
             
-            <p class="mt-4 text-xl text-black-500">€{{ item.price }}</p>
+            <p class="mt-4 text-xl text-black-500">&#x20b9;{{ item.price }}</p>
             
           
 
@@ -685,7 +685,7 @@
                   <img class="h- w-full object-fill" src="{{ related_item.main_image.url }}" alt="{{ related_item.name }}">
                   <div class="p-4">
                     <h3 class="text-lg font-semibold text-gray-900">{{ related_item.name }}</h3>
-                    <p class="text-gray-600">€{{ related_item.price }}</p>
+                    <p class="text-gray-600">&#x20b9;{{ related_item.price }}</p>
                   </div>
                 </div>
               </a>
