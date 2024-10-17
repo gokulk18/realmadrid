@@ -169,8 +169,71 @@ def trainer_index(request):
     return render(request,'trainer_index.html')
 
 
+from django.http import JsonResponse
+from django.shortcuts import render
+import pandas as pd
+import joblib
+from sklearn.preprocessing import LabelEncoder
+
+# Load the model and feature names
+model = joblib.load("random_forest_model.joblib")
+with open("feature_names.txt", "r") as f:
+    feature_names = [line.strip() for line in f]
+
+label_encoder = LabelEncoder()
+
 def trainer_test(request):
-    return render(request,'trainer_test.html')
+    if request.method == 'POST':
+        try:
+            # Retrieve form data
+            player_name = request.POST.get('playerName')
+            distance_covered = float(request.POST.get('distanceCovered'))
+            sprint_speed = float(request.POST.get('sprintSpeed'))  # Ensure this is in m/s
+            heart_rate = float(request.POST.get('heartRate'))
+            training_load = float(request.POST.get('trainingLoad'))
+            recovery = float(request.POST.get('recovery'))
+            match_minutes = float(request.POST.get('matchMinutes'))
+            wellness = float(request.POST.get('wellness'))
+            injury_status = request.POST.get('injuryStatus')
+
+            # Prepare input data for prediction
+            input_data = {
+                'Distance Covered (km)': distance_covered,
+                'Sprint Speed (m/s)': sprint_speed,  # Ensure this matches the CSV
+                'Heart Rate (bpm)': heart_rate,
+                'Injury Status': injury_status,
+                'Training Load (min/week)': training_load,
+                'Recovery Time (hours)': recovery,
+                'Match Minutes Played': match_minutes,
+                'Wellness Score': wellness
+            }
+
+            # Convert input data to DataFrame for prediction
+            input_df = pd.DataFrame([input_data])
+
+            # One-hot encode categorical features
+            input_df = pd.get_dummies(input_df, columns=['Injury Status'], drop_first=True)
+
+            # Ensure the input DataFrame has the same columns as the training data
+            input_df = input_df.reindex(columns=feature_names, fill_value=0)
+
+            # Debugging: Print the input DataFrame
+            print("Input DataFrame for prediction:")
+            print(input_df)
+
+            # Make predictions
+            prediction = model.predict(input_df)
+
+            # Determine match fit status based on prediction
+            match_fit_status = "Match Fit" if prediction[0] == 1 else "Not Match Fit"
+
+            # Return prediction as JSON response
+            return JsonResponse({'prediction': match_fit_status, 'player_name': player_name})
+
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+
+    return render(request, 'trainer_test.html')
 
 
 def schedule(request):

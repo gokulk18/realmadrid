@@ -107,3 +107,82 @@
             </div>
         </nav>
     </div>
+    <div class="flex flex-col flex-1 overflow-hidden bg-gray-100">
+        <header class="bg-white border-b border-gray-100">
+<div class="flex items-center justify-between px-4 py-4 sm:px-6">
+    <div class="flex items-center">
+        <button @click="sidebarOpen = !sidebarOpen" class="text-gray-500 lg:hidden focus:outline-none">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M4 6H20M4 12H20M4 18H11" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+        </button>
+
+        <div class="relative" x-data="{ search: '' }" @click.away="search = ''">
+<div class="relative mx-4 lg:mx-0">
+    <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+        <svg class="w-5 h-5 text-gray-400" viewBox="0 0 24 24" fill="none">
+            <path d="M21 21L15 15M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+    </span>
+
+    <input x-model="search" type="text" class="w-32 h-10 py-2 pl-10 pr-4 text-gray-700 placeholder-gray-400 transition-all duration-150 bg-white border border-gray-200 rounded-md focus:w-44 sm:w-64 sm:focus:w-80 focus:border-indigo-400 focus:outline-none focus:ring focus:ring-indigo-300 focus:ring-opacity-40" placeholder="Find anything...">
+</div>
+
+<div class="absolute right-0 z-20 w-full py-2 mt-2 space-y-4 overflow-hidden bg-white rounded-md shadow-xl"
+    x-show="search.length > 0" 
+    x-cloak 
+    x-transition:enter="transition ease-out duration-100 transform"
+    x-transition:enter-start="opacity-0 scale-95" 
+    x-transition:enter-end="opacity-100 scale-100"
+    x-transition:leave="transition ease-in duration-75 transform"
+    x-transition:leave-start="opacity-100 scale-100" 
+    x-transition:leave-end="opacity-0 scale-95"
+>
+</div>
+</div>        </div>
+
+    <div class="flex items-center">
+    
+
+        <div x-data="{ dropdownOpen: false }" class="relative inline-block">
+            <button @click="dropdownOpen = ! dropdownOpen" class="relative z-10 flex items-center flex-shrink-0 text-sm text-gray-600 focus:outline-none">
+                <img class="flex  w-8 h-8 " src="{% static 'madrid_images/real-madrid-logo.png' %}" alt="Real Madrid Logo">
+            </button>
+
+            <div class="absolute right-0 z-20 w-56 py-2 mt-2 overflow-hidden bg-white rounded-md shadow-xl rtl:right-auto rtl:left-0"
+                x-show="dropdownOpen" 
+                x-cloak 
+                x-transition:enter="transition ease-out duration-100 transform"
+                x-transition:enter-start="opacity-0 scale-95" 
+                x-transition:enter-end="opacity-100 scale-100"
+                x-transition:leave="transition ease-in duration-75 transform"
+                x-transition:leave-start="opacity-100 scale-100" 
+                x-transition:leave-end="opacity-0 scale-95"
+                @click.away="dropdownOpen = false"
+            >
+                <a href="profile.html" class="flex items-center p-3 -mt-2 text-sm text-gray-600 transition-colors duration-200 transform hover:bg-gray-100">
+                    <img class="flex mx-1 full w-9 h-9" src="{% static 'madrid_images/real-madrid-logo.png' %}" alt="Real Madrid Logo" >
+                    <div class="mx-1">
+                        {% comment %} <h1 class="text-sm font-semibold text-gray-700">John Doe</h1>
+                        <p class="text-sm text-gray-500">johndoe@example.com</p> {% endcomment %}
+                    </div>
+                </a>
+
+                <hr class="border-gray-200 ">
+                
+                {% comment %} <a href="profile.html" class="block px-4 py-2 text-sm text-gray-600 capitalize transition-colors duration-200 transform hover:bg-gray-100">
+                    Profile
+                </a>
+                
+                <a href="profile.html" class="block px-4 py-2 text-sm text-gray-600 capitalize transition-colors duration-200 transform hover:bg-gray-100">
+                    Settings
+                </a> {% endcomment %}
+
+                <a href="{% url 'logout' %}" class="block px-4 py-2 text-sm text-gray-600 capitalize transition-colors duration-200 transform hover:bg-gray-100">
+                    Sign Out
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+</header>

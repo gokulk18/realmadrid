@@ -1,0 +1,8 @@
+Distance Covered (km)
+Sprint Speed (m/s)
+Heart Rate (bpm)
+Injury Status
+Training Load (min/week)
+Recovery Time (hours)
+Match Minutes Played
+Wellness Score
