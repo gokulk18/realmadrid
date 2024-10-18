@@ -1628,15 +1628,13 @@ def admin_squad_list(request):
     return render(request, 'admin_squad_list.html', {'players_by_position': players_by_position})
 
 
-from django.db.models import Q
 
 
 def store(request):
     # Fetch all categories
     categories = Category.objects.all()
 
-    # Get the search query
-    query = request.GET.get('q')
+  
 
     # Get the current category from the request, default to the first category if none specified
     current_category_id = request.GET.get('category')
@@ -1658,18 +1656,8 @@ def store(request):
     # Initialize items queryset
     items = Item.objects.all()
 
-    if query:
-        # If there's a search query, filter items based on the query
-        items = items.filter(
-            Q(name__icontains=query) |
-            Q(description__icontains=query) |
-            Q(category__category_name__icontains=query) |
-            Q(subcategory__sub_category_name__icontains=query)
-        )
-    elif selected_subcategory_id:
-        # If a subcategory is selected, filter items based on the subcategory
-        items = items.filter(subcategory_id=selected_subcategory_id)
-    elif current_category:
+   
+    if current_category:
         # If only a category is selected, filter items based on the category
         items = items.filter(category=current_category)
 
@@ -1695,12 +1683,28 @@ def store(request):
         'next_category_items': next_category_items,
         'selected_subcategory_id': selected_subcategory_id,
         'all_category_items': all_category_items,
-        'query': query,  # Add the search query to the context
     }
 
     return render(request, 'store.html', context)
 
 
+
+from django.http import JsonResponse
+from .models import Item
+
+def search_products(request):
+    query = request.GET.get('query', '')
+    if query:
+        items = Item.objects.filter(name__icontains=query)[:10]  # Limit to 10 results
+        results = [{
+            'id': item.id,
+            'name': item.name,
+            'price': item.price,
+            'main_image': item.main_image.url if item.main_image else '',
+            'category_id': item.category.id,  # Include category_id
+        } for item in items]
+        return JsonResponse(results, safe=False)
+    return JsonResponse([], safe=False)
 
 def wishlist(request):
     return render(request, 'wishlist.html')
