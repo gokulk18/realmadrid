@@ -211,6 +211,27 @@
         outline: 0;
         box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
     }
+    .filter-button-container {
+        display: flex;
+        justify-content: flex-start; /* Align to the left */
+        margin: 20px 0; /* Add some margin */
+        padding-left: 20px; /* Add padding to the left */
+    }
+
+    .filter-button {
+        background-color: #4A90E2; /* Button color */
+        color: white; /* Text color */
+        border: none; /* Remove border */
+        border-radius: 5px; /* Rounded corners */
+        padding: 10px 20px; /* Padding */
+        font-size: 16px; /* Font size */
+        cursor: pointer; /* Pointer cursor on hover */
+        transition: background-color 0.3s; /* Smooth transition */
+    }
+
+    .filter-button:hover {
+        background-color: #357ABD; /* Darker shade on hover */
+    }
     </style>
 
     <script>
@@ -526,9 +547,7 @@
                     <input id="search-input" class="w-full border rounded-md pl-10 pr-4 py-2 focus:border-blue-500 focus:outline-none focus:shadow-outline" type="text" placeholder="Search">
                 </div>
 
-                <div id="search-results" class="mt-4 grid grid-cols-1 gap-8 xl:mt-16 md:grid-cols-2 xl:grid-cols-3">
-                    <!-- Search results will be dynamically inserted here -->
-                </div>
+               
 
                 <nav :class="isOpen ? '' : 'hidden'" class="sm:flex sm:justify-center sm:items-center mt-4">
                     <div class="flex flex-col sm:flex-row">
@@ -542,7 +561,9 @@
                 </nav>
             </div>
         </header>
-
+        <div id="search-results" class="mt-4 grid grid-cols-1 gap-8 xl:mt-16 md:grid-cols-2 xl:grid-cols-3">
+            <!-- Search results will be dynamically inserted here -->
+        </div>
     {% if query %}
         <!-- Search results section -->
         <section class="bg-white dark:bg-gray-900" style="background: white;">
@@ -600,8 +621,12 @@
         </section>
     {% else %}
         <!-- Banner and regular store content -->
-        <div class="relative isolate overflow-hidden" style="padding-top: 0 !important; padding-bottom: 0 !important;z-index:1 !important">
+        <div id="hero-banner" class="relative isolate overflow-hidden" style="padding-top: 0 !important; padding-bottom: 0 !important; z-index: 1 !important;">
             <img src="{% static 'madrid_images/hero_banner_desktop__11_.png' %}">
+        </div>
+        
+        <div class="filter-button-container">
+            <button class="filter-button">Filter by</button>
         </div>
         
         <section class="bg-white dark:bg-gray-900" style="background: white;">
@@ -776,3 +801,28 @@
 </body>
 </html>
     
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('search-input');
+        const heroBanner = document.getElementById('hero-banner'); // Reference to the hero banner
+        let debounceTimer;
+
+        searchInput.addEventListener('input', function() {
+            clearTimeout(debounceTimer);
+            const query = this.value;
+
+            // Hide the hero banner while typing
+            heroBanner.style.display = 'none'; // Remove the banner from the document flow
+
+            debounceTimer = setTimeout(() => {
+                if (query.length > 0) {
+                    // Show results and keep the banner hidden
+                    // You can add your fetch logic here
+                } else {
+                    // Show the hero banner again if input is empty
+                    heroBanner.style.display = 'block'; // Restore the banner
+                }
+            }, 300); // Adjust the delay as needed
+        });
+    });
+</script>

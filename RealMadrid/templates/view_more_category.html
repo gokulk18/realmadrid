@@ -328,10 +328,49 @@
             }
             return cookieValue;
         }
-        </script>
 
+        document.addEventListener('DOMContentLoaded', function() {
+            let debounceTimer;
+            const searchInput = document.getElementById('search-input');
+            const resultsContainer = document.getElementById('search-results');
 
+            searchInput.addEventListener('input', function() {
+                clearTimeout(debounceTimer);
+                const query = this.value;
 
+                debounceTimer = setTimeout(() => {
+                    if (query.length > 0) {
+                        fetch(`/search-products/?query=${encodeURIComponent(query)}`)
+                            .then(response => response.json())
+                            .then(data => {
+                                resultsContainer.innerHTML = ''; // Clear previous results
+                                if (data.length > 0) {
+                                    data.forEach(item => {
+                                        const itemElement = document.createElement('div');
+                                        itemElement.className = 'bg-white dark:bg-gray-800 border border-gray-600 dark:border-gray-400 rounded-xl shadow-lg overflow-hidden flex flex-col';
+                                        const productUrl = `/category/${item.category_id}/product/${item.id}/`;
+                                        itemElement.innerHTML = `
+                                            <a href="${productUrl}" class="product-link">
+                                                <img class="object-fill w-full h-66" src="${item.main_image}" alt="${item.name}">
+                                            </a>
+                                            <div class="p-4 text-center flex-grow" style="background: white;">
+                                                <h3 class="text-2xl font-semibold text-black capitalize dark:text-black">${item.name}</h3>
+                                                <p class="mt-2 text-black capitalize dark:text-black">${item.price}</p>
+                                            </div>
+                                        `;
+                                        resultsContainer.appendChild(itemElement);
+                                    });
+                                } else {
+                                    resultsContainer.innerHTML = '<p class="text-gray-500">No products found.</p>';
+                                }
+                            });
+                    } else {
+                        resultsContainer.innerHTML = ''; // Clear results if input is empty
+                    }
+                }, 300); // Adjust the delay as needed
+            });
+        });
+    </script>
 
 </head>
 <body class="bg-gray-100 font-sans">
@@ -453,8 +492,9 @@
                             <path d="M21 21L15 15M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
                     </span>
-                    <input class="w-full border rounded-md pl-10 pr-4 py-2 focus:border-blue-500 focus:outline-none focus:shadow-outline" type="text" placeholder="Search">
+                    <input id="search-input" class="w-full border rounded-md pl-10 pr-4 py-2 focus:border-blue-500 focus:outline-none focus:shadow-outline" type="text" placeholder="Search">
                 </div>
+               
                 
                 <nav :class="isOpen ? '' : 'hidden'" class="sm:flex sm:justify-center sm:items-center mt-4">
                     <div class="flex flex-col sm:flex-row">
@@ -468,8 +508,10 @@
                 </nav>
             </div>
         </header>
-
-    <div class="relative overflow-hidden bg-gray-100">
+        <div id="search-results" class="mt-4 grid grid-cols-1 gap-8 xl:mt-16 md:grid-cols-2 xl:grid-cols-3">
+            <!-- Search results will be dynamically inserted here -->
+        </div>
+    <div id="search-section" class="relative overflow-hidden bg-gray-100">
         <div class="container mx-auto px-6 py-8 flex items-center">
             <div class="w-1/2">
                 <img src="{% static 'madrid_images/jerseymain.png' %}" alt="Real Madrid T-shirt 24/25" class="w-full h-auto rounded-lg shadow-lg">
@@ -490,6 +532,31 @@
         </div>
     </div>
 
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('search-input');
+            const searchSection = document.getElementById('search-section');
+            let debounceTimer;
+
+            searchInput.addEventListener('input', function() {
+                clearTimeout(debounceTimer);
+                const query = this.value;
+
+                // Hide the search section while typing
+                searchSection.style.display = 'none';
+
+                debounceTimer = setTimeout(() => {
+                    if (query.length > 0) {
+                        // Show results and keep the section hidden
+                        // You can add your fetch logic here
+                    } else {
+                        // Show the search section again if input is empty
+                        searchSection.style.display = 'block';
+                    }
+                }, 300); // Adjust the delay as needed
+            });
+        });
+    </script>
 
     <section class="bg-white dark:bg-gray-900" style="background: white;">
         <div class="container px-6 py-10 mx-auto">
@@ -655,3 +722,5 @@
         </div>
     </section>
     
+</body>
+</html>
