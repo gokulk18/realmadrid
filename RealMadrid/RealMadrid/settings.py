@@ -27,7 +27,7 @@ SECRET_KEY = 'django-insecure-r$-57d+cx^d3ps3#3&_fb6+#!sk%k7ta$e%iwz4k4%=h9cytq#
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*","realmadridfcwebsite.onrender.com"]
 
 AUTH_USER_MODEL = 'UserHandle.Users'
 # Application definition
@@ -95,6 +95,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'allauth.account.middleware.AccountMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
 
 ROOT_URLCONF = 'RealMadrid.urls'
@@ -167,6 +168,7 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATICFILES_DIRS=[BASE_DIR/'static']
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
