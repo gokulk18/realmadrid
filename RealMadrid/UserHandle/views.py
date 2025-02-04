@@ -48,6 +48,13 @@ from django.views.decorators.csrf import csrf_exempt
 from .models import TicketOrder, TicketItem, Match, Stand, Section
 from django.shortcuts import get_object_or_404
 from django.db import transaction
+from rest_framework import viewsets
+from .models import QuizQuestion
+import os
+from django.core.files.storage import FileSystemStorage
+from PIL import Image
+from .models import UploadedImage  # Assuming you have a model for storing images
+from .models import IdentifyPlayer
 
 
 
@@ -71,7 +78,27 @@ def player_view(request):
     for position in positions:
         players_by_position[position.position] = Player.objects.filter(player_position=position)
 
-    return render(request, 'player_view.html', {'players_by_position': players_by_position})
+    context = {}  # Initialize context dictionary
+
+    if request.user.is_authenticated:
+        user = request.user
+        context.update({
+            'user_name': user.username,
+            'user_email': user.email,
+            'user_phone': getattr(user, 'phone', None),  # Optional: if you have a phone field in the User model
+        })
+    elif 'user_id' in request.session:
+        try:
+            user = Users.objects.get(id=request.session['user_id'])
+            context.update({
+                'user_name': user.name,
+                'user_email': user.email,
+                'user_phone': user.phone,  # Add other user-specific details if needed
+            })
+        except Users.DoesNotExist:
+            pass  # Handle the case where the user does not exist
+
+    return render(request, 'player_view.html', {'players_by_position': players_by_position, **context})
 
 
 def get_cart_items(request):
@@ -278,8 +305,28 @@ def schedule(request):
 
     context = {
         'fixtures': upcoming_home_fixtures,
-        'user_name': request.user.username if request.user.is_authenticated else None,
+        # ... existing context ...
     }
+
+    # Add user information to context
+    if request.user.is_authenticated:
+        user = request.user
+        context.update({
+            'user_name': user.username,
+            'user_email': user.email,
+            'user_phone': getattr(user, 'phone', None),  # Optional: if you have a phone field in the User model
+        })
+    elif 'user_id' in request.session:
+        try:
+            user = Users.objects.get(id=request.session['user_id'])
+            context.update({
+                'user_name': user.name,
+                'user_email': user.email,
+                'user_phone': user.phone,  # Add other user-specific details if needed
+            })
+        except Users.DoesNotExist:
+            pass  # Handle the case where the user does not exist
+
     return render(request, 'schedule.html', context)
 
 
@@ -858,7 +905,7 @@ def checkout(request):
                 }
                 for item in cart_items
             ],
-            'last_address': last_address,  # Pass the last address to the template
+             'last_address': last_address if any(last_address.values()) else None,  # Pass the last address only if it contains values
         }
         return render(request, 'checkout.html', context)
 
@@ -1479,10 +1526,8 @@ def admin_dashboard(request):
     ).order_by('-total_quantity')[:5]
 
     # Prepare data for product sales comparison chart (number of items sold)
-    product_sales = Item.objects.annotate(total_quantity=Count('orderitem__quantity')).order_by('-total_quantity')[:10]
-    product_names = [item.name for item in product_sales]
-    product_sales_data = [item.total_quantity for item in product_sales]
-
+    product_names = [product.name for product in top_products]
+    product_sales_data = [product.total_quantity for product in top_products]
 
     # Fetch upcoming matches
     upcoming_matches = Match.objects.filter(utc_date__gt=timezone.now()).order_by('utc_date')
@@ -1531,6 +1576,24 @@ def admin_dashboard(request):
         'upcoming_matches': upcoming_matches,
         'pie_chart_data': pie_chart_data,  # Add pie chart data to context
     }
+
+    if request.user.is_authenticated:
+        user = request.user
+        context.update({
+            'user_name': user.username,
+            'user_email': user.email,
+            'user_phone': getattr(user, 'phone', None),  # Optional: if you have a phone field in the User model
+        })
+    elif 'user_id' in request.session:
+        try:
+            user = Users.objects.get(id=request.session['user_id'])
+            context.update({
+                'user_name': user.name,
+                'user_email': user.email,
+                'user_phone': user.phone,  # Add other user-specific details if needed
+            })
+        except Users.DoesNotExist:
+            pass
 
     return render(request, 'admin_dashboard.html', context)
 
@@ -1928,6 +1991,23 @@ def user_view_news(request, id):
     context = {
         'news': news_item
     }
+    if request.user.is_authenticated:
+        user = request.user
+        context.update({
+            'user_name': user.username,
+            'user_email': user.email,
+            'user_phone': getattr(user, 'phone', None),  # Optional: if you have a phone field in the User model
+        })
+    elif 'user_id' in request.session:
+        try:
+            user = Users.objects.get(id=request.session['user_id'])
+            context.update({
+                'user_name': user.name,
+                'user_email': user.email,
+                'user_phone': user.phone,  # Add other user-specific details if needed
+            })
+        except Users.DoesNotExist:
+            pass
     return render(request, 'user_view_news.html', context)
     
 def generate_otp():
@@ -2032,6 +2112,7 @@ def password_reset(request):
     return render(request,'password_reset.html')
 
 
+
 def login(request):
     if request.method == 'POST':
         email = request.POST.get('email')
@@ -2064,6 +2145,27 @@ def login(request):
 
     return render(request, 'login.html')
 
+
+import json
+from django.shortcuts import render, redirect
+from .models import QuizQuestion
+
+def admin_player_game(request):
+    # Fetch all uploaded images
+    uploaded_images = UploadedImage.objects.all()  # Assuming UploadedImage is your model for storing images
+    return render(request, 'admin_player_game.html', {'uploaded_images': uploaded_images})
+
+
+def admin_gamification(request):
+    # Fetch all quiz questions
+    quiz_questions = QuizQuestion.objects.all()
+
+    # Render the page with the fetched questions
+    return render(request, 'admin_gamification.html', {'quiz_questions': quiz_questions})
+
+
+def admin_guess_player(request):
+    return render(request,'admin_guess_player.html')
 
 def register(request):
     if request.method == 'POST':
@@ -2263,9 +2365,6 @@ def previous_results(request):
 
 
 
-
-
-
 def match_details(request, fixture_id):
     api_key = settings.API_FOOTBALL_KEY
     context = {
@@ -2273,3 +2372,58 @@ def match_details(request, fixture_id):
         'api_football_key': api_key,
     }
     return render(request, 'match_details.html', context)
+
+
+@csrf_exempt  # Use this if you are not using CSRF tokens in your AJAX requests
+def add_quiz_question(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            question_text = data.get('question')
+            options = data.get('options')
+            correct_answer = data.get('correctAnswer')
+
+            # Create a new QuizQuestion instance
+            quiz_question = QuizQuestion(
+                question_text=question_text,
+                options=options,
+                correct_answers=[correct_answer]  # Store the correct answer as a list
+            )
+            quiz_question.save()  # Save the question to the database
+
+            # Add success message alert
+            messages.success(request, 'Question added successfully!')  # Add this line
+
+            return JsonResponse({'success': True, 'message': 'Question added successfully!'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=400)
+
+    return JsonResponse({'success': False, 'message': 'Invalid request method.'}, status=405)
+
+def upload_image(request):
+    if request.method == 'POST' and request.FILES['image']:
+        image = request.FILES['image']
+        fs = FileSystemStorage()
+        filename = fs.save(image.name, image)  # Save the file
+        UploadedImage.objects.create(image=filename)  # Save the filename to the database
+        return redirect('admin_player_game')  # Redirect after upload
+    return render(request, 'admin_player_game.html')  # Render the same page if not POST
+
+
+
+def upload_identify_player(request):
+    if request.method == 'POST':
+        player_name = request.POST['player_name']
+        player_image = request.FILES['player_image']
+        
+        # Create a new IdentifyPlayer instance and save it
+        identify_player = IdentifyPlayer(name=player_name, image=player_image)
+        identify_player.save()
+        
+        return redirect('admin_dashboard')  # Redirect to a success page or dashboard
+
+    # Fetch all existing IdentifyPlayer records
+    players = IdentifyPlayer.objects.all()
+    return render(request, 'admin_guess_player.html', {'players': players})  # Pass players to the template
+
+

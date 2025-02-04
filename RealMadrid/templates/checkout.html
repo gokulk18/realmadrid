@@ -69,6 +69,7 @@
                 </div>
 
                 <!-- Delivery Address Section -->
+                {% if last_address %}
                 <section class="bg-white rounded-lg shadow-md p-6 mb-6" x-show="step === 'details'">
                     <h2 class="text-xl font-semibold mb-4">Delivery Address</h2>
 
@@ -77,9 +78,9 @@
                         <div class="flex items-center mb-4 p-4 border border-gray-300 rounded-lg" x-show="!isEditing">
                             <input type="radio" name="delivery_address" id="last_address" class="mr-2" checked>
                             <label for="last_address" class="flex-1">
-                                <div class="font-semibold">{{ last_address.full_name }} ({{ last_address.phone }})</div>
+                                <div class="font-semibold">{{ last_address.full_name }} {{ last_address.phone }}</div>
                                 <div class="font-semibold">{{ last_address.email }}</div>
-                                <div>{{ last_address.address }}, {{ last_address.apartment }}, {{ last_address.city }}, {{ last_address.state }}, {{ last_address.zipcode }}</div>
+                                <div>{{ last_address.address }} {{ last_address.apartment }} {{ last_address.city }} {{ last_address.state }} {{ last_address.zipcode }}</div>
                                 <div>{{ last_address.country }}</div>
                             </label>
                             <button class="text-blue-500 ml-4" @click="editAddress()">EDIT</button>
@@ -145,6 +146,7 @@
                         {% endfor %}
                     </div>
                 </section>
+                {% endif %}
 
                 <div x-show="step === 'details'">
                     <div class="mb-6">

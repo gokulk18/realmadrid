@@ -10,6 +10,9 @@
     <!-- UIkit JS -->
     <script src="https://cdn.jsdelivr.net/npm/uikit@3.21.6/dist/js/uikit.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/uikit@3.21.6/dist/js/uikit-icons.min.js"></script>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
 
@@ -74,6 +77,7 @@
                             <span>Google</span>
                         </a>
                     </div>
+                    <div class="g-recaptcha" data-sitekey="{{ RECAPTCHA_PUBLIC_KEY }}"></div>
                 </div>
             </form>
         </div>
@@ -83,5 +87,64 @@
     <path fill="#fff" fill-opacity="1" d="M0,0L40,42.7C80,85,160,171,240,197.3C320,224,400,192,480,154.7C560,117,640,75,720,74.7C800,75,880,117,960,154.7C1040,192,1120,224,1200,213.3C1280,203,1360,149,1400,122.7L1440,96L1440,320L1400,320C1360,320,1280,320,1200,320C1120,320,1040,320,960,320C880,320,800,320,720,320C640,320,560,320,480,320C400,320,320,320,240,320C160,320,80,320,40,320L0,320Z"></path>
 </svg>
 <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.js"></script>
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
+
+<!-- Bootstrap Modal for Math Question -->
+<div class="modal fade" id="mathModal" tabindex="-1" role="dialog" aria-labelledby="mathModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="mathModalLabel">CAPTCHA Check</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" onclick="closeModal()">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p id="mathQuestion"></p>
+                <input type="text" id="mathAnswer" class="form-control" placeholder="Your answer">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal()">Close</button>
+                <button type="button" class="btn btn-primary" onclick="validateAnswer()">Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap JS and dependencies -->
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+<script>
+    let correctAnswer;
+
+    function generateMathQuestion() {
+        const num1 = Math.floor(Math.random() * 10);
+        const num2 = Math.floor(Math.random() * 10);
+        correctAnswer = num1 + num2; // Change to num1 - num2 for subtraction
+        document.getElementById('mathQuestion').innerText = `What is ${num1} + ${num2}?`;
+        $('#mathModal').modal('show'); // Show the Bootstrap modal
+    }
+
+    function validateAnswer() {
+        const userAnswer = parseInt(document.getElementById('mathAnswer').value);
+        if (userAnswer === correctAnswer) {
+            document.querySelector('form').submit(); // Submit the form if the answer is correct
+        } else {
+            alert('Incorrect answer. Please try again.');
+            closeModal();
+        }
+    }
+
+    function closeModal() {
+        $('#mathModal').modal('hide'); // Hide the Bootstrap modal
+    }
+
+    document.querySelector('form').onsubmit = function(event) {
+        event.preventDefault(); // Prevent form submission
+        generateMathQuestion(); // Show the math question modal
+    };
+</script>
 </body>
 </html>

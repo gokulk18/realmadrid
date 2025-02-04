@@ -37,6 +37,21 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 model = RandomForestClassifier()
 model.fit(X_train, y_train)
 
+# Evaluate the model
+y_pred = model.predict(X_test)  # Make predictions on the test set
+accuracy = accuracy_score(y_test, y_pred)  # Calculate accuracy
+print(f"Model accuracy: {accuracy:.2f}")  # Print the accuracy
+
+# Calculate confusion matrix
+conf_matrix = confusion_matrix(y_test, y_pred)  # Get the confusion matrix
+TP = conf_matrix[1, 1]  # True Positives
+TN = conf_matrix[0, 0]  # True Negatives
+FP = conf_matrix[0, 1]  # False Positives
+FN = conf_matrix[1, 0]  # False Negatives
+
+# Print the confusion matrix values
+print(f"True Positives: {TP}, True Negatives: {TN}, False Positives: {FP}, False Negatives: {FN}")
+
 # Save the trained model to a file
 model_filename = "random_forest_model.joblib"  # Specify the filename
 joblib.dump(model, model_filename)  # Save the model

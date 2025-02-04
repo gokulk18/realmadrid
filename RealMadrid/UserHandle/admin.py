@@ -2,7 +2,8 @@ from django.contrib import admin
 from .models import (
     Users, Position, Player, News, Category, SubCategory, Item, ItemImage, ItemSize,
     Cart, CartItem, Wishlist, WishlistItem, Order, OrderItem, Payment, Shipping,
-    Stand, Section, Match, TicketOrder, TicketItem, TicketPayment 
+    Stand, Section, Match, TicketOrder, TicketItem, TicketPayment, QuizQuestion,
+    UploadedImage, IdentifyPlayer  # Import the UploadedImage and IdentifyPlayer models
 )
 
 class UsersAdmin(admin.ModelAdmin):
@@ -192,12 +193,17 @@ class TicketPaymentAdmin(admin.ModelAdmin):
             return self.readonly_fields + ('ticket_order', 'transaction_id')
         return self.readonly_fields
 
+class QuizQuestionAdmin(admin.ModelAdmin):
+    list_display = ('question_text',)
+    search_fields = ('question_text',)
 
+class UploadedImageAdmin(admin.ModelAdmin):
+    list_display = ('id', 'image', 'uploaded_at')  # Display fields in the admin
+    search_fields = ('id',)  # Add search functionality if needed
 
-
-
-
-
+class IdentifyPlayerAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'image')  # Display fields in the admin
+    search_fields = ('name',)  # Add search functionality for the name field
 
 # Register the models with the admin site
 admin.site.register(Users, UsersAdmin)
@@ -223,3 +229,6 @@ admin.site.register(Match, MatchAdmin)
 admin.site.register(TicketOrder, TicketOrderAdmin)
 admin.site.register(TicketItem, TicketItemAdmin)
 admin.site.register(TicketPayment, TicketPaymentAdmin)
+admin.site.register(QuizQuestion, QuizQuestionAdmin)
+admin.site.register(UploadedImage, UploadedImageAdmin)  # Register the UploadedImage model
+admin.site.register(IdentifyPlayer, IdentifyPlayerAdmin)  # Register the IdentifyPlayer model

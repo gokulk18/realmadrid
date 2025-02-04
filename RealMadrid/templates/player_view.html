@@ -85,7 +85,7 @@
 <section class="bg-white dark:bg-white-900">
     <nav id="navbar" x-data="{ isOpen: false }" class="fixed inset-x-0 z-30 container p-6 mx-auto lg:flex lg:justify-between lg:items-center bg-white text-[#43526e] transition-transform duration-300 ease-in-out transform top-0">
         <div class="flex items-center justify-between">
-            <a href="#" class="flex items-center">
+            <a href="{% url 'index' %}" class="flex items-center">
                 <img class="w-auto h-6 sm:h-7" src="{% static 'madrid_images/real-madrid-logo.png' %}" alt="Real Madrid Logo">
                 <span class="ml-2 lg:ml-6 hover:text-blue-500">REAL MADRID FC</span>
             </a>

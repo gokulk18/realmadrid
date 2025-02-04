@@ -355,13 +355,13 @@
                     return this.cartItems.filter(item => !item.outOfStock).length;
                 },
                 checkout() {
-                    const availableItems = this.cartItems.filter(item => !item.outOfStock);
+                    const availableItems = this.cartItems.filter(item => !item.outOfStock && item.quantity > 0);
                     if (availableItems.length === 0) {
                         alert('There are no available items in your cart to checkout.');
                         return;
                     }
-                    // Implement checkout logic here with availableItems
-                    console.log('Proceeding to checkout with available items:', availableItems);
+                    // Redirect to the checkout page
+                    window.location.href = "{% url 'checkout' %}";
                 }
             }
         }
@@ -625,9 +625,7 @@
             <img src="{% static 'madrid_images/hero_banner_desktop__11_.png' %}">
         </div>
         
-        <div class="filter-button-container">
-            <button class="filter-button">Filter by</button>
-        </div>
+       
         
         <section class="bg-white dark:bg-gray-900" style="background: white;">
             <div class="container px-6 py-10 mx-auto">

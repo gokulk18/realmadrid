@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount.providers.google',
     'rest_framework',
+    'captcha',
     
 
 ]
@@ -183,3 +184,7 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'realmadridfcwebsite@gmail.com'
 EMAIL_HOST_PASSWORD = 'chtm unlc cear flmm'
+
+
+RECAPTCHA_PUBLIC_KEY = '6LewbMcqAAAAAPQ223lSt-7DZzoCaqjx4FWZ4j-G'
+RECAPTCHA_PRIVATE_KEY = '6LewbMcqAAAAABH9I2uqR0EQZwq0fzpDawoL_r7G'

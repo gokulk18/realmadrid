@@ -3,6 +3,7 @@ from django.contrib.auth.models import AbstractUser
 from django.utils.crypto import get_random_string
 from django.core.validators import MinValueValidator
 from django.utils import timezone
+import json
 
 class Users(AbstractUser):
     name = models.CharField(max_length=255)
@@ -344,4 +345,24 @@ class TicketPayment(models.Model):
     class Meta:
         ordering = ['-created_at']
 
+class QuizQuestion(models.Model):
+    question_text = models.TextField()
+    options = models.JSONField()  # Use JSONField to store options as a list
+    correct_answers = models.JSONField()  # Store correct answers as a list of indices
 
+    def __str__(self):
+        return self.question_text
+
+
+
+class UploadedImage(models.Model):
+    image = models.ImageField(upload_to='jigsaw_images/')  # Adjust the upload path as needed
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+
+class IdentifyPlayer(models.Model):
+    name = models.CharField(max_length=100)
+    image = models.ImageField(upload_to='players/')
+
+    def __str__(self):
+        return self.name

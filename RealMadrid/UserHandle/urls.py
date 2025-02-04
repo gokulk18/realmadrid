@@ -76,9 +76,12 @@ urlpatterns = [
     path('admin_add_subsection/',views.admin_add_subsection,name="admin_add_subsection"),
     path('admin_delete_section/',views.admin_delete_section,name='admin_delete_section'),
     path('admin_ticket_stats/',views.admin_ticket_stats,name='admin_ticket_stats'),
-
-
-
+    path('admin_gamification/',views.admin_gamification,name="admin_gamification"),
+    path('add-quiz-question/', views.add_quiz_question, name='add_quiz_question'),
+    path('admin_player_game/',views.admin_player_game,name="admin_player_game"),
+    path('upload_image/', views.upload_image, name='upload_image'),
+    path('admin_guess_player/,',views.admin_guess_player,name='admin_guess_player'),
+    path('upload_identify_player/', views.upload_identify_player, name='upload_identify_player'),
 
 
 

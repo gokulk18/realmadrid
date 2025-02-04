@@ -6,8 +6,13 @@ from selenium.common.exceptions import TimeoutException
 import time
 
 def test_login():
-    # Initialize the WebDriver
-    driver = webdriver.Chrome()  # Ensure you have the ChromeDriver installed and in your PATH
+    # Initialize the WebDriver with options to ignore SSL errors and suppress logs
+    options = webdriver.ChromeOptions()
+    options.add_argument('--ignore-certificate-errors')
+    options.add_argument('--silent')  # Suppress logging
+    options.add_argument('--disable-logging')  # Disable logging
+    options.add_argument('--log-level=3')  # Set log level to fatal
+    driver = webdriver.Chrome(options=options)  # Ensure you have the ChromeDriver installed and in your PATH
     driver.get("http://127.0.0.1:8000/login")  # Replace with your actual login URL
 
     try:
