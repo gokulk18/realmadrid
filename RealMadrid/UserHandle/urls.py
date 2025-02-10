@@ -46,7 +46,10 @@ urlpatterns = [
     path('custom_jersey/',views.custom_jersey,name='custom_jersey'),
     path('generate-report/<int:order_id>/', views.generate_report, name='generate_report'),
     path('search-products/', views.search_products, name='search_products'),
-
+    path('gamezone/', views.gamezone,name='gamezone'),
+    path('gamezone_quiz/', views.gamezone_quiz,name='gamezone_quiz'),
+    path('gamezone_guess/', views.gamezone_guess,name='gamezone_guess'),
+    path('gamezone_jigsaw/', views.gamezone_jigsaw,name='gamezone_jigsaw'),
 
 
 
@@ -80,7 +83,7 @@ urlpatterns = [
     path('add-quiz-question/', views.add_quiz_question, name='add_quiz_question'),
     path('admin_player_game/',views.admin_player_game,name="admin_player_game"),
     path('upload_image/', views.upload_image, name='upload_image'),
-    path('admin_guess_player/,',views.admin_guess_player,name='admin_guess_player'),
+    path('admin_guess_player/',views.admin_guess_player,name='admin_guess_player'),
     path('upload_identify_player/', views.upload_identify_player, name='upload_identify_player'),
 
 

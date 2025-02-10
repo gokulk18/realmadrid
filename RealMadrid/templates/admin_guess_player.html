@@ -300,16 +300,16 @@ x-transition:leave-end="opacity-0 scale-95"
                 </form>
             </div>
 
-            <div id="uploaded-players">
-                <h2>Uploaded Players</h2>
-                <div class="player-list">
+            <div id="uploaded-players" class="bg-white p-4 rounded-lg shadow-md mt-4">
+                <h2 class="text-xl font-semibold mb-4">Uploaded Players</h2>
+                <div class="player-list flex flex-wrap justify-between">
                     {% for player in players %}
-                        <div class="player-item">
-                            <h3>{{ player.name }}</h3>
-                            <img src="{{ player.image.url }}" alt="{{ player.name }}" style="width: 100px; height: auto;">
+                        <div class="player-item border rounded-lg overflow-hidden shadow hover:shadow-lg transition-shadow duration-300 w-1/5 mb-2">
+                            <img src="{{ player.image.url }}" alt="{{ player.name }}" class="w-full h-32 object-cover" style="height: 150px; width: 150px;">
+                            <h3 class="text-center text-lg font-medium p-2">{{ player.name }}</h3>
                         </div>
                     {% empty %}
-                        <p>No players uploaded yet.</p>
+                        <p class="text-center text-gray-500">No players uploaded yet.</p>
                     {% endfor %}
                 </div>
             </div>

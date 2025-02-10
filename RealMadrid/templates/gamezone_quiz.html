@@ -1,0 +1,375 @@
+{% load static %}
+{% load tz %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+    <title>Real Madrid FC</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uikit@3.21.6/dist/css/uikit.min.css" />
+
+    <!-- UIkit JS -->
+    <script src="https://cdn.jsdelivr.net/npm/uikit@3.21.6/dist/js/uikit.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/uikit@3.21.6/dist/js/uikit-icons.min.js"></script>
+    <script src="//unpkg.com/alpinejs" defer></script>
+    <style>
+        .hover-zoom:hover {
+            transform: scale(1.05);
+            transition: transform 0.3s ease-in-out;
+        }
+        .uk-slider-container .uk-slidenav {
+            color: white; /* Default color */
+            transition: color 0.3s ease; /* Smooth transition */
+        }
+    
+        .uk-slider-container .uk-slidenav:hover {
+            color: #3b82f6; /* Blue color on hover */
+        }
+        .rounded-lg {
+            border-radius: 1rem; /* Adjust radius as needed */
+            overflow: hidden; /* Ensures the image fits within the rounded corners */
+        }
+    
+        .hover\:scale-105:hover {
+            transform: scale(1.05); /* Zoom effect on hover */
+        }
+        a{
+            text-decoration: none !important;
+        }
+        .quiz-section {
+            background-color: #f9f9f9; /* Light gray background for a softer look */
+            border-radius: 1rem; /* Rounded corners */
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1); /* Enhanced shadow for depth */
+            padding: 2rem; /* Increased padding */
+            margin: 2rem auto; /* Centered with margin */
+            max-width: 600px; /* Max width for the quiz section */
+            text-align: center; /* Center text for a more professional look */
+        }
+
+        .quiz-question {
+            font-size: 1.8rem; /* Larger font size for question */
+            font-weight: bold; /* Bold text */
+            margin-bottom: 1.5rem; /* Space below question */
+            color: #333; /* Darker text color for better readability */
+        }
+
+        .quiz-option {
+            display: flex; /* Flex display for options */
+            align-items: center; /* Center items vertically */
+            background-color: #3b82f6; /* Blue background */
+            color: white; /* White text */
+            padding: 1rem; /* Padding for buttons */
+            border-radius: 0.5rem; /* Rounded corners */
+            margin: 0.5rem 0; /* Space between options */
+            text-align: left; /* Left align text */
+            transition: background-color 0.3s; /* Smooth transition */
+            cursor: pointer; /* Pointer cursor on hover */
+        }
+
+        .quiz-option:hover {
+            background-color: #2563eb; /* Darker blue on hover */
+        }
+
+        .option-label {
+            margin-right: 1rem; /* Space between label and text */
+            font-weight: bold; /* Bold label */
+        }
+
+        #timer {
+            font-size: 1.5rem; /* Larger font size for timer */
+            font-weight: bold; /* Bold text */
+            margin-top: 1.5rem; /* Space above timer */
+            color: #e63946; /* Red color for urgency */
+        }
+    </style>
+</head>
+<body class="bg-[#f3f5f8]">
+
+
+<!-- Navbar Section -->
+<section class="bg-white dark:bg-white-900">
+    <nav id="navbar" x-data="{ isOpen: false }" class="fixed inset-x-0 z-30 w-full p-6 mx-auto lg:flex lg:justify-between lg:items-center bg-white text-[#43526e] transition-transform duration-300 ease-in-out transform top-0">
+        <div class="flex items-center justify-between">
+            <a href="#" class="flex items-center">
+                <img class="w-auto h-6 sm:h-7" src="{% static 'madrid_images/real-madrid-logo.png' %}" alt="Real Madrid Logo">
+                <span class="ml-2 lg:ml-6 hover:text-blue-500">REAL MADRID FC</span>
+            </a>
+
+            <!-- Mobile menu button -->
+            <div class="flex lg:hidden">
+                <button x-cloak @click="isOpen = !isOpen" type="button" class="text-[#43526e] hover:text-gray-600 focus:outline-none focus:text-gray-600" aria-label="toggle menu">
+                    <svg x-show="!isOpen" xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 8h16M4 16h16" />
+                    </svg>
+
+                    <svg x-show="isOpen" xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Menu open: "block", Menu closed: "hidden" -->
+            <div x-cloak :class="[isOpen ? 'translate-x-0 opacity-100 ' : 'opacity-0 -translate-x-full']" class="absolute inset-x-0 z-20 w-full px-6 py-4 transition-all duration-300 ease-in-out bg-white shadow-md lg:bg-transparent lg:shadow-none lg:mt-0 lg:p-0 lg:top-0 lg:relative lg:w-auto lg:opacity-100 lg:translate-x-0 lg:flex lg:items-center text-[#43526e]">
+                <div class="flex flex-col lg:flex-row lg:space-x-4">
+                    <a class="block lg:mx-6 hover:text-blue-500" href="{% url 'player_view' %}">Madridstas</a>
+                    <a class="block lg:mx-6 hover:text-blue-500" href="{% url 'schedule' %}">Tickets</a>
+                    <a class="block lg:mx-6 hover:text-blue-500" href="{% url 'store' %}">Store</a>
+                    <a class="block lg:mx-6 hover:text-blue-500" href="{% url 'previous_results' %}">Results</a>
+                    <a class="block lg:mx-6 hover:text-blue-500" href="{% url 'gamezone' %}">Game Zone</a>
+
+                </div>
+
+            {% if user_name %}
+            <div x-data="{ isOpenDropdown: false }" class="relative inline-block">
+                <!-- Dropdown toggle button -->
+                <button @click="isOpenDropdown = !isOpenDropdown" class="relative z-10 flex items-center p-2 bg-white focus:outline-none">
+                    <span class="mx-1">{{ user_name }}</span>
+                    <svg class="w-5 h-5 mx-1" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 15.713L18.01 9.70299L16.597 8.28799L12 12.888L7.40399 8.28799L5.98999 9.70199L12 15.713Z" fill="currentColor"></path>
+                    </svg>
+                </button>
+
+                <!-- Dropdown menu -->
+                <div x-show="isOpenDropdown" 
+                    @click.away="isOpenDropdown = false"
+                    x-transition:enter="transition ease-out duration-100"
+                    x-transition:enter-start="opacity-0 scale-90"
+                    x-transition:enter-end="opacity-100 scale-100"
+                    x-transition:leave="transition ease-in duration-100"
+                    x-transition:leave-start="opacity-100 scale-100"
+                    x-transition:leave-end="opacity-0 scale-90"
+                    class="absolute right-0 z-20 w-56 py-2 mt-2 overflow-hidden origin-top-right bg-[#43526e] rounded-md shadow-xl dark:bg-white-800"
+                >
+                    <a href="{% url 'profile' %}" class="block px-4 py-3 text-sm text-gray-600 capitalize transition-colors duration-300 transform dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 dark:hover:text-white">View profile</a>
+                    <hr class="border-gray-200 dark:border-gray-700">
+                    <a href="#" class="block px-4 py-3 text-sm text-gray-600 capitalize transition-colors duration-300 transform dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 dark:hover:text-white">Help</a>
+                    <a href="{% url 'logout' %}" class="block px-4 py-3 text-sm text-gray-600 capitalize transition-colors duration-300 transform dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 dark:hover:text-white">Sign Out</a>
+                </div>
+            </div>
+            {% else %}
+            <a href="{% url 'login' %}" class="block lg:mx-6 hover:text-blue-500">Login</a>
+            {% endif %}
+        </div>
+    </nav>
+    <hr>
+</section>
+
+
+    <!-- JavaScript for Scroll Behavior -->
+    <script>
+        let lastScrollTop = 0;
+        const navbar = document.getElementById('navbar');
+
+        window.addEventListener('scroll', () => {
+            let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+            if (scrollTop > lastScrollTop) {
+                // Scroll down
+                navbar.style.transform = 'translateY(-100%)';
+            } else {
+                // Scroll up
+                navbar.style.transform = 'translateY(0)';
+            }
+            lastScrollTop = scrollTop;
+        });
+    </script>
+
+  
+ 
+    
+
+   
+    <!-- Quiz Section -->
+    <section class="quiz-section p-6" style="margin-top: 10%;">
+        <h2 class="text-2xl font-bold mb-4">Quiz</h2>
+        <div id="quiz-container">
+            {% if questions %}
+                <div id="question" class="quiz-question">{{ questions.0.question_text }}</div>
+                <div id="options" class="mb-4">
+                    {% for option in questions.0.options %}
+                        <div class="quiz-option" onclick="selectOption('{{ option }}', '{{ questions.0.correct_answer }}')">
+                            <span class="option-label">{{ forloop.counter }}.</span>{{ option }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="quiz-question">No questions available.</div>
+            {% endif %}
+            <button id="next-button" class="uk-button uk-button-primary" disabled>Next Question</button>
+            <div id="timer" class="mt-4 text-red-500"></div>
+        </div>
+    </section>
+
+    <!-- Modal Structure -->
+    <div id="score-modal" class="uk-modal" uk-modal>
+        <div class="uk-modal-dialog uk-modal-body">
+            <h2 class="uk-modal-title">Quiz Completed!</h2>
+            <p id="final-score"></p>
+            <button class="uk-button uk-button-default" onclick="redirectToGameZone()">OK</button>
+        </div>
+    </div>
+
+    <canvas id="fireworksCanvas" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; display: none;"></canvas>
+
+    <script>
+        let currentQuestionIndex = 0;
+        let score = 0; // Initialize score
+        let timer;
+        const timerDuration = 15; // seconds
+
+        function loadQuestion() {
+            clearInterval(timer);
+            const currentQuestion = {{ questions|safe }}[currentQuestionIndex]; // Use the questions context
+            document.getElementById('question').innerText = currentQuestion.question_text;
+            const optionsContainer = document.getElementById('options');
+            optionsContainer.innerHTML = '';
+            currentQuestion.options.forEach((option, index) => {
+                const button = document.createElement('div');
+                button.className = 'quiz-option';
+                button.onclick = () => selectOption(option, currentQuestion.correct_answer); // Pass correct answer index
+                button.innerHTML = `<span class="option-label">${String.fromCharCode(65 + index)}.</span>${option}`; // A, B, C, D
+                optionsContainer.appendChild(button);
+            });
+            startTimer();
+        }
+
+        function startTimer() {
+            let timeLeft = timerDuration;
+            document.getElementById('timer').innerText = `Time left: ${timeLeft}s`;
+            timer = setInterval(() => {
+                timeLeft--;
+                document.getElementById('timer').innerText = `Time left: ${timeLeft}s`;
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    document.getElementById('next-button').disabled = false;
+
+                    // Automatically load the next question immediately when time runs out
+                    document.getElementById('next-button').click();
+                }
+            }, 1000);
+        }
+
+        function selectOption(selected, correctAnswerIndex) {
+            const currentQuestion = {{ questions|safe }}[currentQuestionIndex];
+            const correctAnswer = currentQuestion.options[correctAnswerIndex]; // Get the correct answer using the index
+
+            const options = document.querySelectorAll('.quiz-option');
+            options.forEach(option => {
+                option.style.pointerEvents = 'none'; // Disable further clicks
+            });
+
+            if (selected === correctAnswer) {
+                score++; // Increment score for correct answer
+                options.forEach(option => {
+                    if (option.innerText.includes(selected)) {
+                        option.style.backgroundColor = 'green'; // Green for correct answer
+                    }
+                });
+            } else {
+                options.forEach(option => {
+                    if (option.innerText.includes(selected)) {
+                        option.style.backgroundColor = 'red'; // Red for wrong answer
+                    } else if (option.innerText.includes(correctAnswer)) {
+                        option.style.backgroundColor = 'green'; // Show correct answer
+                    }
+                });
+            }
+            clearInterval(timer);
+            document.getElementById('next-button').disabled = false;
+
+            // Load the next question after a short delay
+            setTimeout(() => {
+                document.getElementById('next-button').click();
+            }, 5000); // Adjusted delay to 5000 milliseconds (5 seconds)
+        }
+
+        document.getElementById('next-button').onclick = () => {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < {{ questions|length }}) {
+                loadQuestion();
+                document.getElementById('next-button').disabled = true;
+            } else {
+                // Show the modal with the final score
+                document.getElementById('final-score').innerText = `Your total score is ${score} out of {{ questions|length }}. Congratulations!`;
+                UIkit.modal('#score-modal').show(); // Show the modal
+                showFireworks(); // Trigger fireworks effect
+            }
+        };
+
+        function redirectToGameZone() {
+            window.location.href = "{% url 'gamezone' %}"; // Redirect to gamezone.html
+        }
+
+        function showFireworks() {
+            const canvas = document.getElementById('fireworksCanvas');
+            canvas.style.display = 'block';
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const particles = [];
+            const colors = ['#ff0', '#f00', '#0f0', '#00f', '#ff0'];
+
+            function createFirework(x, y) {
+                const count = 100;
+                for (let i = 0; i < count; i++) {
+                    particles.push({
+                        x: x,
+                        y: y,
+                        radius: Math.random() * 3 + 1,
+                        color: colors[Math.floor(Math.random() * colors.length)],
+                        angle: Math.random() * Math.PI * 2,
+                        speed: Math.random() * 3 + 1,
+                        alpha: 1
+                    });
+                }
+            }
+
+            function updateParticles() {
+                for (let i = particles.length - 1; i >= 0; i--) {
+                    const p = particles[i];
+                    p.x += Math.cos(p.angle) * p.speed;
+                    p.y += Math.sin(p.angle) * p.speed;
+                    p.alpha -= 0.02;
+                    if (p.alpha <= 0) {
+                        particles.splice(i, 1);
+                    }
+                }
+            }
+
+            function drawParticles() {
+                for (const p of particles) {
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = p.color;
+                    ctx.globalAlpha = p.alpha;
+                    ctx.fill();
+                }
+            }
+
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                updateParticles();
+                drawParticles();
+                if (particles.length > 0) {
+                    requestAnimationFrame(animate);
+                } else {
+                    canvas.style.display = 'none'; // Hide canvas when done
+                }
+            }
+
+            createFirework(canvas.width / 2, canvas.height / 2); // Firework at center
+            animate();
+        }
+
+        loadQuestion(); // Load the first question
+    </script>
+
+</body>
+</html>
+   

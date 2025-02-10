@@ -2165,7 +2165,22 @@ def admin_gamification(request):
 
 
 def admin_guess_player(request):
-    return render(request,'admin_guess_player.html')
+    if request.method == 'POST':
+        player_name = request.POST['player_name']
+        player_image = request.FILES['player_image']
+        
+        # Create a new IdentifyPlayer instance and save it
+        identify_player = IdentifyPlayer(name=player_name, image=player_image)
+        identify_player.save()
+        
+        return redirect('admin_dashboard')  # Redirect to a success page or dashboard
+
+    # Fetch all existing IdentifyPlayer records
+    players = IdentifyPlayer.objects.all()  # Fetch players from the database
+    context = {
+        'players': players,  # Pass players to the template
+    }
+    return render(request, 'admin_guess_player.html', context)  # Render the template with context
 
 def register(request):
     if request.method == 'POST':
@@ -2420,10 +2435,69 @@ def upload_identify_player(request):
         identify_player = IdentifyPlayer(name=player_name, image=player_image)
         identify_player.save()
         
-        return redirect('admin_dashboard')  # Redirect to a success page or dashboard
+        return redirect('admin_guess_player')  # Redirect to a success page or dashboard
 
     # Fetch all existing IdentifyPlayer records
+    players = IdentifyPlayer.objects.all()  # Fetch players from the database
+    context = {
+        'players': players,  # Pass players to the template
+    }
+    return render(request, 'admin_guess_player.html', context)  # Render the template with context
+
+
+def gamezone(request):
+    return render(request,'gamezone.html')
+
+def gamezone_quiz(request):
+    try:
+        # Fetch all questions from the QuizQuestion model
+        questions = list(QuizQuestion.objects.all())
+        
+        if not questions:
+            logger.warning("No questions found in the database.")
+            return render(request, 'gamezone_quiz.html', {'questions': []})
+
+        # Ensure we don't exceed available questions
+        random_questions = random.sample(questions, min(10, len(questions)))  
+
+        # Prepare the context with questions, their options, and correct answers
+        context = {
+            'questions': [
+                {
+                    'question_text': question.question_text,
+                    'options': question.options,
+                    'correct_answer': question.correct_answers[0]  # Assuming correct_answers is a list of indices
+                }
+                for question in random_questions
+            ]
+        }
+
+        # Render the template with the random questions and their options
+        return render(request, 'gamezone_quiz.html', context)
+    
+    except Exception as e:
+        # Log the error for debugging
+        logger.error(f"Error fetching quiz questions: {str(e)}")
+        return render(request, 'gamezone_quiz.html', {'questions': []})  # Return an empty list on error
+    
+    
+import random
+
+def gamezone_guess(request):
+    # Fetch all players from the IdentifyPlayer model
     players = IdentifyPlayer.objects.all()
-    return render(request, 'admin_guess_player.html', {'players': players})  # Pass players to the template
+    
+    if not players:
+        return render(request, 'gamezone_guess.html', {'error': 'No players found.'})
 
+    # Randomly select a player for the current guess
+    current_player = random.choice(players)
 
+    context = {
+        'current_player': current_player,  # Pass the selected player to the template
+    }
+    
+    return render(request, 'gamezone_guess.html', context)
+
+def gamezone_jigsaw(request):
+    return render(request,'gamezone_jigsaw.html')
