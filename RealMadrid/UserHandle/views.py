@@ -2499,5 +2499,6 @@ def gamezone_guess(request):
     
     return render(request, 'gamezone_guess.html', context)
 
+
 def gamezone_jigsaw(request):
     return render(request,'gamezone_jigsaw.html')
