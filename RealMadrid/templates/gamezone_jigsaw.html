@@ -16,6 +16,8 @@
     <script src="https://cdn.jsdelivr.net/npm/uikit@3.21.6/dist/js/uikit.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/uikit@3.21.6/dist/js/uikit-icons.min.js"></script>
     <script src="//unpkg.com/alpinejs" defer></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
     <style>
         .hover-zoom:hover {
             transform: scale(1.05);
@@ -39,6 +41,33 @@
         }
         a{
             text-decoration: none !important;
+        }
+        .tile {
+            width: 100px; /* Adjust the size as needed */
+            height: 100px; /* Adjust the size as needed */
+            display: inline-block;
+            margin: 0; /* Remove margin to eliminate gaps */
+            border: 1px solid transparent; /* Optional: Add a border for better visibility */
+            position: relative; /* Position relative for absolute children */
+            overflow: hidden; /* Ensure content fits within the tile */
+        }
+
+        .jigsaw-tile {
+            width: 100%; /* Full width of the tile */
+            height: 100%; /* Full height of the tile */
+            background-size: cover; /* Cover the tile area */
+            background-position: center; /* Center the background image */
+            cursor: move; /* Change cursor to indicate draggable */
+            border-radius: 5px; /* Optional: Add rounded corners for a softer look */
+        }
+
+        #tiles-container {
+            display: grid; /* Use grid layout for a 4x4 arrangement */
+            grid-template-columns: repeat(4, 1fr); /* Create 4 equal columns */
+            gap: 0; /* Remove gap between tiles */
+            width: 420px; /* Set a fixed width for the container */
+            height: 420px; /* Set a fixed height for the container */
+            position: relative; /* Position relative for absolute children */
         }
     </style>
 </head>
@@ -129,6 +158,91 @@
             navbar.style.transform = 'translateY(0)';
         }
         lastScrollTop = scrollTop;
+    });
+</script>
+
+<div class="container">
+    <h1 class="text-3xl font-bold mb-4">Jigsaw Puzzle Game</h1>
+    <div id="tiles-container" class="grid grid-cols-4 gap-2 mt-4">
+        {% if tiles %}
+            {% for tile in tiles %}
+                <div class="tile jigsaw-tile" data-tile-id="{{ forloop.counter }}" style="background-image: url('{{ MEDIA_URL }}{{ tile }}'); background-size: cover; background-position: center;">
+                    <!-- Removed the <img> tag to use background image instead -->
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>No tiles available.</p>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        // Array to hold the original tile images
+        const originalTiles = [];
+
+        // Shuffle function
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]]; // Swap elements
+            }
+            return array;
+        }
+
+        // Initialize tiles
+        {% if tiles %}
+            {% for tile in tiles %}
+                originalTiles.push('{{ MEDIA_URL }}{{ tile }}'); // Store original tile URLs
+            {% endfor %}
+        {% endif %}
+
+        // Shuffle the original tiles
+        const shuffledTiles = shuffle([...originalTiles]);
+
+        // Set shuffled images to the tiles
+        $('.jigsaw-tile').each(function(index) {
+            $(this).css('background-image', 'url(' + shuffledTiles[index] + ')');
+            $(this).data('original-image', shuffledTiles[index]); // Store the original image for comparison
+        });
+
+        // Function to make tiles draggable
+        function makeTilesDraggable() {
+            $('.jigsaw-tile').draggable({
+                revert: "invalid", // Revert if not dropped on a valid target
+                start: function() {
+                    $(this).css('z-index', 1000); // Bring the dragged tile to the front
+                },
+                stop: function() {
+                    $(this).css('z-index', ''); // Reset z-index after dragging
+                }
+            });
+        }
+
+        // Function to make tiles droppable
+        function makeTilesDroppable() {
+            $('.tile').droppable({
+                accept: '.jigsaw-tile',
+                drop: function(event, ui) {
+                    // Handle tile drop logic here
+                    const droppedTileId = ui.draggable.data('tile-id');
+                    const targetTileId = $(this).data('tile-id');
+
+                    // Swap the images of the tiles
+                    const tempBg = ui.draggable.css('background-image');
+                    ui.draggable.css('background-image', $(this).css('background-image'));
+                    $(this).css('background-image', tempBg);
+
+                    // Re-initialize draggable and droppable functionality
+                    makeTilesDraggable();
+                    makeTilesDroppable();
+                }
+            });
+        }
+
+        // Initialize draggable and droppable functionality
+        makeTilesDraggable();
+        makeTilesDroppable();
     });
 </script>
 

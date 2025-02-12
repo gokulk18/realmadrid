@@ -2501,4 +2501,40 @@ def gamezone_guess(request):
 
 
 def gamezone_jigsaw(request):
-    return render(request,'gamezone_jigsaw.html')
+    # Fetch the first uploaded image
+    uploaded_image = UploadedImage.objects.first()  # Fetch one image at a time
+    tiles = []
+
+    if uploaded_image:
+        # Load the image using PIL
+        image_path = os.path.join(settings.MEDIA_ROOT, uploaded_image.image.name)
+        image = Image.open(image_path)
+
+        # Define the number of tiles (e.g., 4x4)
+        tile_size = (image.width // 4, image.height // 4)
+
+        # Create the tiles directory if it doesn't exist
+        tiles_directory = os.path.join(settings.MEDIA_ROOT, 'tiles')
+        os.makedirs(tiles_directory, exist_ok=True)  # Create the directory
+
+        # Split the image into tiles
+        for i in range(4):  # 4 rows
+            for j in range(4):  # 4 columns
+                left = j * tile_size[0]
+                upper = i * tile_size[1]
+                right = left + tile_size[0]
+                lower = upper + tile_size[1]
+
+                # Create a tile
+                tile = image.crop((left, upper, right, lower))
+                tile_path = os.path.join(tiles_directory, f'tile_{i}_{j}.png')
+                tile.save(tile_path)  # Save the tile image
+
+                # Append the tile path to the list
+                tiles.append(f'tiles/tile_{i}_{j}.png')
+
+    context = {
+        'tiles': tiles,  # Pass the list of tile paths to the template
+        'MEDIA_URL': settings.MEDIA_URL,  # Add MEDIA_URL to context
+    }
+    return render(request, 'gamezone_jigsaw.html', context)
