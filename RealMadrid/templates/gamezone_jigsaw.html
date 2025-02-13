@@ -43,8 +43,8 @@
             text-decoration: none !important;
         }
         .tile {
-            width: 100px; /* Adjust the size as needed */
-            height: 100px; /* Adjust the size as needed */
+            width: 100px; /* Fixed size for each tile */
+            height: 100px; /* Fixed size for each tile */
             display: inline-block;
             margin: 0; /* Remove margin to eliminate gaps */
             border: 1px solid transparent; /* Optional: Add a border for better visibility */
@@ -62,11 +62,12 @@
         }
 
         #tiles-container {
-            display: grid; /* Use grid layout for a 4x4 arrangement */
-            grid-template-columns: repeat(4, 1fr); /* Create 4 equal columns */
+            display: grid; /* Use grid layout for a 3x3 arrangement */
+            grid-template-columns: repeat(3, 100px); /* Create 3 equal columns of fixed width */
+            grid-template-rows: repeat(3, 100px); /* Create 3 equal rows of fixed height */
             gap: 0; /* Remove gap between tiles */
-            width: 420px; /* Set a fixed width for the container */
-            height: 420px; /* Set a fixed height for the container */
+            width: 300px; /* Set a fixed width for the container */
+            height: 300px; /* Set a fixed height for the container */
             position: relative; /* Position relative for absolute children */
         }
     </style>
@@ -161,8 +162,13 @@
     });
 </script>
 
-<div class="container">
+<div class="container" style="margin-top: 9%; margin-left: 41%;">
     <h1 class="text-3xl font-bold mb-4">Jigsaw Puzzle Game</h1>
+    <div class="flex gap-4 mb-4">
+        <button id="reset-button" class="uk-button uk-button-primary">Reset to Original</button>
+        <button id="shuffle-button" class="uk-button uk-button-default">Shuffle Tiles</button>
+        <button id="submit-button" class="uk-button uk-button-secondary">Submit Solution</button>
+    </div>
     <div id="tiles-container" class="grid grid-cols-4 gap-2 mt-4">
         {% if tiles %}
             {% for tile in tiles %}
@@ -176,8 +182,76 @@
     </div>
 </div>
 
+<!-- Add this modal after the container div -->
+<div id="congratsModal" uk-modal>
+    <div class="uk-modal-dialog uk-modal-body text-center">
+        <h2 class="uk-modal-title text-2xl font-bold mb-4">Congratulations! 🎉</h2>
+        <p>You've successfully completed the puzzle!</p>
+        <button class="uk-button uk-button-primary uk-modal-close mt-4">Close</button>
+    </div>
+</div>
+
+<!-- Add confetti.js before your script -->
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+
 <script>
     $(document).ready(function() {
+        // Store original state when page loads
+        const originalState = [];
+        
+        $('.jigsaw-tile').each(function(index) {
+            // Store the initial position and image
+            originalState[index] = {
+                position: index,
+                image: $(this).css('background-image')
+            };
+            // Add a data attribute for position tracking
+            $(this).attr('data-original-position', index);
+        });
+
+        function isPuzzleSolved() {
+            let solved = true;
+            $('.jigsaw-tile').each(function(index) {
+                const currentImage = $(this).css('background-image');
+                const originalImage = originalState[index].image;
+                
+                console.log(`Checking tile ${index}:`);
+                console.log(`Current: ${currentImage}`);
+                console.log(`Original: ${originalImage}`);
+                
+                if (currentImage !== originalImage) {
+                    solved = false;
+                    return false;
+                }
+            });
+            return solved;
+        }
+
+        // Modified submit button handler
+        $('#submit-button').click(function() {
+            if (isPuzzleSolved()) {
+                UIkit.modal('#congratsModal').show();
+                triggerConfetti();
+                
+                // Add timeout for redirect
+                setTimeout(function() {
+                    window.location.href = "{% url 'gamezone' %}";
+                }, 7000); // 7 seconds delay
+            } else {
+                // Show current state for debugging
+                $('.jigsaw-tile').each(function(index) {
+                    console.log(`Tile ${index} current position:`, $(this).css('background-image'));
+                });
+                
+                UIkit.notification({
+                    message: 'Not quite right! Keep trying!',
+                    status: 'warning',
+                    pos: 'top-center',
+                    timeout: 2000
+                });
+            }
+        });
+
         // Array to hold the original tile images
         const originalTiles = [];
 
@@ -209,12 +283,14 @@
         // Function to make tiles draggable
         function makeTilesDraggable() {
             $('.jigsaw-tile').draggable({
-                revert: "invalid", // Revert if not dropped on a valid target
+                revert: "invalid",
                 start: function() {
-                    $(this).css('z-index', 1000); // Bring the dragged tile to the front
+                    $(this).css('z-index', 1000);
                 },
                 stop: function() {
-                    $(this).css('z-index', ''); // Reset z-index after dragging
+                    $(this).css('z-index', '');
+                    // Ensure the tile remains draggable after being dropped
+                    makeTilesDraggable();
                 }
             });
         }
@@ -224,21 +300,87 @@
             $('.tile').droppable({
                 accept: '.jigsaw-tile',
                 drop: function(event, ui) {
-                    // Handle tile drop logic here
-                    const droppedTileId = ui.draggable.data('tile-id');
-                    const targetTileId = $(this).data('tile-id');
-
-                    // Swap the images of the tiles
-                    const tempBg = ui.draggable.css('background-image');
-                    ui.draggable.css('background-image', $(this).css('background-image'));
-                    $(this).css('background-image', tempBg);
-
-                    // Re-initialize draggable and droppable functionality
-                    makeTilesDraggable();
-                    makeTilesDroppable();
+                    const droppedTile = ui.draggable;
+                    const targetTile = $(this);
+                    
+                    // Store the background images
+                    const droppedBg = droppedTile.css('background-image');
+                    const targetBg = targetTile.css('background-image');
+                    
+                    // Swap background images
+                    droppedTile.css('background-image', targetBg);
+                    targetTile.css('background-image', droppedBg);
+                    
+                    // Reset the dragged tile's position
+                    droppedTile.css({
+                        top: '0',
+                        left: '0'
+                    });
                 }
             });
         }
+
+        // Reset functionality
+        $('#reset-button').click(function() {
+            $('.jigsaw-tile').each(function(index) {
+                $(this).css('background-image', 'url(' + originalTiles[index] + ')'); // Reset to original image
+            });
+        });
+
+        // Function to trigger confetti
+        function triggerConfetti() {
+            var duration = 3000;
+            var end = Date.now() + duration;
+
+            (function frame() {
+                confetti({
+                    particleCount: 50,
+                    angle: 60,
+                    spread: 55,
+                    origin: { x: 0 },
+                    colors: ['#ff0000', '#ffffff', '#000000'] // Real Madrid colors
+                });
+                confetti({
+                    particleCount: 50,
+                    angle: 120,
+                    spread: 55,
+                    origin: { x: 1 },
+                    colors: ['#ff0000', '#ffffff', '#000000']
+                });
+
+                if (Date.now() < end) {
+                    requestAnimationFrame(frame);
+                }
+            }());
+        }
+
+        // Shuffle function
+        function shuffleTiles() {
+            const tiles = $('.jigsaw-tile').toArray();
+            const backgrounds = tiles.map(tile => $(tile).css('background-image'));
+            
+            // Fisher-Yates shuffle algorithm
+            for (let i = backgrounds.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [backgrounds[i], backgrounds[j]] = [backgrounds[j], backgrounds[i]];
+            }
+            
+            // Apply shuffled backgrounds
+            tiles.forEach((tile, index) => {
+                $(tile).css('background-image', backgrounds[index]);
+            });
+        }
+
+        // Add shuffle button handler
+        $('#shuffle-button').click(function() {
+            shuffleTiles();
+            UIkit.notification({
+                message: 'Tiles shuffled! Try to solve the puzzle!',
+                status: 'primary',
+                pos: 'top-center',
+                timeout: 2000
+            });
+        });
 
         // Initialize draggable and droppable functionality
         makeTilesDraggable();

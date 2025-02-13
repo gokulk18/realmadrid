@@ -50,7 +50,7 @@ urlpatterns = [
     path('gamezone_quiz/', views.gamezone_quiz,name='gamezone_quiz'),
     path('gamezone_guess/', views.gamezone_guess,name='gamezone_guess'),
     path('gamezone_jigsaw/', views.gamezone_jigsaw,name='gamezone_jigsaw'),
-
+    path('dynamic_stadium/<str:match_id>/', views.dynamic_stadium, name='dynamic_stadium'),
 
 
 

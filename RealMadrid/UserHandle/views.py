@@ -2501,25 +2501,28 @@ def gamezone_guess(request):
 
 
 def gamezone_jigsaw(request):
-    # Fetch the first uploaded image
-    uploaded_image = UploadedImage.objects.first()  # Fetch one image at a time
+    # Fetch all uploaded images
+    uploaded_images = UploadedImage.objects.all()  # Fetch all images
     tiles = []
 
-    if uploaded_image:
+    if uploaded_images:
+        # Randomly select an uploaded image
+        uploaded_image = random.choice(uploaded_images)  # Select a random image
+
         # Load the image using PIL
         image_path = os.path.join(settings.MEDIA_ROOT, uploaded_image.image.name)
         image = Image.open(image_path)
 
-        # Define the number of tiles (e.g., 4x4)
-        tile_size = (image.width // 4, image.height // 4)
+        # Define the number of tiles (e.g., 3x3)
+        tile_size = (image.width // 3, image.height // 3)  # Change to 3 tiles
 
         # Create the tiles directory if it doesn't exist
         tiles_directory = os.path.join(settings.MEDIA_ROOT, 'tiles')
         os.makedirs(tiles_directory, exist_ok=True)  # Create the directory
 
         # Split the image into tiles
-        for i in range(4):  # 4 rows
-            for j in range(4):  # 4 columns
+        for i in range(3):  # 3 rows
+            for j in range(3):  # 3 columns
                 left = j * tile_size[0]
                 upper = i * tile_size[1]
                 right = left + tile_size[0]
@@ -2538,3 +2541,64 @@ def gamezone_jigsaw(request):
         'MEDIA_URL': settings.MEDIA_URL,  # Add MEDIA_URL to context
     }
     return render(request, 'gamezone_jigsaw.html', context)
+
+
+
+def dynamic_stadium(request, match_id):
+    match = get_object_or_404(Match, match_id=match_id)
+    
+    # Get all stands and their sections
+    stands = Stand.objects.all()
+    stands_sections = {}
+    for stand in stands:
+        sections = Section.objects.filter(stand=stand)
+        # For each section, get the total seats and booked seats
+        section_data = []
+        for section in sections:
+            total_seats = len(section.seats)
+            booked_seats = TicketItem.objects.filter(
+                order__match=match,
+                stand=stand,
+                section=section
+            ).count()
+            available_seats = total_seats - booked_seats
+            
+            section_data.append({
+                'section': section,
+                'total_seats': total_seats,
+                'available_seats': available_seats,
+                'price': section.price,
+            })
+        stands_sections[stand] = section_data
+
+    context = {
+        'match': {
+            'id': match.match_id,
+            'home_team': match.home_team,
+            'away_team': match.away_team,
+            'competition': match.competition,
+            'kickoff_time': match.ist_date,
+            'venue': match.venue,
+        },
+        'stands_sections': stands_sections,
+    }
+
+    if request.user.is_authenticated:
+        user = request.user
+        context.update({
+            'user_name': user.username,
+            'user_email': user.email,
+            'user_phone': getattr(user, 'phone', None),
+        })
+    elif 'user_id' in request.session:
+        try:
+            user = Users.objects.get(id=request.session['user_id'])
+            context.update({
+                'user_name': user.name,
+                'user_email': user.email,
+                'user_phone': user.phone,
+            })
+        except Users.DoesNotExist:
+            pass
+
+    return render(request, 'dynamic_stadium.html', context)
