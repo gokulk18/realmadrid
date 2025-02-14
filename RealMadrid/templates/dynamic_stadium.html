@@ -277,7 +277,7 @@
                 {% for stand in stands %}
                 <div class="p-4 border rounded-lg text-center">
                     <h3 class="font-bold">{{ stand.name }} Stand</h3>
-                    <p class="text-lg">€{{ stand.price_category }}</p>
+                    <p class="text-lg">₹300</p>
                 </div>
                 {% endfor %}
             </div>
@@ -304,7 +304,7 @@
                 <div id="selected-seats" class="mb-4"></div>
                 <div class="flex justify-between items-center">
                     <div>
-                        <span class="font-bold">Total Amount: €</span>
+                        <span class="font-bold">Total Amount: ₹</span>
                         <span id="total-amount">0</span>
                     </div>
                     <button class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
@@ -331,7 +331,7 @@
     let selectedSeats = new Set();
     const standPrices = {
         {% for stand in stands %}
-            '{{ stand.name }}': {{ stand.price_category }},
+            '{{ stand.name }}': 300,  // Set fixed price of Rs. 300
         {% endfor %}
     };
 
@@ -381,9 +381,9 @@
         let seatsHtml = '<ul class="list-disc pl-5">';
         selectedSeats.forEach(seat => {
             const stand = seat.split('-')[0];
-            const price = standPrices[stand] || 0;
+            const price = 300;  // Fixed price of Rs. 300
             totalAmount += price;
-            seatsHtml += `<li>Seat ${seat} - €${price}</li>`;
+            seatsHtml += `<li>Seat ${seat} - ₹${price}</li>`;
         });
         seatsHtml += '</ul>';
 

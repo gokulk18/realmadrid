@@ -241,26 +241,6 @@ class Shipping(models.Model):
         return None
     
 
-class Stand(models.Model):
-    name = models.CharField(max_length=100)
-    
-    def __str__(self):
-        return self.name
-
-
-class Section(models.Model):
-    name = models.CharField(max_length=100)
-    stand = models.ForeignKey(Stand, on_delete=models.CASCADE, related_name='sections')
-    seats = models.JSONField(default=list)  # Store seat numbers as a JSON list
-    price = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
-
-    class Meta:
-        unique_together = ('stand', 'name')  # Ensure unique section names per stand
-
-    def __str__(self):
-        return f"{self.stand.name} - {self.name}"
-
-
 class Match(models.Model):
     match_id = models.CharField(max_length=100, unique=True)
     home_team = models.CharField(max_length=100)
@@ -277,73 +257,6 @@ class Match(models.Model):
 
     class Meta:
         ordering = ['utc_date']
-
-class TicketOrder(models.Model):
-    ORDER_STATUS_CHOICES = [
-        ('Pending', 'Pending'),
-        ('Confirmed', 'Confirmed'),
-        ('Cancelled', 'Cancelled')
-    ]
-
-    order_number = models.CharField(max_length=20, unique=True, editable=False)
-    user = models.ForeignKey(Users, on_delete=models.SET_NULL, null=True, blank=True)
-    match = models.ForeignKey(Match, on_delete=models.CASCADE)
-    full_name = models.CharField(max_length=100)
-    email = models.EmailField()
-    phone = models.CharField(max_length=20)
-    total_price = models.DecimalField(max_digits=10, decimal_places=2)
-    booking_fee = models.DecimalField(max_digits=6, decimal_places=2, null=True)
-    status = models.CharField(max_length=20, choices=ORDER_STATUS_CHOICES, default='Pending')
-    is_paid = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def save(self, *args, **kwargs):
-        if not self.order_number:
-            self.order_number = self.generate_order_number()
-        super().save(*args, **kwargs)
-
-    def generate_order_number(self):
-        return f"TKT-{get_random_string(16).upper()}"
-
-    def __str__(self):
-        return f"Ticket Order {self.order_number} for {self.full_name}"
-
-class TicketItem(models.Model):
-    order = models.ForeignKey(TicketOrder, related_name='tickets', on_delete=models.CASCADE)
-    stand = models.ForeignKey(Stand, on_delete=models.CASCADE)
-    section = models.ForeignKey(Section, on_delete=models.CASCADE)
-    seat_number = models.PositiveIntegerField(null=True, blank=True)
-    price = models.DecimalField(max_digits=10, decimal_places=2)
-
-    class Meta:
-        unique_together = ('order', 'stand', 'section', 'seat_number')
-
-    def __str__(self):
-        return f"Ticket for {self.order.match} - {self.stand} {self.section} Seat {self.seat_number}"
-
-
-
-class TicketPayment(models.Model):
-    PAYMENT_STATUS_CHOICES = [
-        ('Pending', 'Pending'),
-        ('Completed', 'Completed'),
-        ('Failed', 'Failed'),
-        ('Refunded', 'Refunded')
-    ]
-
-    ticket_order = models.OneToOneField('TicketOrder', on_delete=models.CASCADE)
-    payment_method = models.CharField(max_length=50)
-    transaction_id = models.CharField(max_length=100, unique=True)
-    amount_paid = models.DecimalField(max_digits=10, decimal_places=2)
-    status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES)
-    created_at = models.DateTimeField(default=timezone.now)
-
-    def __str__(self):
-        return f"Payment {self.transaction_id} for Ticket Order {self.ticket_order.order_number}"
-
-    class Meta:
-        ordering = ['-created_at']
 
 class QuizQuestion(models.Model):
     question_text = models.TextField()
