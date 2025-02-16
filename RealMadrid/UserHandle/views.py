@@ -6,7 +6,7 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.views.decorators.csrf import csrf_exempt
 from django.urls import reverse
-from .models import Users
+from .models import Users, Position, Player, News, Category, SubCategory, Item, ItemImage, ItemSize, Cart, CartItem, Wishlist, WishlistItem, Order, OrderItem, Payment, Shipping, Stand, Section, Match, TicketOrder, TicketItem, TicketPayment, QuizQuestion, UploadedImage, IdentifyPlayer, PlayerCredentials
 import random
 from django.contrib.auth.hashers import make_password, check_password # For password hashing
 from django.contrib.auth.decorators import login_required
@@ -25,7 +25,7 @@ from .models import Player
 from .models import News,Cart, CartItem
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from .models import Category
-from .models import SubCategory,ItemImage,Item,ItemSize,Wishlist, WishlistItem,Order, OrderItem, Shipping,Payment
+from .models import SubCategory,ItemImage,Item,ItemSize,Wishlist, WishlistItem,Order, OrderItem, Shipping,Payment,Section
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.db import transaction
 from allauth.socialaccount.models import SocialAccount
@@ -37,14 +37,14 @@ from django.views.decorators.csrf import csrf_protect
 import requests
 from django.shortcuts import render
 from django.utils.dateparse import parse_datetime
-from django.utils.timezone import make_aware, get_current_timezone
-from datetime import datetime
+from django.utils.timezone import make_aware
 import pytz
 from django.utils import timezone
 import http
 from .models import Match
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from .models import TicketOrder, TicketItem, Match, Stand, Section
 from django.shortcuts import get_object_or_404
 from django.db import transaction
 from rest_framework import viewsets
@@ -55,13 +55,19 @@ from PIL import Image
 from .models import UploadedImage  # Assuming you have a model for storing images
 from .models import IdentifyPlayer
 
+
+
 logger = logging.getLogger(__name__)
+
+
+
 
 class CustomTokenGenerator(PasswordResetTokenGenerator):
     def _make_hash_value(self, user, timestamp):
         return str(user.pk) + str(timestamp)
 
 token_generator = CustomTokenGenerator()
+
 
 def player_view(request):
     positions = Position.objects.all()
@@ -93,6 +99,7 @@ def player_view(request):
 
     return render(request, 'player_view.html', {'players_by_position': players_by_position, **context})
 
+
 def get_cart_items(request):
     user_id = request.session.get('user_id')
     if not user_id:
@@ -120,11 +127,73 @@ def get_cart_items(request):
     
     return JsonResponse(items_data, safe=False)
 
+
 def payment_success(request):
     return render(request,'payment_success.html')
 
+
+
+
+
+
+from django.shortcuts import render
+from django.utils.dateparse import parse_datetime
+from django.utils.timezone import make_aware
+import pytz
+import requests
+from .models import Stand
+from django.utils import timezone
+
+def stadium(request, match_id):
+    match = get_object_or_404(Match, match_id=match_id)
+    
+    # Use ist_date directly without formatting
+    kickoff_time = match.ist_date
+
+    stands = Stand.objects.all()
+    stands_sections = {}
+    for stand in stands:
+        sections = Section.objects.filter(stand=stand)
+        stands_sections[stand] = sections
+
+    context = {
+        'match': {
+            'id': match.match_id,
+            'home_team': match.home_team,
+            'away_team': match.away_team,
+            'competition': match.competition,
+            'kickoff_time': kickoff_time,  # Use the ist_date directly
+        },
+        'stands_sections': stands_sections,
+    }
+
+    return render(request, 'stadium.html', context)
+
+
+
+@csrf_exempt
+def store_ticket_data(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            request.session['ticket_data'] = {
+                'stand': data.get('stand'),
+                'section': data.get('section'),
+                'quantity': data.get('quantity'),
+                'price': data.get('price'),
+                'match_id': data.get('match_id'),
+                'match_details': data.get('match_details')  # Add this line
+            }
+            return JsonResponse({'success': True})
+        except json.JSONDecodeError:
+            return JsonResponse({'success': False, 'error': 'Invalid JSON data'})
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+
+
 def trainer_index(request):
     return render(request,'trainer_index.html')
+
 
 from django.http import JsonResponse
 from django.shortcuts import render
@@ -192,6 +261,7 @@ def trainer_test(request):
 
     return render(request, 'trainer_test.html')
 
+
 def schedule(request):
     api_key = 'dc93cd61f7a04a67be5652fc72195459'
     url = 'https://api.football-data.org/v4/teams/86/matches'  # Real Madrid's ID is 86
@@ -258,6 +328,389 @@ def schedule(request):
 
     return render(request, 'schedule.html', context)
 
+
+
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from .models import Stand
+from django.db import IntegrityError
+from django.views.decorators.cache import never_cache
+
+@never_cache
+def admin_stadium(request):
+    if request.method == 'POST':
+        stand_id = request.POST.get('stand_id')
+        stand_name = request.POST.get('stand_name', '').strip()
+        
+        if stand_id:  # This is an update operation
+            stand = get_object_or_404(Stand, id=stand_id)
+            if stand_name:
+                try:
+                    stand.name = stand_name
+                    stand.save()
+                    messages.success(request, 'Stand updated successfully!', extra_tags='admin_edit_stand')
+                except IntegrityError:
+                    messages.error(request, 'Stand name already exists.', extra_tags='admin_edit_stand')
+            else:
+                messages.error(request, 'Stand name cannot be empty.', extra_tags='admin_edit_stand')
+        else:  # This is an add operation
+            if stand_name:
+                try:
+                    Stand.objects.create(name=stand_name)
+                    messages.success(request, 'Stand added successfully!', extra_tags='admin_add_stand')
+                except IntegrityError:
+                    messages.error(request, 'Stand name already exists.', extra_tags='admin_add_stand')
+            else:
+                messages.error(request, 'Stand name cannot be empty.', extra_tags='admin_add_stand')
+        
+        return redirect('admin_stadium')
+
+    # For GET requests, fetch all stands
+    stands = Stand.objects.all().order_by('name')
+    context = {
+        'stands_list': stands
+    }
+    return render(request, 'admin_stadium.html', context)
+    
+    
+    
+from django.contrib import messages
+
+@never_cache
+def admin_add_subsection(request):
+    if request.method == 'POST':
+        section_id = request.POST.get('section_id')
+        stand_id = request.POST.get('stand')
+        section_name = request.POST.get('section').strip()
+        seats_count = request.POST.get('seats')
+        price = request.POST.get('price')
+
+        if not stand_id:
+            messages.error(request, 'Stand must be selected.', extra_tags='admin_add_section')
+        elif not section_name or not section_name.replace(' ', '').isalnum():
+            messages.error(request, 'Section name must contain only alphabets, numbers, and spaces.', extra_tags='admin_add_section')
+        elif not seats_count or not seats_count.isdigit() or int(seats_count) <= 0:
+            messages.error(request, 'Number of seats must be a positive integer.', extra_tags='admin_add_section')
+        elif not price or float(price) < 0:
+            messages.error(request, 'Price must be a non-negative number.', extra_tags='admin_add_section')
+        else:
+            try:
+                stand = Stand.objects.get(id=stand_id)
+                if section_id:  # This is an update operation
+                    section = get_object_or_404(Section, id=section_id)
+                    if Section.objects.filter(stand=stand, name=section_name).exclude(id=section_id).exists():
+                        messages.error(request, 'Section name already exists in the selected stand.', extra_tags='admin_edit_section')
+                    else:
+                        section.name = section_name
+                        section.stand = stand
+                        section.seats = list(range(1, int(seats_count) + 1))
+                        section.price = float(price)
+                        section.save()
+                        messages.success(request, 'Section updated successfully!', extra_tags='admin_edit_section success-message')
+                else:  # This is an add operation
+                    if Section.objects.filter(stand=stand, name=section_name).exists():
+                        messages.error(request, 'Section already exists in the selected stand.', extra_tags='admin_add_section')
+                    else:
+                        seats = list(range(1, int(seats_count) + 1))
+                        Section.objects.create(name=section_name, stand=stand, seats=seats, price=float(price))
+                        messages.success(request, 'Section added successfully!', extra_tags='admin_add_section success-message')
+                return redirect('admin_add_subsection')
+            except Stand.DoesNotExist:
+                messages.error(request, 'Selected stand does not exist.', extra_tags='admin_add_section')
+            except ValueError:
+                messages.error(request, 'Invalid price format.', extra_tags='admin_add_section')
+
+    # Fetch all stands and their associated sections
+    stands = Stand.objects.all().prefetch_related('sections')
+
+    context = {
+        'stand_list': stands,
+    }
+    return render(request, 'admin_add_subsection.html', context)
+
+@require_POST
+def admin_delete_section(request):
+    section_id = request.POST.get('section_id')
+    try:
+        section = Section.objects.get(id=section_id)
+        section.delete()
+        messages.success(request, 'Section deleted successfully!', extra_tags='admin_delete_section')
+        return JsonResponse({'success': True})
+    except Section.DoesNotExist:
+        messages.error(request, 'Section not found.', extra_tags='admin_delete_section')
+        return JsonResponse({'success': False})
+
+
+def ticket_to_cart(request):
+    if request.method == 'POST':
+        stand = request.POST.get('stand')
+        section = request.POST.get('section')
+        seats = int(request.POST.get('seats'))
+        ticket_price = float(request.POST.get('ticket_price'))
+        
+        total_price = seats * ticket_price
+        
+        # Store the selected tickets and total price in the session
+        request.session['cart'] = {
+            'stand': stand,
+            'section': section,
+            'seats': seats,
+            'ticket_price': ticket_price,
+            'total_price': total_price
+        }
+        
+        return redirect('ticket_checkout')
+    return JsonResponse({'error': 'Invalid request'}, status=400)
+
+
+
+
+
+
+
+import logging
+from django.shortcuts import render, get_object_or_404
+from django.views.decorators.http import require_http_methods
+from django.http import JsonResponse
+from .models import Users, Match
+
+logger = logging.getLogger(__name__)
+
+@require_http_methods(["GET", "POST"])
+def ticket_checkout(request):
+    user_id = request.session.get('user_id')
+    if not user_id:
+        return JsonResponse({'error': 'User not logged in'}, status=401)
+
+    user = get_object_or_404(Users, id=user_id)
+
+    if request.method == 'POST':
+        # Handle POST request (data coming directly from stadium page)
+        match_id = request.POST.get('match_id')
+        stand = request.POST.get('stand')
+        section = request.POST.get('section')
+        quantity = int(request.POST.get('quantity', 1))
+        price = float(request.POST.get('price', 0))
+    else:
+        # Handle GET request (data should be in the session)
+        ticket_data = request.session.get('ticket_data', {})
+        match_id = ticket_data.get('match_id')
+        stand = ticket_data.get('stand')
+        section = ticket_data.get('section')
+        quantity = int(ticket_data.get('quantity', 1))
+        price = float(ticket_data.get('price', 0))
+
+    logger.info(f"Processing ticket checkout for match_id: {match_id}")
+
+    try:
+        # Fetch match details using match_id
+        match = get_object_or_404(Match, match_id=match_id)
+        
+        context = {
+            'user_email': user.email,  # Use the email from the Users model
+            'match_details': {
+                'match_id': match.match_id,
+                'home_team': match.home_team,
+                'away_team': match.away_team,
+                'date': match.ist_date.strftime('%d %B %Y'),
+                'competition': match.competition,
+            },
+            'ticket_data': {
+                'stand': stand,
+                'section': section,
+                'quantity': quantity,
+                'price': price,
+                'total_price': quantity * price,
+            },
+        }
+        return render(request, 'ticket_checkout.html', context)
+    except Match.DoesNotExist:
+        logger.error(f"Match with match_id {match_id} not found")
+        return render(request, 'ticket_checkout.html', {'error': 'Match not found'})
+
+
+
+
+
+
+
+from django.db import transaction
+from time import sleep
+import random
+from django.core.mail import EmailMessage
+from django.template.loader import render_to_string
+from django.conf import settings
+import qrcode
+from io import BytesIO
+import base64
+import time
+from decimal import Decimal  # Add this import
+
+from django.core.mail import EmailMessage
+from django.template.loader import render_to_string
+from django.conf import settings
+import qrcode
+from io import BytesIO
+import base64
+from django.urls import reverse
+
+@csrf_exempt
+@require_POST
+def allocate_seats(request):
+    data = json.loads(request.body)
+    match_id = data['matchId']
+    stand_name = data['ticketStand']
+    section_name = data['ticketSection']
+    quantity = int(data['ticketQuantity'])
+    full_name = data['fullName']
+    email = data['email']
+    phone = data['phone']
+    total_price = Decimal(data['totalAmount'])
+
+    try:
+        with transaction.atomic():
+            match = Match.objects.get(match_id=match_id)
+            stand = Stand.objects.get(name=stand_name)
+            section = Section.objects.get(stand=stand, name=section_name)
+
+            # Get all existing ticket items for this match, stand, and section
+            existing_tickets = TicketItem.objects.filter(
+                order__match=match,
+                stand=stand,
+                section=section
+            ).select_for_update()  # Lock these rows for update
+
+            # Get all occupied seat numbers
+            occupied_seats = set(ticket.seat_number for ticket in existing_tickets if ticket.seat_number is not None)
+
+            # Find available seats
+            all_seats = set(range(1, len(section.seats) + 1))
+            available_seats = list(all_seats - occupied_seats)
+            available_seats.sort()
+
+            if len(available_seats) < quantity:
+                return JsonResponse({'success': False, 'error': 'Not enough seats available'})
+
+            assigned_seats = available_seats[:quantity]
+
+            # Get user from session
+            user_id = request.session.get('user_id')
+            user = Users.objects.get(id=user_id) if user_id else None
+
+            # Create TicketOrder
+            order = TicketOrder.objects.create(
+                user=user,
+                match=match,
+                full_name=full_name,
+                email=email,
+                phone=phone,
+                total_price=total_price,
+                status='Pending',
+                is_paid=False
+            )
+
+            # Create TicketItems
+            ticket_items = []
+            for seat in assigned_seats:
+                ticket_item = TicketItem(
+                    order=order,
+                    stand=stand,
+                    section=section,
+                    seat_number=seat,
+                    price=section.price
+                )
+                ticket_items.append(ticket_item)
+
+            TicketItem.objects.bulk_create(ticket_items)
+
+            # Generate QR code
+            qr = qrcode.QRCode(version=1, box_size=10, border=5)
+            qr.add_data(f"Order: {order.order_number}, Match: {match.home_team} vs {match.away_team}")
+            qr.make(fit=True)
+            img = qr.make_image(fill_color="black", back_color="white")
+            buffer = BytesIO()
+            img.save(buffer, format="PNG")
+            qr_image = base64.b64encode(buffer.getvalue()).decode()
+
+            # Prepare email content
+            context = {
+                'full_name': full_name,
+                'match': match,
+                'order': order,
+                'ticket_items': ticket_items,
+                'qr_code': qr_image,
+            }
+            email_html = render_to_string('email_templates/e_ticket.html', context)
+
+            # Send email
+            email = EmailMessage(
+                'Your E-Ticket for Real Madrid Match',
+                email_html,
+                settings.DEFAULT_FROM_EMAIL,
+                [email],
+            )
+            email.content_subtype = "html"
+            email.send()
+
+            # Generate URL for booking success page
+            success_url = reverse('booking_success', kwargs={'order_number': order.order_number})
+
+            return JsonResponse({
+                'success': True, 
+                'assigned_seats': assigned_seats,
+                'order_number': order.order_number,
+                'redirect_url': success_url
+            })
+
+    except (Match.DoesNotExist, Stand.DoesNotExist, Section.DoesNotExist) as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+    except Users.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'User not found'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': f"An unexpected error occurred: {str(e)}"})
+
+
+
+
+def booking_success(request, order_number):
+    try:
+        order = get_object_or_404(TicketOrder, order_number=order_number)
+        ticket_items = TicketItem.objects.filter(order=order)
+        
+        context = {
+            'order': order,
+            'ticket_items': ticket_items,
+            'total_tickets': ticket_items.count(),
+            'match_details': {
+                'home_team': order.match.home_team,
+                'away_team': order.match.away_team,
+                'date': order.match.ist_date.strftime('%d %B %Y'),
+                'time': order.match.ist_date.strftime('%I:%M %p'),
+                'venue': order.match.venue,
+            }
+        }
+        return render(request, 'booking_success.html', context)
+    except TicketOrder.DoesNotExist:
+        messages.error(request, "Order not found.")
+        return redirect('index')
+
+
+
+
+def custom_jersey(request):
+    categories = Category.objects.all()  # Fetch all categories
+    return render(request, 'custom_jersey.html', {'categories': categories})  # Pass categories to the template
+
+
+    
+def order_detail(request, order_id):
+    order = get_object_or_404(Order.objects.select_related('shipping'), id=order_id)
+    return render(request, 'order_detail.html', {'order': order})
+
+def match_details(request):
+    return render(request,'match_details.html')
+
+
 def admin_view_orders(request):
     # Get all orders and order them by creation date (newest first)
     all_orders = Order.objects.all().order_by('-created_at')
@@ -292,6 +745,9 @@ def admin_view_orders(request):
     
     return render(request, 'admin_view_orders.html', context)
 
+
+
+
 def view_order(request):
     user_id = request.session.get('user_id')
     if not user_id:
@@ -318,6 +774,7 @@ def view_order(request):
     except Users.DoesNotExist:
         messages.error(request, "User not found. Please try logging in again.")
         return redirect('login')
+
 
 def checkout(request):
     user_id = request.session.get('user_id')
@@ -451,43 +908,24 @@ def checkout(request):
         }
         return render(request, 'checkout.html', context)
 
-def order_detail(request, order_id):
-    user_id = request.session.get('user_id')
-    if not user_id:
-        return redirect('login')
 
-    user = get_object_or_404(Users, id=user_id)
-    order = get_object_or_404(Order, id=order_id, user=user)
-    order_items = order.items.all()
-    shipping = order.shipping_set.first()
-    payment = order.payment_set.first()
 
-    context = {
-        'order': order,
-        'order_items': order_items,
-        'shipping': shipping,
-        'payment': payment,
-        'user_name': user.name,
-        'user_email': user.email,
-        'user_phone': user.phone,
-    }
+def real_madrid_fixtures(request):
+    api_key = 'dc93cd61f7a04a67be5652fc72195459'
+    url = 'https://api.football-data.org/v4/teams/86/matches'  # Real Madrid's ID is 86
+    headers = {'X-Auth-Token': api_key}
 
-    return render(request, 'order_detail.html', context)
+    response = requests.get(url, headers=headers)
+    fixtures = response.json().get('matches', [])
 
-def custom_jersey(request):
-    user_id = request.session.get('user_id')
-    context = {}
-    
-    if user_id:
-        user = get_object_or_404(Users, id=user_id)
-        context.update({
-            'user_name': user.name,
-            'user_email': user.email,
-            'user_phone': user.phone,
-        })
-    
-    return render(request, 'custom_jersey.html', context)
+    return render(request, 'index.html', {'fixtures': fixtures})
 
+
+
+
+
+@csrf_protect
+@require_POST
 def remove_from_cart(request):
     user_id = request.session.get('user_id')
     if not user_id:
@@ -522,6 +960,7 @@ def remove_from_cart(request):
     
     return JsonResponse({'error': 'Item not found in cart'}, status=404)
 
+
 def add_to_wishlist(request):
     if request.method == 'POST':
         # Get the user using session ID
@@ -553,6 +992,7 @@ def add_to_wishlist(request):
         return redirect('product_single_view', category_id=item.category.id, item_id=item.id)
     
     return redirect('store')  # Redirect to store if not a POST request
+
 
 from django.db.models import Prefetch,F
 
@@ -593,6 +1033,8 @@ def view_wishlist(request):
     }
     return render(request, 'wishlist.html', context)
 
+
+
 @require_POST
 def remove_from_wishlist(request):
     user_id = request.session.get('user_id')
@@ -617,6 +1059,9 @@ def remove_from_wishlist(request):
         messages.error(request, f"An error occurred: {str(e)}")
 
     return redirect('view_wishlist')
+
+
+
 
 def add_to_cart(request):
     if request.method == 'POST':
@@ -655,6 +1100,15 @@ def add_to_cart(request):
         return redirect('product_single_view', category_id=item.category.id, item_id=item.id)
     
     return redirect('store')  # Redirect to store if not a POST request
+
+
+
+
+
+
+
+
+
 
 @csrf_protect
 @require_POST
@@ -718,6 +1172,7 @@ def update_cart_quantity(request):
         logger.error(f"Item not found. CartItem ID: {cart_item_id}")
     
     return JsonResponse({'success': False, 'error': 'Failed to update cart'}, status=404)
+
 
 def add_position(request):
     if request.method == 'POST':
@@ -827,9 +1282,12 @@ def admin_add_item(request):
     }
     return render(request, 'admin_add_item.html', context)
 
+
 def get_subcategories(request, category_id):
     subcategories = SubCategory.objects.filter(category_id=category_id).values('id', 'sub_category_name')
     return JsonResponse(list(subcategories), safe=False)
+
+
 
 def admin_update_player(request, player_id):
     player = get_object_or_404(Player, id=player_id)
@@ -854,6 +1312,8 @@ def admin_update_player(request, player_id):
         'position_list': position_list,
     }
     return render(request, 'admin_update_player.html', context)
+
+
 
 from django.http import HttpResponse
 from reportlab.lib.pagesizes import letter
@@ -891,8 +1351,6 @@ def generate_report(request, order_id):
 
     # Add a line break
     p.line(left_margin, top_margin - 90, right_margin, top_margin - 90)
-
-    # Shipping and Billing Info
     p.setFont("Helvetica-Bold", 14)
     p.drawString(left_margin, top_margin - 110, "Billing Information")
     p.setFont("Helvetica", 12)
@@ -978,6 +1436,63 @@ def generate_report(request, order_id):
 
     return response
 
+
+
+
+
+
+
+
+from django.shortcuts import render, get_object_or_404
+from .models import Match, TicketItem, Stand, Section  # Ensure Stand and Section are imported
+from django.utils import timezone
+from django.db.models import Count  # Add this import for aggregation
+
+def admin_ticket_stats(request):
+    # Fetch only home matches for Real Madrid
+    matches = Match.objects.filter(home_team='Real Madrid CF', utc_date__gt=timezone.now())
+    selected_match = None
+    tickets_sold = 0
+    total_seats = 0
+    stand_booking_data = {}  # Dictionary to hold booking data for stands
+
+    if request.method == 'POST':
+        match_id = request.POST.get('match_id')
+        selected_match = get_object_or_404(Match, match_id=match_id)
+
+        # Calculate total seats available for the selected match
+        total_seats = 0
+        for stand in Stand.objects.all():
+            sections = Section.objects.filter(stand=stand)
+            for section in sections:
+                total_seats += len(section.seats)  # Assuming seats are stored as a list in JSONField
+
+            # Calculate tickets sold for the selected match and aggregate by stand
+            tickets_sold_for_stand = TicketItem.objects.filter(order__match=selected_match, stand=stand).count()
+            stand_booking_data[stand.name] = tickets_sold_for_stand  # Store tickets sold for each stand
+
+        # Calculate tickets sold for the selected match
+        tickets_sold = TicketItem.objects.filter(order__match=selected_match).count()
+
+    tickets_available = total_seats - tickets_sold
+
+    # Prepare data for graph (e.g., bar chart)
+    stand_names = list(stand_booking_data.keys())
+    tickets_sold_counts = list(stand_booking_data.values())
+
+    context = {
+        'matches': matches,
+        'selected_match': selected_match,
+        'tickets_sold': tickets_sold,
+        'total_seats': total_seats,
+        'tickets_available': tickets_available,
+        'stand_names': stand_names,  # Pass stand names for graph
+        'tickets_sold_counts': tickets_sold_counts,  # Pass ticket counts for graph
+    }
+    return render(request, 'admin_ticket_stats.html', context)
+
+
+
 from django.db.models import Sum, Count
 from django.db.models.functions import TruncDate
 from datetime import timedelta
@@ -985,7 +1500,7 @@ from django.utils import timezone
 from django.views.decorators.cache import never_cache
 from django.shortcuts import render
 
-from .models import Order, Payment
+from .models import TicketItem, Match, TicketOrder, Section, Stand  # Ensure these models are imported
 
 @never_cache
 def admin_dashboard(request):
@@ -1017,14 +1532,24 @@ def admin_dashboard(request):
     # Prepare data for tickets sold and available for each upcoming match
     match_ticket_data = []
     for match in upcoming_matches:
-        tickets_sold = 0
+        tickets_sold = TicketItem.objects.filter(order__match=match).count()
+
+        # Calculate total tickets from all sections related to the venue of the match
+        total_tickets = 0
+        stands = Stand.objects.filter(name=match.venue)  # Assuming the venue name matches the stand name
+        for stand in stands:
+            sections = Section.objects.filter(stand=stand)
+            for section in sections:
+                total_tickets += len(section.seats)  # Assuming seats are stored as a JSON list
+
+        tickets_available = total_tickets - tickets_sold
 
         match_ticket_data.append({
             'match_id': match.match_id,
             'home_team': match.home_team,
             'away_team': match.away_team,
             'tickets_sold': tickets_sold,
-            'tickets_available': 0,
+            'tickets_available': tickets_available,
         })
 
     # Prepare data for the pie chart
@@ -1069,6 +1594,7 @@ def admin_dashboard(request):
 
     return render(request, 'admin_dashboard.html', context)
 
+
 def admin_add_category(request):
     if request.method == 'POST':
         category_name = request.POST.get('category').strip()  # Strip leading/trailing whitespace
@@ -1086,6 +1612,7 @@ def admin_add_category(request):
     categories = Category.objects.all()
 
     return render(request, 'admin_add_category.html', {'category_list': categories})
+
 
 def admin_add_subcategory(request):
     if request.method == 'POST':
@@ -1139,6 +1666,15 @@ def admin_view_store(request):
 
     return render(request, 'admin_view_store.html', {'category_items': category_items})
 
+
+
+
+
+
+
+
+
+
 @never_cache
 def admin_squad_list(request):
     # Fetch all positions
@@ -1150,6 +1686,9 @@ def admin_squad_list(request):
         players_by_position[position.position] = Player.objects.filter(player_position=position)
 
     return render(request, 'admin_squad_list.html', {'players_by_position': players_by_position})
+
+
+
 
 def store(request):
     # Fetch all categories
@@ -1208,6 +1747,8 @@ def store(request):
 
     return render(request, 'store.html', context)
 
+
+
 from django.http import JsonResponse
 from .models import Item
 
@@ -1227,6 +1768,10 @@ def search_products(request):
 
 def wishlist(request):
     return render(request, 'wishlist.html')
+
+
+
+
 
 def admin_edit_item(request, item_id):
     item = get_object_or_404(Item, id=item_id)
@@ -1271,6 +1816,9 @@ def admin_edit_item(request, item_id):
         'subcategories': subcategories
     })
 
+  
+
+
 def product_single_view(request, category_id, item_id):
     
     categories = Category.objects.all()
@@ -1297,7 +1845,7 @@ def product_single_view(request, category_id, item_id):
     }
     
     return render(request, 'product_single_view.html', context)
-
+    
 def view_more_category(request, category_id):
     # Fetch all categories
     categories = Category.objects.all()
@@ -1321,7 +1869,8 @@ def view_more_category(request, category_id):
         'selected_subcategory_id': selected_subcategory_id,
     }
     return render(request, 'view_more_category.html', context)
-
+    
+    
 def product_details(request, category_id, item_id):
     item = Item.objects.filter(id=item_id, category_id=category_id).first()
     
@@ -1331,12 +1880,16 @@ def product_details(request, category_id, item_id):
     return render(request, 'product_details.html', {
         'item': item,
     })
+    
+
 
 def get_team_details(team_id, api_key):
     url = f'https://api.football-data.org/v4/teams/{team_id}'
     headers = {'X-Auth-Token': api_key}
     response = requests.get(url, headers=headers)
     return response.json() if response.status_code == 200 else {}
+
+
 
 @never_cache
 def index(request):
@@ -1417,6 +1970,7 @@ def index(request):
             if utc_date > current_time:
                 # Convert to IST
                 ist_date = utc_date.astimezone(ist_timezone)
+                
                 # Format the date as a string
                 fixture['ist_date'] = ist_date.strftime("%a, %b %d, %Y, %I:%M %p IST")
                 upcoming_fixtures.append(fixture)
@@ -1429,6 +1983,7 @@ def index(request):
 
     return render(request, 'index.html', context)
 
+    
 def user_view_news(request, id):
     news_item = get_object_or_404(News, id=id)
     context = {
@@ -1452,13 +2007,14 @@ def user_view_news(request, id):
         except Users.DoesNotExist:
             pass
     return render(request, 'user_view_news.html', context)
-
+    
 def generate_otp():
     return random.randint(1000, 9999)
 
 def position_list(request):
     positions = Position.objects.all()
     return render(request, 'admin_add_player.html', {'position_list': positions})
+
 
 def admin_show_news(request):
         # Fetch all news items
@@ -1482,6 +2038,7 @@ def admin_show_news(request):
         'paginator': paginator,
     }
     return render(request, 'admin_show_news.html', context)
+
 
 def admin_add_news(request):
     return render(request,'admin_add_news.html')
@@ -1541,11 +2098,18 @@ def logout(request):
     request.session.flush()
     return redirect('login')
 
+
 def forgotpassword(request):
     return render(request,'forgotpassword.html')
 
+
+
+
+
 def password_reset(request):
     return render(request,'password_reset.html')
+
+
 
 def login(request):
     if request.method == 'POST':
@@ -1558,35 +2122,49 @@ def login(request):
             return redirect('admin_dashboard')
 
         try:
-            # Standard authentication for other users
+            # First try standard user authentication
             user = Users.objects.get(email=email)
             if check_password(password, user.password):  # Check hashed password
                 # Initialize session variables
                 request.session['user_id'] = user.id
-                request.session['user_name'] = user.name  # Optionally store user's name
+                request.session['user_name'] = user.name
+                request.session['user_type'] = 'standard'  # Mark as standard user
                 request.session.save()
-
-                # Redirect to a different page after successful login
-                return redirect('index')  # Redirect to 'index' page
-
-            else:
-                # Unique error message for incorrect credentials
-                messages.error(request, "Invalid email or password.", extra_tags='login_error')
-                
+                return redirect('index')
+            
         except Users.DoesNotExist:
-            # Unique error message for non-existent user
-            messages.error(request, "Invalid email or password.", extra_tags='login_error')
+            # If user not found in Users table, try PlayerCredentials
+            try:
+                player_cred = PlayerCredentials.objects.get(email=email)
+                if check_password(password, player_cred.password):  # Check hashed password
+                    # Initialize session variables for player
+                    request.session['user_id'] = player_cred.player.id
+                    request.session['user_name'] = player_cred.player.player_name
+                    request.session['user_type'] = 'player'  # Mark as player
+                    request.session.save()
+                    return redirect('player_dashboard')  # Redirect to player dashboard instead of index
+                else:
+                    messages.error(request, "Invalid email or password.", extra_tags='login_error')
+            except PlayerCredentials.DoesNotExist:
+                messages.error(request, "Invalid email or password.", extra_tags='login_error')
+
+        # If we get here, either the password was wrong or neither type of user was found
+        messages.error(request, "Invalid email or password.", extra_tags='login_error')
 
     return render(request, 'login.html')
+
 
 import json
 from django.shortcuts import render, redirect
 from .models import QuizQuestion
 
+@login_required
+@csrf_exempt
 def admin_player_game(request):
     # Fetch all uploaded images
     uploaded_images = UploadedImage.objects.all()  # Assuming UploadedImage is your model for storing images
     return render(request, 'admin_player_game.html', {'uploaded_images': uploaded_images})
+
 
 def admin_gamification(request):
     # Fetch all quiz questions
@@ -1594,6 +2172,7 @@ def admin_gamification(request):
 
     # Render the page with the fetched questions
     return render(request, 'admin_gamification.html', {'quiz_questions': quiz_questions})
+
 
 def admin_guess_player(request):
     if request.method == 'POST':
@@ -1651,6 +2230,7 @@ def register(request):
 
     return render(request, 'register.html')
 
+
 def email_otp_verif(request):
     if request.method == 'POST':
         otp1 = request.POST.get('otp1', '')
@@ -1689,6 +2269,10 @@ def email_otp_verif(request):
 
     return render(request, 'email_otp_verif.html', {'user_email': request.session.get('user_email')})
 
+
+
+
+
 @csrf_exempt
 def forgotpassword(request):
     if request.method == 'POST':
@@ -1718,6 +2302,7 @@ def forgotpassword(request):
     return render(request, 'password_reset/forgotpassword.html')
 
 logger = logging.getLogger(__name__)
+
 
 def password_reset(request, uidb64, token):
     try:
@@ -1749,6 +2334,9 @@ def password_reset(request, uidb64, token):
         messages.error(request, 'Invalid password reset link.')
         return redirect('login')
 
+
+
+
 @csrf_exempt  # Use csrf_exempt decorator to skip CSRF token requirement for this view (for testing purposes)
 def check_email_availability(request):
     if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -1768,8 +2356,104 @@ def check_email_availability(request):
     logger.warning("Invalid request received")
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
+
+
+
 import requests
 from django.conf import settings
+
+def previous_results(request):
+    api_key = 'dc93cd61f7a04a67be5652fc72195459'
+    url = 'https://api.football-data.org/v4/teams/86/matches'  # Real Madrid's ID is 86
+    headers = {'X-Auth-Token': api_key}
+
+    response = requests.get(url, headers=headers)
+    matches = response.json().get('matches', [])
+
+    # Filter for past matches
+    past_matches = [
+        {
+            'home_team': match['homeTeam']['name'],
+            'away_team': match['awayTeam']['name'],
+            'score': match['score'],
+            'utc_date': parse_datetime(match['utcDate']),
+        }
+        for match in matches if match['status'] == 'FINISHED'
+    ]
+
+    # Prepare context with past match details
+    context = {
+        'past_matches': past_matches,
+    }
+    
+    return render(request, 'previous_results.html', context)
+
+
+
+def match_details(request, fixture_id):
+    api_key = settings.API_FOOTBALL_KEY
+    context = {
+        'fixture_id': fixture_id,
+        'api_football_key': api_key,
+    }
+    return render(request, 'match_details.html', context)
+
+
+@csrf_exempt  # Use this if you are not using CSRF tokens in your AJAX requests
+def add_quiz_question(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            question_text = data.get('question')
+            options = data.get('options')
+            correct_answer = data.get('correctAnswer')
+
+            # Create a new QuizQuestion instance
+            quiz_question = QuizQuestion(
+                question_text=question_text,
+                options=options,
+                correct_answers=[correct_answer]  # Store the correct answer as a list
+            )
+            quiz_question.save()  # Save the question to the database
+
+            # Add success message alert
+            messages.success(request, 'Question added successfully!')  # Add this line
+
+            return JsonResponse({'success': True, 'message': 'Question added successfully!'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=400)
+
+    return JsonResponse({'success': False, 'message': 'Invalid request method.'}, status=405)
+
+def upload_image(request):
+    if request.method == 'POST' and request.FILES['image']:
+        image = request.FILES['image']
+        fs = FileSystemStorage()
+        filename = fs.save(image.name, image)  # Save the file
+        UploadedImage.objects.create(image=filename)  # Save the filename to the database
+        return redirect('admin_player_game')  # Redirect after upload
+    return render(request, 'admin_player_game.html')  # Render the same page if not POST
+
+
+
+def upload_identify_player(request):
+    if request.method == 'POST':
+        player_name = request.POST['player_name']
+        player_image = request.FILES['player_image']
+        
+        # Create a new IdentifyPlayer instance and save it
+        identify_player = IdentifyPlayer(name=player_name, image=player_image)
+        identify_player.save()
+        
+        return redirect('admin_guess_player')  # Redirect to a success page or dashboard
+
+    # Fetch all existing IdentifyPlayer records
+    players = IdentifyPlayer.objects.all()  # Fetch players from the database
+    context = {
+        'players': players,  # Pass players to the template
+    }
+    return render(request, 'admin_guess_player.html', context)  # Render the template with context
+
 
 def gamezone(request):
     return render(request,'gamezone.html')
@@ -1806,6 +2490,7 @@ def gamezone_quiz(request):
         logger.error(f"Error fetching quiz questions: {str(e)}")
         return render(request, 'gamezone_quiz.html', {'questions': []})  # Return an empty list on error
     
+    
 import random
 
 def gamezone_guess(request):
@@ -1823,6 +2508,7 @@ def gamezone_guess(request):
     }
     
     return render(request, 'gamezone_guess.html', context)
+
 
 def gamezone_jigsaw(request):
     # Fetch all uploaded images
@@ -1866,44 +2552,170 @@ def gamezone_jigsaw(request):
     }
     return render(request, 'gamezone_jigsaw.html', context)
 
-def previous_results(request):
+
+
+def dynamic_stadium(request, match_id):
+    match = get_object_or_404(Match, match_id=match_id)
+    
+    # Get all stands and their sections
+    stands = Stand.objects.all()
+    stands_sections = {}
+    for stand in stands:
+        sections = Section.objects.filter(stand=stand)
+        # For each section, get the total seats and booked seats
+        section_data = []
+        for section in sections:
+            total_seats = len(section.seats)
+            booked_seats = TicketItem.objects.filter(
+                order__match=match,
+                stand=stand,
+                section=section
+            ).count()
+            available_seats = total_seats - booked_seats
+            
+            section_data.append({
+                'section': section,
+                'total_seats': total_seats,
+                'available_seats': available_seats,
+                'price': section.price,
+            })
+        stands_sections[stand] = section_data
+
+    context = {
+        'match': {
+            'id': match.match_id,
+            'home_team': match.home_team,
+            'away_team': match.away_team,
+            'competition': match.competition,
+            'kickoff_time': match.ist_date,
+            'venue': match.venue,
+        },
+        'stands_sections': stands_sections,
+    }
+
+    if request.user.is_authenticated:
+        user = request.user
+        context.update({
+            'user_name': user.username,
+            'user_email': user.email,
+            'user_phone': getattr(user, 'phone', None),
+        })
+    elif 'user_id' in request.session:
+        try:
+            user = Users.objects.get(id=request.session['user_id'])
+            context.update({
+                'user_name': user.name,
+                'user_email': user.email,
+                'user_phone': user.phone,
+            })
+        except Users.DoesNotExist:
+            pass
+
+    return render(request, 'dynamic_stadium.html', context)
+
+@login_required
+@csrf_exempt
+def admin_player_logins(request):
+    players = Player.objects.all()
+    return render(request, 'admin_player_logins.html', {'players': players})
+
+@login_required
+@csrf_exempt
+def create_player_login(request):
+    if request.method == 'POST':
+        player_id = request.POST.get('player')
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+        
+        try:
+            player = Player.objects.get(id=player_id)
+            
+            # Check if player already has credentials
+            if PlayerCredentials.objects.filter(player=player).exists():
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Player already has login credentials'
+                })
+            
+            # Check if email is already in use
+            if PlayerCredentials.objects.filter(email=email).exists():
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Email is already in use'
+                })
+            
+            # Create new credentials
+            PlayerCredentials.objects.create(
+                player=player,
+                email=email,
+                password=make_password(password)  # Hash the password
+            )
+            
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Player login credentials created successfully'
+            })
+            
+        except Player.DoesNotExist:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Player not found'
+            })
+        except Exception as e:
+            return JsonResponse({
+                'status': 'error',
+                'message': str(e)
+            })
+    
+    return JsonResponse({
+        'status': 'error',
+        'message': 'Invalid request method'
+    })
+
+
+def player_dashboard(request):
+    if request.session.get('user_type') != 'player':
+        return redirect('login')
+    
+    # Fetch fixtures from the football-data.org API
     api_key = 'dc93cd61f7a04a67be5652fc72195459'
     url = 'https://api.football-data.org/v4/teams/86/matches'  # Real Madrid's ID is 86
     headers = {'X-Auth-Token': api_key}
 
-    response = requests.get(url, headers=headers)
-    matches = response.json().get('matches', [])
+    try:
+        response = requests.get(url, headers=headers)
+        all_fixtures = response.json().get('matches', [])
 
-    # Filter for past matches
-    past_matches = [
-        {
-            'home_team': match['homeTeam']['name'],
-            'away_team': match['awayTeam']['name'],
-            'score': match['score'],
-            'utc_date': parse_datetime(match['utcDate']),
-        }
-        for match in matches if match['status'] == 'FINISHED'
-    ]
+        # Convert UTC dates to IST and filter for upcoming events
+        ist_timezone = pytz.timezone('Asia/Kolkata')
+        current_time = timezone.now()
+        upcoming_fixtures = []
 
-    # Prepare context with past match details
+        for fixture in all_fixtures:
+            utc_date = parse_datetime(fixture['utcDate'])
+            if utc_date:
+                # Make the datetime aware if it's naive
+                if utc_date.tzinfo is None:
+                    utc_date = make_aware(utc_date)
+                
+                # Only process if the fixture is in the future
+                if utc_date > current_time:
+                    # Convert to IST
+                    ist_date = utc_date.astimezone(ist_timezone)
+                    
+                    # Format the date as a string
+                    fixture['ist_date'] = ist_date.strftime("%a, %b %d, %Y, %I:%M %p IST")
+                    upcoming_fixtures.append(fixture)
+
+        # Sort upcoming fixtures by date and get the next fixture
+        upcoming_fixtures.sort(key=lambda x: parse_datetime(x['utcDate']))
+        next_match = upcoming_fixtures[0] if upcoming_fixtures else None
+
+    except Exception as e:
+        print(f"Error fetching next match: {e}")
+        next_match = None
+
     context = {
-        'past_matches': past_matches,
+        'next_match': next_match
     }
-    
-    return render(request, 'previous_results.html', context)
-
-def match_details(request, fixture_id):
-    api_key = settings.API_FOOTBALL_KEY
-    context = {
-        'fixture_id': fixture_id,
-        'api_football_key': api_key,
-    }
-    return render(request, 'match_details.html', context)
-
-
-def dynamic_stadium(request, match_id: str):
-    match = Match.objects.get(match_id=match_id)
-    context = {
-        'match': match,
-    }
-    return render(request, 'dynamic_stadium.html', context)
+    return render(request, 'player_dashboard.html', context)
