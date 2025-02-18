@@ -313,7 +313,7 @@
                 {% for stand in stands %}
                 <div class="p-4 border rounded-lg text-center">
                     <h3 class="font-bold">{{ stand.name }} Stand</h3>
-                    <p class="text-lg">€{{ stand.price_category }}</p>
+                    <p class="text-lg">₹300</p>
                 </div>
                 {% endfor %}
             </div>
@@ -340,7 +340,7 @@
                 <div id="selected-seats" class="mb-4"></div>
                 <div class="flex justify-between items-center">
                     <div>
-                        <span class="font-bold">Total Amount: €</span>
+                        <span class="font-bold">Total Amount: ₹</span>
                         <span id="total-amount">0</span>
                     </div>
                     <button class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
@@ -449,27 +449,32 @@
         background-color: #ef4444;
         cursor: not-allowed;
     }
+    .seat:not(.booked):hover {
+        background-color: #60a5fa;
+    }
 </style>
 
 <script>
-    let selectedSeats = new Set();
-    let currentPreviewSeat = null;
-    const standPrices = {
-        {% for stand in stands %}
-            '{{ stand.name }}': {{ stand.price_category }},
-        {% endfor %}
-    };
+    const bookedSeats = {{ booked_seats|safe }};
 
-    // Mark booked seats as unavailable when page loads
+    function isSeatBooked(seatNumber) {
+        return bookedSeats.includes(seatNumber);
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
-        {% for booking in booked_seats %}
-            const bookedSeat = document.querySelector(`[data-seat="{{ booking.seat_number }}"]`);
-            if (bookedSeat) {
-                bookedSeat.classList.add('booked');
-                bookedSeat.onclick = null; // Remove click handler
+        document.querySelectorAll('.seat').forEach(seat => {
+            const seatNumber = seat.getAttribute('data-seat');
+            if (isSeatBooked(seatNumber)) {
+                seat.classList.add('booked');
+                seat.classList.remove('cursor-pointer', 'hover:bg-blue-500');
+                seat.classList.add('bg-red-500', 'cursor-not-allowed');
+                seat.onclick = null;
             }
-        {% endfor %}
+        });
     });
+
+    let selectedSeats = [];
+    const maxSeats = 4;
 
     function updateSeatPreview(seatNumber) {
         const previewContainer = document.getElementById('preview-container');
@@ -479,7 +484,10 @@
         const [stand, number] = seatNumber.split('-');
         
         previewSection.classList.remove('hidden');
+        
+        // Update current preview seat and refresh the display
         currentPreviewSeat = seatNumber;
+        updateSelectedSeatsDisplay();
         
         // Reset transforms
         previewContainer.style.transform = '';
@@ -549,13 +557,13 @@
         const seatNumber = seatElement.dataset.seat;
         
         // Toggle seat selection
-        if (selectedSeats.has(seatNumber)) {
-            selectedSeats.delete(seatNumber);
+        if (selectedSeats.includes(seatNumber)) {
+            selectedSeats.splice(selectedSeats.indexOf(seatNumber), 1);
             seatElement.classList.remove('selected');
             
             // If this was the current preview seat, show preview of another selected seat if available
             if (currentPreviewSeat === seatNumber) {
-                const nextSeat = selectedSeats.values().next().value;
+                const nextSeat = selectedSeats[0];
                 if (nextSeat) {
                     updateSeatPreview(nextSeat);
                 } else {
@@ -564,9 +572,13 @@
                 }
             }
         } else {
-            selectedSeats.add(seatNumber);
-            seatElement.classList.add('selected');
-            updateSeatPreview(seatNumber);
+            if (selectedSeats.length < maxSeats) {
+                selectedSeats.push(seatNumber);
+                seatElement.classList.add('selected');
+                updateSeatPreview(seatNumber);
+            } else {
+                alert('You can select a maximum of ' + maxSeats + ' seats.');
+            }
         }
         
         updateSelectedSeatsDisplay();
@@ -577,7 +589,7 @@
         const totalAmountSpan = document.getElementById('total-amount');
         let totalAmount = 0;
 
-        if (selectedSeats.size === 0) {
+        if (selectedSeats.length === 0) {
             selectedSeatsDiv.innerHTML = '<p>No seats selected</p>';
             totalAmountSpan.textContent = '0';
             return;
@@ -586,12 +598,12 @@
         let seatsHtml = '<ul class="list-disc pl-5">';
         selectedSeats.forEach(seat => {
             const stand = seat.split('-')[0];
-            const price = standPrices[stand] || 0;
+            const price = 300; // Assuming price is 300 for all stands
             totalAmount += price;
             const isCurrentPreview = seat === currentPreviewSeat;
             const previewButton = `<button onclick="updateSeatPreview('${seat}')" class="ml-2 px-2 py-1 text-sm ${isCurrentPreview ? 'bg-blue-500 text-white' : 'bg-gray-200 hover:bg-blue-500 hover:text-white'} rounded transition-colors">View</button>`;
             seatsHtml += `<li class="flex items-center justify-between mb-2">
-                            <span>Seat ${seat} - €${price}</span>
+                            <span>Seat ${seat} - ₹${price}</span>
                             ${previewButton}
                          </li>`;
         });
@@ -602,37 +614,33 @@
     }
 
     function proceedToBooking() {
-        if (selectedSeats.size === 0) {
+        if (selectedSeats.length === 0) {
             alert('Please select at least one seat to proceed.');
             return;
         }
 
-        // Convert Set to Array for sending to server
-        const seatsArray = Array.from(selectedSeats);
-        
-        // Create form data
-        const formData = new FormData();
-        formData.append('seats', JSON.stringify(seatsArray));
-        formData.append('match_id', '{{ match.id }}');
-        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
-
         // Send booking request to server
-        fetch('', {
+        fetch(`/process-ticket-booking/{{ match.id }}/`, {
             method: 'POST',
-            body: formData
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({
+                seats: selectedSeats  // Send seats array inside an object
+            })
         })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert('Booking successful!');
-                window.location.href = data.redirect_url; // Redirect to payment or confirmation page
+                window.location.href = data.redirect_url;
             } else {
-                alert(data.error || 'Booking failed. Please try again.');
+                alert(data.error || 'An error occurred while processing your booking.');
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('An error occurred. Please try again.');
+            alert('An error occurred while processing your booking.');
         });
     }
 </script>

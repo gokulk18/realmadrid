@@ -339,6 +339,13 @@ a{
                             <input id="seats" name="seats" type="number" min="1" placeholder="Enter number of seats" class="input input-bordered input-primary w-full rounded-lg" />
                         </div>
 
+                        <div class="flex flex-col">
+                            <label class="text-gray-700 dark:text-gray-200 mb-1 text-align:left" for="price" style="text-align: left;">
+                                Price: <span class="text-red-600" id="err_price">Must be a non-negative number</span>
+                            </label>
+                            <input id="price" name="price" type="number" min="0" step="0.01" placeholder="Enter ticket price" class="input input-bordered input-primary w-full rounded-lg" />
+                        </div>
+
                         <div class="flex justify-center mt-6">
                             <input type="submit" id="submitBtn" name="submit" value="Add Section" class="btn btn-primary" disabled />
                         </div>
@@ -419,15 +426,18 @@ a{
             var stand = $('#stand').val();
             var section = $('#section').val().trim();
             var seats = $('#seats').val();
+            var price = $('#price').val();
             
             // Check if section contains only alphabets, numbers, and spaces, but must not be empty
             var isValidSection = /^[a-zA-Z0-9\s]+$/.test(section) && section.length > 0;
             var isValidSeats = seats && parseInt(seats) > 0;
+            var isValidPrice = price && parseFloat(price) >= 0;
 
-            if (stand && isValidSection && isValidSeats) {
+            if (stand && isValidSection && isValidSeats && isValidPrice) {
                 $('#submitBtn').prop('disabled', false);
                 $('#err_section').hide();
                 $('#err_seats').hide();
+                $('#err_price').hide();
             } else {
                 $('#submitBtn').prop('disabled', true);
                 if (section.length > 0 && !isValidSection) {
@@ -440,13 +450,19 @@ a{
                 } else {
                     $('#err_seats').hide();
                 }
+                if (price && !isValidPrice) {
+                    $('#err_price').show();
+                } else {
+                    $('#err_price').hide();
+                }
             }
         }
 
         $('#err_section').hide();
         $('#err_seats').hide();
+        $('#err_price').hide();
 
-        $('#stand, #section, #seats').on('input change', function() {
+        $('#stand, #section, #seats, #price').on('input change', function() {
             toggleSubmitButton();
         });
 

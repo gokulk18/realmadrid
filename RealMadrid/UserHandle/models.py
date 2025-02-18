@@ -281,7 +281,9 @@ class Match(models.Model):
 class TicketOrder(models.Model):
     ORDER_STATUS_CHOICES = [
         ('Pending', 'Pending'),
+        ('Payment_Initiated', 'Payment Initiated'),
         ('Confirmed', 'Confirmed'),
+        ('Failed', 'Failed'),
         ('Cancelled', 'Cancelled')
     ]
 
@@ -294,20 +296,28 @@ class TicketOrder(models.Model):
     total_price = models.DecimalField(max_digits=10, decimal_places=2)
     booking_fee = models.DecimalField(max_digits=6, decimal_places=2, null=True)
     status = models.CharField(max_length=20, choices=ORDER_STATUS_CHOICES, default='Pending')
+    razorpay_order_id = models.CharField(max_length=200, null=True, blank=True)
     is_paid = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    payment_deadline = models.DateTimeField(null=True, blank=True)
 
     def save(self, *args, **kwargs):
         if not self.order_number:
             self.order_number = self.generate_order_number()
+        if not self.payment_deadline and self.status == 'Pending':
+            # Set payment deadline to 15 minutes from creation
+            self.payment_deadline = timezone.now() + timezone.timedelta(minutes=15)
         super().save(*args, **kwargs)
 
     def generate_order_number(self):
-        return f"TKT-{get_random_string(16).upper()}"
+        # Generate a unique order number
+        prefix = 'TKT'
+        random_str = get_random_string(12, allowed_chars='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789')
+        return f"{prefix}-{random_str}"
 
     def __str__(self):
-        return f"Ticket Order {self.order_number} for {self.full_name}"
+        return f"Order {self.order_number} - {self.status}"
 
 class TicketItem(models.Model):
     order = models.ForeignKey(TicketOrder, related_name='tickets', on_delete=models.CASCADE)
@@ -322,28 +332,31 @@ class TicketItem(models.Model):
     def __str__(self):
         return f"Ticket for {self.order.match} - {self.stand} {self.section} Seat {self.seat_number}"
 
-
-
 class TicketPayment(models.Model):
     PAYMENT_STATUS_CHOICES = [
         ('Pending', 'Pending'),
+        ('Initiated', 'Initiated'),
         ('Completed', 'Completed'),
         ('Failed', 'Failed'),
         ('Refunded', 'Refunded')
     ]
 
-    ticket_order = models.OneToOneField('TicketOrder', on_delete=models.CASCADE)
+    ticket_order = models.OneToOneField(TicketOrder, on_delete=models.CASCADE)
     payment_method = models.CharField(max_length=50)
+    razorpay_payment_id = models.CharField(max_length=200, null=True, blank=True)
+    razorpay_order_id = models.CharField(max_length=200, null=True, blank=True)
+    razorpay_signature = models.CharField(max_length=500, null=True, blank=True)
     transaction_id = models.CharField(max_length=100, unique=True)
     amount_paid = models.DecimalField(max_digits=10, decimal_places=2)
-    status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES)
+    status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='Pending')
     created_at = models.DateTimeField(default=timezone.now)
-
-    def __str__(self):
-        return f"Payment {self.transaction_id} for Ticket Order {self.ticket_order.order_number}"
+    completed_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Payment for {self.ticket_order.order_number} - {self.status}"
 
 class QuizQuestion(models.Model):
     question_text = models.TextField()
@@ -376,3 +389,19 @@ class PlayerCredentials(models.Model):
 
     def __str__(self):
         return f"{self.player.player_name}'s credentials"
+
+class PlayerTask(models.Model):
+    title = models.CharField(max_length=200)
+    description = models.TextField()
+    assigned_players = models.ManyToManyField(Player, related_name='assigned_tasks')
+    due_date = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=20, choices=[
+        ('pending', 'Pending'),
+        ('completed', 'Completed'),
+        ('overdue', 'Overdue')
+    ], default='pending')
+    video_required = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.title

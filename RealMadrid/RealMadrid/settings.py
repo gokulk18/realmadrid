@@ -75,7 +75,8 @@ SOCIALACCOUNT_PROVIDERS = {
 }
 
 API_FOOTBALL_KEY = '98ee819a2d19a9d60b47a221819ff19c'
-RAZORPAY_KEY_ID='rzp_test_7FTQA5xPrTVrqk'
+RAZORPAY_KEY_ID = 'rzp_test_7FTQA5xPrTVrqk'
+RAZORPAY_KEY_SECRET = 'KQCLbGXxKnHkpqJSMkFPvWJx'
 
 AUTHENTICATION_BACKENDS = (
     # Needed to login by username in Django admin, regardless of `allauth`
@@ -184,7 +185,6 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'realmadridfcwebsite@gmail.com'
 EMAIL_HOST_PASSWORD = 'chtm unlc cear flmm'
-
 
 RECAPTCHA_PUBLIC_KEY = '6LewbMcqAAAAAPQ223lSt-7DZzoCaqjx4FWZ4j-G'
 RECAPTCHA_PRIVATE_KEY = '6LewbMcqAAAAABH9I2uqR0EQZwq0fzpDawoL_r7G'

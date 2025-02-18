@@ -1,0 +1,125 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ticket Payment - Real Madrid FC</title>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+    <div class="min-h-screen flex items-center justify-center px-4">
+        <div class="max-w-4xl w-full space-y-8 bg-white p-8 rounded-lg shadow-lg">
+            <!-- Order Summary -->
+            <div class="border-b pb-6">
+                <h2 class="text-2xl font-bold mb-4">Order Summary</h2>
+                <div class="space-y-2">
+                    <p class="text-lg">Order Number: <span class="font-semibold">{{ order.order_number }}</span></p>
+                    <p class="text-lg">Match: <span class="font-semibold">{{ order.match.home_team }} vs {{ order.match.away_team }}</span></p>
+                    <p class="text-lg">Date: <span class="font-semibold">{{ order.match.ist_date|date:"l, F d, Y" }}</span></p>
+                    <p class="text-lg">Time: <span class="font-semibold">{{ order.match.ist_date|date:"g:i A" }} IST</span></p>
+                    <p class="text-lg">Venue: <span class="font-semibold">{{ order.match.venue }}</span></p>
+                    <p class="text-lg">Selected Seats:</p>
+                    <ul class="list-disc pl-8">
+                        {% for ticket in order.tickets.all %}
+                        <li>{{ ticket.stand.name }} - Section {{ ticket.section.name }} - Seat {{ ticket.seat_number }}</li>
+                        {% endfor %}
+                    </ul>
+                    <p class="text-lg mt-4">Booking Fee: <span class="font-semibold">₹{{ order.booking_fee }}</span></p>
+                    <p class="text-lg font-bold">Total Amount: <span class="text-xl">₹{{ order.total_price }}</span></p>
+                </div>
+            </div>
+
+            <!-- Payment Section -->
+            <div class="mt-8">
+                <h3 class="text-xl font-semibold mb-4">Payment Details</h3>
+                <button id="rzp-button" class="w-full bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 transition-colors">
+                    Pay Now
+                </button>
+                <p class="text-sm text-gray-600 mt-2">* Your seats will be confirmed only after successful payment</p>
+                <p class="text-sm text-gray-600">* Payment session will expire in <span id="countdown">15:00</span></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Countdown timer
+        function startCountdown(duration, display) {
+            var timer = duration, minutes, seconds;
+            var countdown = setInterval(function () {
+                minutes = parseInt(timer / 60, 10);
+                seconds = parseInt(timer % 60, 10);
+
+                minutes = minutes < 10 ? "0" + minutes : minutes;
+                seconds = seconds < 10 ? "0" + seconds : seconds;
+
+                display.textContent = minutes + ":" + seconds;
+
+                if (--timer < 0) {
+                    clearInterval(countdown);
+                    window.location.href = "{% url 'dynamic_stadium' order.match.match_id %}";
+                }
+            }, 1000);
+        }
+
+        window.onload = function () {
+            var fifteenMinutes = 60 * 15,
+                display = document.querySelector('#countdown');
+            startCountdown(fifteenMinutes, display);
+        };
+
+        // Razorpay integration
+        var options = {
+            "key": "{{ razorpay_key_id }}", 
+            "amount": "{{ order_total_price_paise }}", 
+            "currency": "INR",
+            "name": "Real Madrid FC",
+            "description": "Ticket Order: {{ order.order_number }}",
+            "image": "{% static 'madrid_images/real-madrid-logo.png' %}",
+            "order_id": "{{ razorpay_order_id }}", 
+            "handler": function (response) {
+                fetch('/process-ticket-payment/{{ order.order_number }}/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({
+                        razorpay_payment_id: response.razorpay_payment_id,
+                        razorpay_order_id: response.razorpay_order_id,
+                        razorpay_signature: response.razorpay_signature
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.href = data.redirect_url;
+                    } else {
+                        alert(data.error || 'Payment verification failed');
+                        window.location.href = "{% url 'dynamic_stadium' order.match.match_id %}";
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred. Please try again.');
+                    window.location.href = "{% url 'dynamic_stadium' order.match.match_id %}";
+                });
+            },
+            "prefill": {
+                "name": "{{ order.full_name }}",
+                "email": "{{ order.email }}",
+                "contact": "{{ order.phone }}"
+            },
+            "theme": {
+                "color": "#3B82F6"
+            }
+        };
+        var rzp = new Razorpay(options);
+        document.getElementById('rzp-button').onclick = function(e){
+            rzp.open();
+            e.preventDefault();
+        }
+    </script>
+</body>
+</html>

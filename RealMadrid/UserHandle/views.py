@@ -1,3 +1,4 @@
+import razorpay  # Add this import for Razorpay integration
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.core.mail import send_mail
@@ -48,7 +49,7 @@ from .models import TicketOrder, TicketItem, Match, Stand, Section
 from django.shortcuts import get_object_or_404
 from django.db import transaction
 from rest_framework import viewsets
-from .models import QuizQuestion
+from .models import QuizQuestion , PlayerTask
 import os
 from django.core.files.storage import FileSystemStorage
 from PIL import Image
@@ -673,26 +674,31 @@ def allocate_seats(request):
 
 
 def booking_success(request, order_number):
-    try:
-        order = get_object_or_404(TicketOrder, order_number=order_number)
-        ticket_items = TicketItem.objects.filter(order=order)
-        
-        context = {
-            'order': order,
-            'ticket_items': ticket_items,
-            'total_tickets': ticket_items.count(),
-            'match_details': {
-                'home_team': order.match.home_team,
-                'away_team': order.match.away_team,
-                'date': order.match.ist_date.strftime('%d %B %Y'),
-                'time': order.match.ist_date.strftime('%I:%M %p'),
-                'venue': order.match.venue,
-            }
-        }
-        return render(request, 'booking_success.html', context)
-    except TicketOrder.DoesNotExist:
-        messages.error(request, "Order not found.")
-        return redirect('index')
+    # Get the confirmed order
+    order = get_object_or_404(TicketOrder, order_number=order_number, status='Confirmed')
+    
+    # Ensure the order belongs to the current user
+    if request.user.is_authenticated:
+        if order.user != request.user:
+            raise Http404
+    elif 'user_id' in request.session:
+        if order.user.id != request.session['user_id']:
+            raise Http404
+    else:
+        raise Http404
+
+    # Get ticket items
+    ticket_items = order.tickets.all()
+
+    context = {
+        'order': order,
+        'ticket_items': ticket_items,
+        'total_tickets': ticket_items.count()
+    }
+    
+    return render(request, 'booking_success.html', context)
+
+
 
 
 
@@ -900,7 +906,7 @@ def checkout(request):
                     'size': item.size,
                     'price': float(item.item.price),
                     'total': float(item.item.price * item.quantity),
-                    'image': item.item.main_image.url if item.item.main_image else None,
+                    'image': item.item.main_image.url if item.item.main_image else '',
                 }
                 for item in cart_items
             ],
@@ -2562,24 +2568,14 @@ def dynamic_stadium(request, match_id):
     stands_sections = {}
     for stand in stands:
         sections = Section.objects.filter(stand=stand)
-        # For each section, get the total seats and booked seats
-        section_data = []
-        for section in sections:
-            total_seats = len(section.seats)
-            booked_seats = TicketItem.objects.filter(
-                order__match=match,
-                stand=stand,
-                section=section
-            ).count()
-            available_seats = total_seats - booked_seats
-            
-            section_data.append({
-                'section': section,
-                'total_seats': total_seats,
-                'available_seats': available_seats,
-                'price': section.price,
-            })
-        stands_sections[stand] = section_data
+        stands_sections[stand] = sections
+
+    # Get all booked seats for this match
+    booked_seats = set()
+    ticket_items = TicketItem.objects.filter(order__match=match)
+    for item in ticket_items:
+        stand_code = item.stand.name[0]  # First letter of stand name (N, S, E, W)
+        booked_seats.add(f"{stand_code}-{item.seat_number}")
 
     context = {
         'match': {
@@ -2591,6 +2587,7 @@ def dynamic_stadium(request, match_id):
             'venue': match.venue,
         },
         'stands_sections': stands_sections,
+        'booked_seats': list(booked_seats),  # Convert set to list for JSON serialization
     }
 
     if request.user.is_authenticated:
@@ -2715,7 +2712,320 @@ def player_dashboard(request):
         print(f"Error fetching next match: {e}")
         next_match = None
 
+    # Fetch tasks assigned to the player
+    player = Player.objects.get(id=request.session['user_id'])
+    assigned_tasks = PlayerTask.objects.filter(
+        assigned_players=player
+    ).order_by('-created_at')
+
+    # Update task status based on due date
+    for task in assigned_tasks:
+        if task.status == 'pending' and task.due_date < current_time:
+            task.status = 'overdue'
+            task.save()
+
     context = {
-        'next_match': next_match
+        'next_match': next_match,
+        'assigned_tasks': assigned_tasks,
+        'pending_tasks_count': assigned_tasks.filter(status='pending').count()
     }
+    
     return render(request, 'player_dashboard.html', context)
+
+def trainer_assign_task(request):
+    players = Player.objects.all().order_by('player_name')
+    
+    if request.method == 'POST':
+        title = request.POST.get('title')
+        description = request.POST.get('description')
+        due_date = request.POST.get('due_date')
+        video_required = request.POST.get('video_required') == 'on'
+        player_ids = request.POST.getlist('players')
+
+        task = PlayerTask.objects.create(
+            title=title,
+            description=description,
+            due_date=due_date,
+            video_required=video_required
+        )
+        
+        # Add selected players to the task
+        task.assigned_players.add(*player_ids)
+        messages.success(request, 'Task assigned successfully!')
+        return redirect('trainer_assign_task')
+
+    context = {
+        'players': players,
+        'assigned_tasks': PlayerTask.objects.all().order_by('-created_at')
+    }
+    return render(request, 'trainer_assign_task.html', context)
+
+@csrf_exempt
+@transaction.atomic
+def process_ticket_booking(request, match_id):
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+    try:
+        # Parse the JSON data from request body
+        data = json.loads(request.body)
+        seats = data.get('seats', [])  # Get the seats array from the request
+        
+        if not seats:
+            return JsonResponse({'success': False, 'error': 'No seats selected'})
+
+        # Get match details
+        match = get_object_or_404(Match, match_id=match_id)
+        
+        # Get user
+        if request.user.is_authenticated:
+            user = request.user
+        elif 'user_id' in request.session:
+            user = get_object_or_404(Users, id=request.session['user_id'])
+        else:
+            return JsonResponse({'success': False, 'error': 'User not authenticated'})
+
+        # Calculate booking fee
+        booking_fee = 50  # Fixed booking fee per ticket
+        total_booking_fee = booking_fee * len(seats)
+
+        # Create temporary order
+        order = TicketOrder.objects.create(
+            user=user,
+            match=match,
+            full_name=user.name,
+            email=user.email,
+            phone=user.phone,
+            total_price=0,  # Will update after adding items
+            booking_fee=total_booking_fee,
+            status='Pending',
+            payment_deadline=timezone.now() + timezone.timedelta(minutes=15)  # 15 minutes to complete payment
+        )
+
+        # Create temporary ticket items
+        total_price = 0
+        for seat_number in seats:
+            stand_code, seat_num = seat_number.split('-')
+            
+            # Map stand code to stand object
+            stand_map = {
+                'N': 'North Stand',
+                'S': 'South Stand',
+                'E': 'East Stand',
+                'W': 'West Stand'
+            }
+            
+            stand = get_object_or_404(Stand, name=stand_map[stand_code])
+            section = Section.objects.filter(stand=stand).first()
+            
+            # Check if seat is already booked
+            if TicketItem.objects.filter(
+                order__match=match,
+                stand=stand,
+                section=section,
+                seat_number=seat_num
+            ).exists():
+                # Rollback transaction
+                transaction.set_rollback(True)
+                return JsonResponse({
+                    'success': False,
+                    'error': f'Seat {seat_number} is already booked'
+                })
+
+            # Create ticket item
+            ticket_item = TicketItem.objects.create(
+                order=order,
+                stand=stand,
+                section=section,
+                seat_number=seat_num,
+                price=section.price
+            )
+            total_price += section.price
+
+        # Update order total price
+        order.total_price = total_price + total_booking_fee
+        order.save()
+
+        # Create payment record
+        payment = TicketPayment.objects.create(
+            ticket_order=order,
+            payment_method='Pending',  # Will be updated after payment
+            transaction_id=f'TXN-{order.order_number}',
+            amount_paid=order.total_price,
+            status='Pending'
+        )
+
+        return JsonResponse({
+            'success': True,
+            'redirect_url': reverse('ticket_payment', kwargs={'order_number': order.order_number}),
+            'order_number': order.order_number,
+            'total_amount': float(order.total_price)
+        })
+
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'Invalid JSON data'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+def ticket_payment(request, order_number):
+    # Get the order
+    order = get_object_or_404(TicketOrder, order_number=order_number, status__in=['Pending', 'Payment_Initiated'])
+    
+    # Ensure the order belongs to the current user
+    if request.user.is_authenticated:
+        if order.user != request.user:
+            raise Http404
+    elif 'user_id' in request.session:
+        if order.user.id != request.session['user_id']:
+            raise Http404
+    else:
+        raise Http404
+
+    # Check if payment deadline has passed
+    if order.payment_deadline and order.payment_deadline < timezone.now():
+        order.status = 'Cancelled'
+        order.save()
+        messages.error(request, "Payment session expired. Please book again.")
+        return redirect('dynamic_stadium', match_id=order.match.match_id)
+
+    try:
+        # Initialize Razorpay client
+        client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+        
+        if order.status == 'Pending':
+            # Create Razorpay order
+            razorpay_order = client.order.create({
+                'amount': int(order.total_price * 100),  # Amount in paise
+                'currency': 'INR',
+                'receipt': order.order_number,
+                'payment_capture': 1  # Auto capture payment
+            })
+
+            # Update order with Razorpay order ID
+            order.razorpay_order_id = razorpay_order['id']
+            order.status = 'Payment_Initiated'
+            order.save()
+
+            # Create or update payment record
+            payment, created = TicketPayment.objects.get_or_create(
+                ticket_order=order,
+                defaults={
+                    'payment_method': 'Razorpay',
+                    'razorpay_order_id': razorpay_order['id'],
+                    'transaction_id': f'TXN-{order.order_number}',
+                    'amount_paid': order.total_price,
+                    'status': 'Initiated'
+                }
+            )
+            if not created:
+                payment.razorpay_order_id = razorpay_order['id']
+                payment.status = 'Initiated'
+                payment.save()
+        else:
+            # Get existing Razorpay order
+            razorpay_order = client.order.fetch(order.razorpay_order_id)
+            payment = TicketPayment.objects.get(ticket_order=order)
+
+        # Prepare context for template
+        context = {
+            'order': order,
+            'razorpay_key_id': settings.RAZORPAY_KEY_ID,
+            'razorpay_order_id': razorpay_order['id'],
+            'order_total_price_paise': int(order.total_price * 100)
+        }
+        return render(request, 'ticket_payment.html', context)
+    
+    except Exception as e:
+        # Log the error and show a user-friendly message
+        logger.error(f"Razorpay error for order {order_number}: {str(e)}")
+        messages.error(request, "Unable to initialize payment. Please try again.")
+        return redirect('dynamic_stadium', match_id=order.match.match_id)
+
+@csrf_exempt
+@transaction.atomic
+def process_ticket_payment(request, order_number):
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+    try:
+        # Parse the JSON data from request body
+        data = json.loads(request.body)
+        razorpay_payment_id = data.get('razorpay_payment_id')
+        razorpay_order_id = data.get('razorpay_order_id')
+        razorpay_signature = data.get('razorpay_signature')
+        
+        # Get the order
+        order = get_object_or_404(TicketOrder, order_number=order_number)
+        
+        # Ensure the order belongs to the current user
+        if request.user.is_authenticated:
+            if order.user != request.user:
+                raise Http404
+        elif 'user_id' in request.session:
+            if order.user.id != request.session['user_id']:
+                raise Http404
+        else:
+            raise Http404
+
+        # Check if order is still pending
+        if order.status != 'Pending':
+            return JsonResponse({
+                'success': False,
+                'error': 'Order has already been processed'
+            })
+
+        # Initialize Razorpay client
+        client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+        
+        # Verify payment signature
+        params_dict = {
+            'razorpay_payment_id': razorpay_payment_id,
+            'razorpay_order_id': razorpay_order_id,
+            'razorpay_signature': razorpay_signature
+        }
+        
+        try:
+            client.utility.verify_payment_signature(params_dict)
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': 'Invalid payment signature'
+            })
+
+        # Payment verified successfully, update order status
+        order.status = 'Confirmed'
+        order.save()
+
+        # Update payment record
+        payment = TicketPayment.objects.get(ticket_order=order)
+        payment.payment_method = 'Razorpay'
+        payment.transaction_id = razorpay_payment_id
+        payment.status = 'Completed'
+        payment.save()
+
+        # Send confirmation email
+        try:
+            subject = 'Real Madrid FC - Ticket Booking Confirmation'
+            message = render_to_string('emails/ticket_confirmation.html', {
+                'order': order,
+                'tickets': order.tickets.all()
+            })
+            send_mail(
+                subject,
+                message,
+                settings.DEFAULT_FROM_EMAIL,
+                [order.email],
+                html_message=message
+            )
+        except Exception as e:
+            logger.error(f'Failed to send confirmation email for order {order.order_number}: {str(e)}')
+
+        return JsonResponse({
+            'success': True,
+            'redirect_url': reverse('booking_success', kwargs={'order_number': order.order_number})
+        })
+
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'Invalid JSON data'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})

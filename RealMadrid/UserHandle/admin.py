@@ -3,7 +3,7 @@ from .models import (
     Users, Position, Player, News, Category, SubCategory, Item, ItemImage, ItemSize,
     Cart, CartItem, Wishlist, WishlistItem, Order, OrderItem, Payment, Shipping,
     Stand, Section, Match, TicketOrder, TicketItem, TicketPayment, QuizQuestion,
-    UploadedImage, IdentifyPlayer, PlayerCredentials
+    UploadedImage, IdentifyPlayer, PlayerCredentials, PlayerTask
 )
 
 class UsersAdmin(admin.ModelAdmin):
@@ -211,6 +211,25 @@ class PlayerCredentialsAdmin(admin.ModelAdmin):
     list_filter = ('created_at', 'updated_at')
     readonly_fields = ('created_at', 'updated_at')
 
+class PlayerTaskAdmin(admin.ModelAdmin):
+    list_display = ('title', 'due_date', 'status', 'video_required', 'created_at')
+    list_filter = ('status', 'video_required', 'created_at', 'due_date')
+    search_fields = ('title', 'description')
+    filter_horizontal = ('assigned_players',)
+    readonly_fields = ('created_at',)
+    fieldsets = (
+        ('Task Information', {
+            'fields': ('title', 'description', 'due_date', 'video_required')
+        }),
+        ('Assignment Details', {
+            'fields': ('assigned_players', 'status')
+        }),
+        ('Metadata', {
+            'fields': ('created_at',),
+            'classes': ('collapse',)
+        }),
+    )
+
 # Register the models with the admin site
 admin.site.register(Users, UsersAdmin)
 admin.site.register(Position, PositionAdmin)
@@ -239,3 +258,4 @@ admin.site.register(TicketPayment, TicketPaymentAdmin)
 admin.site.register(QuizQuestion, QuizQuestionAdmin)
 admin.site.register(UploadedImage, UploadedImageAdmin)  # Register the UploadedImage model
 admin.site.register(IdentifyPlayer, IdentifyPlayerAdmin)  # Register the IdentifyPlayer model
+admin.site.register(PlayerTask, PlayerTaskAdmin)  # Register the PlayerTask model
