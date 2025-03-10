@@ -29,7 +29,25 @@ class Player(models.Model):
     player_position = models.ForeignKey(Position, on_delete=models.CASCADE)
     player_role = models.CharField(max_length=50)
     player_image = models.ImageField(upload_to='player_images/')
-
+    
+    # New fields for basic info
+    date_of_birth = models.DateField(null=True, blank=True)
+    height = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True)  # in meters
+    weight = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)  # in kg
+    
+    # Statistics
+    appearances = models.PositiveIntegerField(default=0)
+    goals = models.PositiveIntegerField(default=0)
+    assists = models.PositiveIntegerField(default=0)
+    clean_sheets = models.PositiveIntegerField(default=0)  # for goalkeepers
+    yellow_cards = models.PositiveIntegerField(default=0)
+    red_cards = models.PositiveIntegerField(default=0)
+    
+    # Additional info
+    biography = models.TextField(blank=True)
+    joined_date = models.DateField(null=True, blank=True)
+    contract_end_date = models.DateField(null=True, blank=True)
+    
     def __str__(self):
         return self.player_name
     
@@ -147,7 +165,7 @@ class Order(models.Model):
         ('Cancelled', 'Cancelled'),
     )
     
-    user = models.ForeignKey(Users, on_delete=models.CASCADE)
+    user = models.ForeignKey(Users, on_delete=models.SET_NULL, null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Confirmed')
     order_number = models.CharField(max_length=20, unique=True, editable=False)
     full_name = models.CharField(max_length=100)
@@ -403,3 +421,38 @@ class PlayerTask(models.Model):
 
     def __str__(self):
         return self.title
+
+class PlayerAchievement(models.Model):
+    player = models.ForeignKey(Player, related_name='achievements', on_delete=models.CASCADE)
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    date = models.DateField(null=True, blank=True)
+    
+    def __str__(self):
+        return f"{self.player.player_name} - {self.title}"
+
+class PlayerHistory(models.Model):
+    player = models.ForeignKey(Player, related_name='history', on_delete=models.CASCADE)
+    club = models.CharField(max_length=100)
+    start_date = models.DateField()
+    end_date = models.DateField(null=True, blank=True)
+    appearances = models.PositiveIntegerField(default=0)
+    goals = models.PositiveIntegerField(default=0)
+    
+    def __str__(self):
+        return f"{self.player.player_name} at {self.club}"
+
+class SeasonStats(models.Model):
+    player = models.ForeignKey(Player, related_name='season_stats', on_delete=models.CASCADE)
+    season = models.CharField(max_length=9)  # e.g., "2023/2024"
+    competition = models.CharField(max_length=100)  # e.g., "LaLiga", "Champions League"
+    appearances = models.PositiveIntegerField(default=0)
+    goals = models.PositiveIntegerField(default=0)
+    assists = models.PositiveIntegerField(default=0)
+    minutes_played = models.PositiveIntegerField(default=0)
+    
+    class Meta:
+        unique_together = ('player', 'season', 'competition')
+    
+    def __str__(self):
+        return f"{self.player.player_name} - {self.season} {self.competition}"

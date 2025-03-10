@@ -4,242 +4,306 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ player.player_name }} - Real Madrid</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="//unpkg.com/alpinejs" defer></script>
+    <title>{{ player.player_name }} - Player Details</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
     <style>
-        .stat-card {
-            transform: translateY(0);
-            transition: all 0.3s ease;
-            background: linear-gradient(145deg, #ffffff, #f3f4f6);
+        :root {
+            --primary-color: #1e3c72;
+            --secondary-color: #2a5298;
+            --accent-color: #ffd700;
+            --transition: all 0.3s ease;
         }
-        .stat-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-            background: linear-gradient(145deg, #ffffff, #e5e7eb);
+
+        body {
+            background-color: #f8f9fa;
         }
-        .animate-fade-in {
-            animation: fadeIn 0.5s ease-in;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .player-card {
-            background: linear-gradient(to bottom, #1e3a8a, #1d4ed8);
+
+        .player-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
             color: white;
-            position: relative;
+            padding: 3rem 0;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
-        .player-image-container {
-            position: relative;
-            overflow: hidden;
-            height: 450px; /* Increased height */
-        }
-        .player-image-container::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(
-                180deg,
-                rgba(30, 58, 138, 0.1) 0%,
-                rgba(29, 78, 216, 0.4) 100%
-            );
-            z-index: 1;
-        }
-        .player-image-container::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 50%;
-            background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
-            z-index: 2;
-        }
+
         .player-image {
-            width: 100%;
+            max-width: 300px;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            transition: var(--transition);
+            border: 5px solid white;
+        }
+
+        .player-image:hover {
+            transform: scale(1.02);
+        }
+
+        .stats-card {
+            background: white;
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: var(--transition);
+            overflow: hidden;
             height: 100%;
-            object-fit: cover;
-            object-position: top center;
-            transform: scale(1.05);
-            transition: transform 0.5s ease;
         }
-        .player-card:hover .player-image {
-            transform: scale(1.1);
+
+        .stats-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
         }
+
+        .stats-card .card-body {
+            padding: 1.5rem;
+        }
+
+        .stats-card h3 {
+            color: var(--primary-color);
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .achievement-badge {
+            background: linear-gradient(135deg, var(--accent-color), #ffa500);
+            color: #000;
+            padding: 0.7rem 1.2rem;
+            border-radius: 25px;
+            margin: 0.5rem;
+            display: inline-block;
+            transition: var(--transition);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+
+        .achievement-badge:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .section-title {
+            border-left: 6px solid var(--primary-color);
+            padding-left: 1.5rem;
+            margin: 3rem 0 2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .timeline .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: var(--transition);
+            margin-left: 20px;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .timeline .card:hover {
+            transform: translateX(10px);
+        }
+
+        .table {
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+
+        .table thead {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+        }
+
+        .table thead th {
+            border: none;
+            padding: 1rem;
+        }
+
+        .biography-card {
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: var(--transition);
+            background: white;
+            padding: 2rem;
+            line-height: 1.8;
+        }
+
         .player-info {
-            position: relative;
-            z-index: 3;
-            background: linear-gradient(
-                180deg,
-                rgba(30, 58, 138, 0) 0%,
-                rgba(29, 78, 216, 0.9) 100%
-            );
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1.5rem;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .player-info p {
+            margin-bottom: 0.8rem;
+            font-size: 1.1rem;
+        }
+
+        @media (max-width: 768px) {
+            .player-header {
+                padding: 2rem 0;
+            }
+            
+            .stats-card {
+                margin-bottom: 1rem;
+            }
         }
     </style>
 </head>
-<section class="bg-white dark:bg-white-900">
-    <nav id="navbar" x-data="{ isOpen: false }" class="fixed inset-x-0 z-30 w-full p-6 mx-auto lg:flex lg:justify-between lg:items-center bg-white text-[#43526e] transition-transform duration-300 ease-in-out transform top-0">
-        <div class="flex items-center justify-between">
-            <a href="{% url 'index' %}" class="flex items-center">
-                <img class="w-auto h-6 sm:h-7" src="{% static 'madrid_images/real-madrid-logo.png' %}" alt="Real Madrid Logo">
-                <span class="ml-2 lg:ml-6 hover:text-blue-500">REAL MADRID FC</span>
-            </a>
-
-            <!-- Mobile menu button -->
-            <div class="flex lg:hidden">
-                <button x-cloak @click="isOpen = !isOpen" type="button" class="text-[#43526e] hover:text-gray-600 focus:outline-none focus:text-gray-600" aria-label="toggle menu">
-                    <svg x-show="!isOpen" xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 8h16M4 16h16" />
-                    </svg>
-
-                    <svg x-show="isOpen" xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
-            </div>
-        </div>
-
-        <!-- Mobile Menu open: "block", Menu closed: "hidden" -->
-            <div x-cloak :class="[isOpen ? 'translate-x-0 opacity-100 ' : 'opacity-0 -translate-x-full']" class="absolute inset-x-0 z-20 w-full px-6 py-4 transition-all duration-300 ease-in-out bg-white shadow-md lg:bg-transparent lg:shadow-none lg:mt-0 lg:p-0 lg:top-0 lg:relative lg:w-auto lg:opacity-100 lg:translate-x-0 lg:flex lg:items-center text-[#43526e]">
-                <div class="flex flex-col lg:flex-row lg:space-x-4">
-                    <a class="block lg:mx-6 hover:text-blue-500" href="{% url 'player_view' %}">Madridstas</a>
-                    <a class="block lg:mx-6 hover:text-blue-500" href="{% url 'schedule' %}">Tickets</a>
-                    <a class="block lg:mx-6 hover:text-blue-500" href="{% url 'store' %}">Store</a>
-                    <a class="block lg:mx-6 hover:text-blue-500" href="{% url 'previous_results' %}">Results</a>
-                    <a class="block lg:mx-6 hover:text-blue-500" href="{% url 'gamezone' %}">Game Zone</a>
-
+<body>
+    <!-- Player Header Section -->
+    <div class="player-header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-4 text-center">
+                    {% if player.player_image %}
+                        <img src="{{ player.player_image.url }}" alt="{{ player.player_name }}" class="player-image img-fluid mb-3">
+                    {% endif %}
                 </div>
-
-            {% if user_name %}
-            <div x-data="{ isOpenDropdown: false }" class="relative inline-block">
-                <!-- Dropdown toggle button -->
-                <button @click="isOpenDropdown = !isOpenDropdown" class="relative z-10 flex items-center p-2 bg-white focus:outline-none">
-                    <span class="mx-1">{{ user_name }}</span>
-                    <svg class="w-5 h-5 mx-1" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 15.713L18.01 9.70299L16.597 8.28799L12 12.888L7.40399 8.28799L5.98999 9.70199L12 15.713Z" fill="currentColor"></path>
-                    </svg>
-                </button>
-
-                <!-- Dropdown menu -->
-                <div x-show="isOpenDropdown" 
-                    @click.away="isOpenDropdown = false"
-                    x-transition:enter="transition ease-out duration-100"
-                    x-transition:enter-start="opacity-0 scale-90"
-                    x-transition:enter-end="opacity-100 scale-100"
-                    x-transition:leave="transition ease-in duration-100"
-                    x-transition:leave-start="opacity-100 scale-100"
-                    x-transition:leave-end="opacity-0 scale-90"
-                    class="absolute right-0 z-20 w-56 py-2 mt-2 overflow-hidden origin-top-right bg-[#43526e] rounded-md shadow-xl dark:bg-white-800"
-                >
-                    <a href="{% url 'profile' %}" class="block px-4 py-3 text-sm text-gray-600 capitalize transition-colors duration-300 transform dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 dark:hover:text-white">View profile</a>
-                    <hr class="border-gray-200 dark:border-gray-700">
-                    <a href="#" class="block px-4 py-3 text-sm text-gray-600 capitalize transition-colors duration-300 transform dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 dark:hover:text-white">Help</a>
-                    <a href="{% url 'logout' %}" class="block px-4 py-3 text-sm text-gray-600 capitalize transition-colors duration-300 transform dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 dark:hover:text-white">Sign Out</a>
-                </div>
-            </div>
-            {% else %}
-            <a href="{% url 'login' %}" class="block lg:mx-6 hover:text-blue-500">Login</a>
-            {% endif %}
-        </div>
-    </nav>
-    <hr>
-</section>
-
-
-
-
-<script>
-    let lastScrollTop = 0;
-    const navbar = document.getElementById('navbar');
-
-    window.addEventListener('scroll', () => {
-        let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-
-        if (scrollTop > lastScrollTop) {
-            // Scroll down
-            navbar.style.transform = 'translateY(-100%)';
-        } else {
-            // Scroll up
-            navbar.style.transform = 'translateY(0)';
-        }
-        lastScrollTop = scrollTop;
-    });
-</script>
-
-<body class="bg-gradient-to-br from-gray-50 to-gray-200 min-h-screen">
-    <!-- Include your navbar here -->
-    
-    <div class="container mx-auto px-4 py-8 mt-20">
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <!-- Player Profile Card -->
-            <div class="lg:col-span-1 animate-fade-in">
-                <div class="player-card rounded-2xl shadow-2xl overflow-hidden">
-                    <div class="player-image-container">
-                        <img src="{{ player.player_image.url }}" 
-                             alt="{{ player.player_name }}" 
-                             class="player-image">
-                    </div>
-                    <div class="player-info p-8 -mt-20">
-                        <div class="flex items-center justify-between mb-4">
-                            <span class="text-7xl font-bold text-white opacity-90 drop-shadow-lg">#{{ player.jersey_num }}</span>
-                            <span class="text-white bg-blue-500/80 backdrop-blur-sm px-6 py-2 rounded-full text-sm font-semibold shadow-lg">{{ player.player_role }}</span>
+                <div class="col-md-8">
+                    <h1 class="display-4 mb-4">{{ player.player_name }}</h1>
+                    <div class="player-info">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Jersey Number:</strong> #{{ player.jersey_num }}</p>
+                                <p><strong>Position:</strong> {{ player.player_position }}</p>
+                                <p><strong>Role:</strong> {{ player.player_role }}</p>
+                                <p><strong>Nationality:</strong> {{ player.player_country }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Date of Birth:</strong> {{ player.date_of_birth|date:"F j, Y" }}</p>
+                                <p><strong>Height:</strong> {{ player.height }}cm</p>
+                                <p><strong>Weight:</strong> {{ player.weight }}kg</p>
+                                <p><strong>Joined:</strong> {{ player.joined_date|date:"F j, Y" }}</p>
+                            </div>
                         </div>
-                        <h1 class="text-4xl font-bold text-white drop-shadow-lg">{{ player.player_name }}</h1>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Stats and Info -->
-            <div class="lg:col-span-2 space-y-8">
-                <!-- Personal Info -->
-                <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 animate-fade-in" style="animation-delay: 0.2s">
-                    <h2 class="text-2xl font-bold mb-6 text-gray-800">Personal Information</h2>
-                    <div class="grid grid-cols-2 gap-6">
-                        <div class="border-l-4 border-blue-600 pl-4">
-                            <p class="text-gray-500 text-sm">Nationality</p>
-                            <p class="font-bold text-lg text-gray-800">{{ player.nationality }}</p>
-                        </div>
-                        <div class="border-l-4 border-blue-600 pl-4">
-                            <p class="text-gray-500 text-sm">Age</p>
-                            <p class="font-bold text-lg text-gray-800">{{ player.age }}</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Season Stats -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="stat-card rounded-2xl shadow-xl p-8 animate-fade-in" style="animation-delay: 0.4s">
-                        <h3 class="text-gray-500 text-sm uppercase tracking-wider">Appearances</h3>
-                        <p class="text-4xl font-bold text-blue-600 mt-2">{{ player.appearances }}</p>
-                    </div>
-                    <div class="stat-card rounded-2xl shadow-xl p-8 animate-fade-in" style="animation-delay: 0.5s">
-                        <h3 class="text-gray-500 text-sm uppercase tracking-wider">Goals</h3>
-                        <p class="text-4xl font-bold text-blue-600 mt-2">{{ player.goals }}</p>
-                    </div>
-                    <div class="stat-card rounded-2xl shadow-xl p-8 animate-fade-in" style="animation-delay: 0.6s">
-                        <h3 class="text-gray-500 text-sm uppercase tracking-wider">Assists</h3>
-                        <p class="text-4xl font-bold text-blue-600 mt-2">{{ player.assists }}</p>
-                    </div>
-                </div>
-
-                <!-- Career History -->
-                <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 animate-fade-in" style="animation-delay: 0.7s">
-                    <h2 class="text-2xl font-bold mb-6 text-gray-800">Career History</h2>
-                    <div class="space-y-4">
-                        {% for history in player.career_history %}
-                        <div class="flex items-center justify-between p-4 rounded-lg hover:bg-gray-50 transition-colors duration-200">
-                            <span class="font-bold text-gray-800">{{ history.club }}</span>
-                            <span class="text-gray-500 bg-gray-100 px-4 py-1 rounded-full text-sm">{{ history.years }}</span>
-                        </div>
-                        {% endfor %}
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <div class="container my-5">
+        <!-- Career Statistics -->
+        <h2 class="section-title">Career Statistics</h2>
+        <div class="row">
+            <div class="col-md-2 mb-3">
+                <div class="card stats-card text-center">
+                    <div class="card-body">
+                        <h3>{{ player.appearances }}</h3>
+                        <p>Appearances</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2 mb-3">
+                <div class="card stats-card text-center">
+                    <div class="card-body">
+                        <h3>{{ player.goals }}</h3>
+                        <p>Goals</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2 mb-3">
+                <div class="card stats-card text-center">
+                    <div class="card-body">
+                        <h3>{{ player.assists }}</h3>
+                        <p>Assists</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2 mb-3">
+                <div class="card stats-card text-center">
+                    <div class="card-body">
+                        <h3>{{ player.clean_sheets }}</h3>
+                        <p>Clean Sheets</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2 mb-3">
+                <div class="card stats-card text-center">
+                    <div class="card-body">
+                        <h3>{{ player.yellow_cards }}</h3>
+                        <p>Yellow Cards</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2 mb-3">
+                <div class="card stats-card text-center">
+                    <div class="card-body">
+                        <h3>{{ player.red_cards }}</h3>
+                        <p>Red Cards</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Season Statistics -->
+        <h2 class="section-title">Season Statistics</h2>
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Season</th>
+                        <th>Competition</th>
+                        <th>Appearances</th>
+                        <th>Goals</th>
+                        <th>Assists</th>
+                        <th>Minutes Played</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for stat in season_stats %}
+                    <tr>
+                        <td>{{ stat.season }}</td>
+                        <td>{{ stat.competition }}</td>
+                        <td>{{ stat.appearances }}</td>
+                        <td>{{ stat.goals }}</td>
+                        <td>{{ stat.assists }}</td>
+                        <td>{{ stat.minutes_played }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Player History -->
+        <h2 class="section-title">Career History</h2>
+        <div class="timeline">
+            {% for history in player_history %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">{{ history.club }}</h5>
+                    <h6 class="card-subtitle mb-2 text-muted">
+                        {{ history.start_date|date:"Y" }} - {{ history.end_date|date:"Y" }}
+                    </h6>
+                    <p class="card-text">{{ history.description }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Achievements -->
+        <h2 class="section-title">Achievements</h2>
+        <div class="achievements-container">
+            {% for achievement in achievements %}
+            <span class="achievement-badge">
+                {{ achievement.title }} ({{ achievement.year }})
+            </span>
+            {% endfor %}
+        </div>
+
+        <!-- Biography -->
+        <h2 class="section-title">Biography</h2>
+        <div class="card">
+            <div class="card-body">
+                <p class="card-text">{{ player.biography|linebreaks }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js"></script>
 </body>
 </html>

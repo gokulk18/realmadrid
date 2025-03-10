@@ -68,6 +68,164 @@
 .alert-container {
     position: relative;
 }
+
+/* Updated styles for select and options */
+select {
+    color: #000000 !important;
+    background-color: #ffffff !important;
+}
+
+select option {
+    color: #000000 !important;
+    background-color: #ffffff !important;
+    padding: 8px !important;
+}
+
+/* Additional specific styles */
+#position {
+    color: #000000 !important;
+}
+
+#position option {
+    color: #000000 !important;
+    background-color: #ffffff !important;
+    padding: 8px !important;
+}
+
+/* Style for when option is selected/hovered */
+#position option:checked,
+#position option:hover {
+    background-color: #e5e7eb !important;
+    color: #000000 !important;
+}
+
+/* Style for the select when opened */
+#position:focus {
+    color: #000000 !important;
+    background-color: #ffffff !important;
+}
+
+/* Style for the dropdown menu */
+select::-ms-expand {
+    background-color: #333333;
+}
+
+select:-moz-focusring {
+    color: transparent !important;
+    text-shadow: 0 0 0 #000 !important;
+}
+
+/* Additional specific styles for preferred foot dropdown as well */
+#preferred_foot option {
+    color: #000000 !important;
+    background-color: #ffffff !important;
+    padding: 8px !important;
+}
+
+/* Style for when option is selected/hovered */
+#preferred_foot option:checked,
+#preferred_foot option:hover {
+    background-color: #e5e7eb !important;
+    color: #000000 !important;
+}
+
+/* Style for the select when opened */
+#preferred_foot:focus {
+    color: #000000 !important;
+    background-color: #ffffff !important;
+}
+
+/* Ensure black text for all dropdown options */
+select option:not(:checked) {
+    color: #000000 !important;
+}
+
+/* Modern Card Styles */
+.form-card {
+    background: linear-gradient(145deg, #ffffff, #f5f7fa);
+    border-radius: 20px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    backdrop-filter: blur(10px);
+}
+
+.form-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.12);
+}
+
+/* Modern Input Styles */
+.modern-input {
+    background: #f8fafc;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    width: 100%;
+}
+
+.modern-input:focus {
+    background: #fff;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+    outline: none;
+}
+
+/* Select Dropdown Styling */
+.modern-select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236B7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+    background-position: right 12px center;
+    background-repeat: no-repeat;
+    background-size: 20px;
+    padding-right: 40px !important;
+}
+
+/* Card Headers */
+.card-header {
+    position: relative;
+    padding-bottom: 12px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.card-header::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 60px;
+    height: 2px;
+    background: #3b82f6;
+}
+
+/* Form Labels */
+.form-label {
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 8px;
+    display: block;
+    font-size: 0.9rem;
+}
+
+/* Submit Button Enhancement */
+.submit-btn {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    padding: 14px 28px;
+    border-radius: 12px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2);
+}
+
+.submit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px -2px rgba(59, 130, 246, 0.3);
+}
 </style>
 
 <script>
@@ -283,374 +441,372 @@
     </div>
 </header>
 
-            <main class="flex-1 overflow-y-auto">
-                <div class="px-4  sm:px-6">
-                    <div>
-                        <h1 class="text-2xl font-low text-gray-700 sm:text-1xl">    Dashboard
-</h1>
-
-                        <div class="hidden  overflow-y-auto text-sm lg:items-center lg:flex whitespace-nowrap">
-                            <a href="index.html#" class="text-gray-600 hover:underline">
-                                Pages
-                            </a>
-
-                            <span class="mx-1 text-gray-500">
-                                /
-                            </span>
-
-                            <a href="index.html#" class="text-indigo-600 hover:underline">
-                                    Add Member
-                            </a>
-                        </div>
-                    </div>
-                    <br>
-
-                    <body>
+            <main class="flex-1 overflow-y-auto bg-gray-50">
+                <div class="px-4 sm:px-6">
+                    <div class="container mx-auto py-8">
                         {% if messages %}
-                        <div class="alert-container">
+                        <div class="alert-container mb-6">
                             {% for message in messages %}
                                 {% if 'add_player' in message.tags %}
-                                    <div class="alert {{ message.tags }}">
+                                    <div class="alert {{ message.tags }} transform transition-all duration-300 hover:scale-102">
                                         {{ message }}
                                     </div>
                                 {% endif %}
                             {% endfor %}
                         </div>
-                    {% endif %}
-    
+                        {% endif %}
 
+                        <!-- Modern Tabs -->
+                        <div class="tabs bg-white rounded-xl shadow-md mb-8 p-1 inline-flex gap-2">
+                            <a href="{% url 'admin_add_player' %}" class="tab active font-semibold px-6 py-3 rounded-lg transition-all duration-300" id="addMemberTab">Add Member</a>
+                            <a href="{% url 'admin_squad_list' %}" class="tab font-semibold px-6 py-3 rounded-lg transition-all duration-300" id="">Show Squad</a>
+                        </div>
 
-                      <div class="tabs">
-                        <a href="{% url 'admin_add_player' %}" class="tab active" id="addMemberTab">Add Member</a>
-                        <a href="{% url 'admin_squad_list' %}" class="tab" id="">Show Squad</a>
-                    </div>
-                    
-                      <br>
-                      <br>
-                      <div class="container text-center">
-                        <div class="row">
-                            <div class="col-sm-8">
-                                <h1 class="text-2xl font-semibold text-center text-[#0F2145] capitalize lg:text-3xl dark:text-[#0F2145]">Add Player Details</h1>
-                                <br>
-                            
-                                <section class="max-w-4xl p-6 mx-auto bg-white rounded-md shadow-md dark:bg-gray-800">
-                                    <br>
-                                    <form id="add-player-form" action="{% url 'add_player' %}" method="post" enctype="multipart/form-data">
-                                        {% csrf_token %}
-                                        <div class="max-w-xs space-y-6 mt-4 mx-auto">
-                                            <div class="flex flex-col">
-                                                <label class="text-gray-700 dark:text-gray-200 mb-1" for="jersey_num" style="text-align: left;">Player Jersey Number:                                                <span id="err_jersey_num" class="text-red-600"></span>
-                                                </label>
-                                                <input id="jersey_num" name="jersey_num" type="text" placeholder="enter player jersey number" class="input input-bordered input-primary w-full rounded-lg" />
-                                            </div>
-                                    
-                                            <div class="flex flex-col">
-                                                <label class="text-gray-700 dark:text-gray-200 mb-1" for="player_name" style="text-align: left;">Player Name:                                                <span id="err_player_name" class="text-red-600"></span>
-                                                </label>
-                                                <input id="player_name" name="player_name" type="text" placeholder="enter player name" class="input input-bordered input-primary w-full rounded-lg" />
-                                            </div>
-                                    
-                                            <div class="flex flex-col">
-                                                <label class="text-gray-700 dark:text-gray-200 mb-1" for="player_country" style="text-align: left;">Player Country:                                                <span id="err_player_country" class="text-red-600"></span>
-                                                </label>
-                                                <input id="player_country" name="player_country" type="text" placeholder="enter player country" class="input input-bordered input-primary w-full rounded-lg" />
-                                            </div>
-                                    
-                                            <div class="flex flex-col">
-                                                <label class="text-gray-700 dark:text-gray-200 mb-1" for="player_position" style="text-align: left;">
-                                                    Player Position:
-                                                    <span id="err_player_position" class="text-red-600"></span>
-                                                </label>
-                                                <select id="player_position" name="player_position" class="input input-bordered input-primary w-full rounded-lg">
-                                                    <option value="" disabled selected>Choose...</option>
-                                                    {% if position_list %}
-                                                    {% for position in position_list %}
-                                                         <option value="{{ position.id }}">{{ position.position }}</option>
-                                                    {% endfor %}
-                                                    {% endif %}
-
-                                                </select>
-                                            </div>
-                                            
-                                    
-                                            <div class="flex flex-col">
-                                                <label class="text-gray-700 dark:text-gray-200 mb-1" for="player_role" style="text-align: left;">Player Role:                                                <span id="err_player_role" class="text-red-600"></span>
-                                                </label>
-                                                <input id="player_role" name="player_role" type="text" placeholder="enter player role" class="input input-bordered input-primary w-full rounded-lg" />
-                                            </div>
-                                    
-                                            <div class="flex flex-col">
-                                                <label for="player_image" class="form-label" style="text-align: left;">Add Player Image:                                                <span id="err_player_image" class="text-red-600"></span>
-                                                </label>
-                                                <input class="form-control" name="player_image" type="file" id="player_image">
-                                            </div>
-                                    
-                                            <div class="flex justify-center mt-6">
-                                                <input type="submit" id="submitBtn" name="submit1" value="Add Player" class="btn btn-primary" />
-                                            </div>
+                        <!-- Main content grid with improved spacing -->
+                        <div class="grid grid-cols-1 gap-8">
+                            <form id="playerForm" enctype="multipart/form-data">
+                                {% csrf_token %}
+                                
+                                <!-- Basic Player Information -->
+                                <div class="form-card p-8 mb-8">
+                                    <div class="card-header">
+                                        <h3 class="text-xl font-semibold text-gray-800">Basic Information</h3>
+                                    </div>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="form-label">Jersey Number</label>
+                                            <input type="text" id="jersey_num" name="jersey_num" required class="modern-input">
                                         </div>
-                                    </form>
-                                    
-                                </section>
-                            </div>
-                          <div class="col-sm-4">
-                            <h1 class="text-2xl font-semibold text-center text-[#0F2145] capitalize lg:text-3xl dark:text-[#0F2145]"> Add Position</h1>
-                            <br>
-                            <section class="max-w-4xl p-6 mx-auto bg-white rounded-md shadow-md dark:bg-gray-800">
-                                <br>
-                                <form method="post" action="{% url 'add_position' %}">
-                                    {% csrf_token %}
-                                    <div class="max-w-xs space-y-6 mt-4 mx-auto">
-                                        <div class="flex flex-col">
-                                            <label class="text-gray-700 dark:text-gray-200 mb-1 text-align:left" for="position" style="text-align: left;">
-                                                Add position: <span class="text-red-600" id="err_position">Position must be in alphabets</span>
-                                            </label>
-                                            <input id="position" name="position" type="text" placeholder="Enter player position" class="input input-bordered input-primary w-full rounded-lg" />
+                                        <div>
+                                            <label class="form-label">Player Name</label>
+                                            <input type="text" id="player_name" name="player_name" required class="modern-input">
                                         </div>
-                                        <div class="flex justify-center mt-6">
-                                            <input type="submit" id="submitBtn2" name="submit2" value="Add Position" class="btn btn-primary" disabled />
+                                        <div>
+                                            <label class="form-label">Country</label>
+                                            <input type="text" id="player_country" name="player_country" required class="modern-input">
+                                        </div>
+                                        <div>
+                                            <label class="form-label">Position</label>
+                                            <select id="player_position" name="player_position" required class="modern-input modern-select">
+                                                {% for position in positions %}
+                                                    <option value="{{ position.id }}">{{ position.position }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="form-label">Role</label>
+                                            <input type="text" id="player_role" name="player_role" required class="modern-input">
+                                        </div>
+                                        <div>
+                                            <label class="form-label">Player Image</label>
+                                            <input type="file" id="player_image" name="player_image" accept="image/*" class="modern-input">
                                         </div>
                                     </div>
-                                </form>
+                                </div>
 
-                            </section>
-                            <br>
-                            <section class="container px-4 mx-auto">
-                            <h1 class="text-2xl font-semibold text-center text-[#0F2145] capitalize lg:text-3xl dark:text-[#0F2145]">Positions Added</h1>
-                                            
-                                <div class="flex flex-col mt-6">
-                                    <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-                                        <div class="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
-                                            <div class="overflow-hidden border border-gray-200 dark:border-gray-700 md:rounded-lg">
-                            
-                                                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                                                    <thead class="bg-gray-50 dark:bg-gray-800">
-                                                        <tr>
-                                                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                                                Position
-                                                            </th>
-                                                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                                                Action
-                                                            </th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody class="bg-white dark:bg-gray-900">
-                                                        {% if position_list %}
-                                                            {% for position in position_list %}
-                                                                <tr>
-                                                                    <td class="px-4 py-4 text-sm font-medium whitespace-nowrap">
-                                                                        {{ position.position }}
-                                                                    </td>
-                                                                    <td class="px-4 py-4 text-sm font-medium whitespace-nowrap">
-                                                                        <div class="inline px-3 py-1 text-sm font-normal rounded-full text-emerald-500 gap-x-2 bg-emerald-100/60 dark:bg-gray-800">
-                                                                            <input type="button" class="btn btn-danger" value="Edit">
-                                                                        </div>
-                                                                    </td>
-                                                                </tr>
-                                                            {% endfor %}
-                                                        {% else %}
-                                                            <tr>
-                                                                <td class="px-4 py-4 text-sm font-medium text-center" colspan="2">No positions available</td>
-                                                            </tr>
-                                                        {% endif %}
-                                                    </tbody>
-                                                </table>
+                                <!-- Physical Information -->
+                                <div class="form-card p-8 mb-8">
+                                    <div class="card-header">
+                                        <h3 class="text-xl font-semibold text-gray-800">Physical Information</h3>
+                                    </div>
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div>
+                                            <label class="form-label">Date of Birth</label>
+                                            <input type="date" id="date_of_birth" name="date_of_birth" class="modern-input">
+                                        </div>
+                                        <div>
+                                            <label class="form-label">Height (m)</label>
+                                            <input 
+                                                type="number" 
+                                                step="0.01" 
+                                                min="0" 
+                                                max="3" 
+                                                id="height" 
+                                                name="height" 
+                                                placeholder="1.80"
+                                                class="modern-input"
+                                                onchange="this.value = parseFloat(this.value).toFixed(2)"
+                                            >
+                                        </div>
+                                        <div>
+                                            <label class="form-label">Weight (kg)</label>
+                                            <input 
+                                                type="number" 
+                                                step="0.01" 
+                                                min="0" 
+                                                max="150" 
+                                                id="weight" 
+                                                name="weight" 
+                                                placeholder="75.00"
+                                                class="modern-input"
+                                                onchange="this.value = parseFloat(this.value).toFixed(2)"
+                                            >
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Statistics -->
+                                <div class="form-card p-8 mb-8">
+                                    <div class="card-header">
+                                        <h3 class="text-xl font-semibold text-gray-800">Career Statistics</h3>
+                                    </div>
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div>
+                                            <label class="form-label">Appearances</label>
+                                            <input type="number" id="appearances" name="appearances" value="0" class="modern-input">
+                                        </div>
+                                        <div>
+                                            <label class="form-label">Goals</label>
+                                            <input type="number" id="goals" name="goals" value="0" class="modern-input">
+                                        </div>
+                                        <div>
+                                            <label class="form-label">Assists</label>
+                                            <input type="number" id="assists" name="assists" value="0" class="modern-input">
+                                        </div>
+                                        <div>
+                                            <label class="form-label">Clean Sheets</label>
+                                            <input type="number" id="clean_sheets" name="clean_sheets" value="0" class="modern-input">
+                                        </div>
+                                        <div>
+                                            <label class="form-label">Yellow Cards</label>
+                                            <input type="number" id="yellow_cards" name="yellow_cards" value="0" class="modern-input">
+                                        </div>
+                                        <div>
+                                            <label class="form-label">Red Cards</label>
+                                            <input type="number" id="red_cards" name="red_cards" value="0" class="modern-input">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Contract Information -->
+                                <div class="form-card p-8 mb-8">
+                                    <div class="card-header">
+                                        <h3 class="text-xl font-semibold text-gray-800">Contract Information</h3>
+                                    </div>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="form-label">Joined Date</label>
+                                            <input type="date" id="joined_date" name="joined_date" class="modern-input">
+                                        </div>
+                                        <div>
+                                            <label class="form-label">Contract End Date</label>
+                                            <input type="date" id="contract_end_date" name="contract_end_date" class="modern-input">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Biography -->
+                                <div class="form-card p-8 mb-8">
+                                    <div class="card-header">
+                                        <h3 class="text-xl font-semibold text-gray-800">Biography</h3>
+                                    </div>
+                                    <div>
+                                        <label class="form-label">Player Biography</label>
+                                        <textarea id="biography" name="biography" rows="4" class="modern-input"></textarea>
+                                    </div>
+                                </div>
+
+                                <!-- Season Stats -->
+                                <div class="form-card p-8 mb-8">
+                                    <div class="card-header">
+                                        <h3 class="text-xl font-semibold text-gray-800">Current Season Statistics</h3>
+                                    </div>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="form-label">Season</label>
+                                            <input type="text" id="season" name="season" placeholder="2023/2024" class="modern-input">
+                                        </div>
+                                        <div>
+                                            <label class="form-label">Competition</label>
+                                            <input type="text" id="competition" name="competition" placeholder="LaLiga" class="modern-input">
+                                        </div>
+                                        <div>
+                                            <label class="form-label">Minutes Played</label>
+                                            <input type="number" id="minutes_played" name="minutes_played" value="0" class="modern-input">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Add this after the Season Stats section and before the Submit Button -->
+                                <div class="form-card p-8 mb-8">
+                                    <div class="card-header">
+                                        <h3 class="text-xl font-semibold text-gray-800">Player Achievements</h3>
+                                    </div>
+                                    <div class="achievement-container">
+                                        <div class="achievement-fields mb-4">
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div>
+                                                    <label class="form-label">Achievement Title</label>
+                                                    <input type="text" 
+                                                           id="achievement_title" 
+                                                           name="achievement_title" 
+                                                           class="modern-input" 
+                                                           placeholder="e.g., Champions League Winner">
+                                                </div>
+                                                <div>
+                                                    <label class="form-label">Achievement Date</label>
+                                                    <input type="date" 
+                                                           id="achievement_date" 
+                                                           name="achievement_date" 
+                                                           class="modern-input">
+                                                </div>
+                                                <div class="md:col-span-2">
+                                                    <label class="form-label">Achievement Description</label>
+                                                    <textarea id="achievement_description" 
+                                                            name="achievement_description" 
+                                                            class="modern-input" 
+                                                            rows="3" 
+                                                            placeholder="Describe the achievement..."></textarea>
+                                                </div>
+                                            </div>
+                                            <div class="flex justify-end mt-4">
+                                                <button type="button" 
+                                                        id="addMoreAchievement" 
+                                                        class="px-4 py-2 text-sm text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 transition-colors">
+                                                    + Add Another Achievement
+                                                </button>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
 
-                            
-                                <script>
-                                    $(document).ready(function() {
-                                        // Function to enable or disable the submit button
-                                        function toggleSubmitButton() {
-                                            var position = $('#position').val().trim();
-                                            var isValid = /^[a-zA-Z\s]+$/.test(position); // Check if position contains only alphabets and spaces
-                            
-                                            if (isValid) {
-                                                $('#submitBtn2').prop('disabled', false);
-                                                $('#err_position').hide(); // Hide error message if valid
-                                            } else {
-                                                $('#submitBtn2').prop('disabled', true);
-                                                if (position.length > 0) { // Show error message only if there's input
-                                                    $('#err_position').show();
-                                                } else {
-                                                    $('#err_position').hide(); // Hide error message if input is empty
-                                                }
-                                            }
-                                        }
-                            
-                                        // Initial call to hide error messages and set button state
-                                        $('#err_position').hide();
-                            
-                                        // Event listener for position input
-                                        $('#position').on('input', function() {
-                                            toggleSubmitButton();
-                                        });
-                                    });
-                                </script>
-                                <script>
-                                    $(document).ready(function() {
-                                        // Function to disable error messages
-                                        function disableErrorMessages() {
-                                            $('#err_jersey_num').text('');
-                                            $('#err_player_name').text('');
-                                            $('#err_player_country').text('');
-                                            $('#err_player_position').text('');
-                                            $('#err_player_role').text('');
-                                            $('#err_player_image').text('');
-                                        }
-                                    
-                                        // Function to enable or disable the submit button
-                                        function toggleSubmitButton() {
-                                            var isValid = true;
-                                    
-                                            var jerseyNum = $('#jersey_num').val().trim();
-                                            var playerName = $('#player_name').val().trim();
-                                            var playerCountry = $('#player_country').val().trim();
-                                            var playerPosition = $('#player_position').val();
-                                            var playerRole = $('#player_role').val().trim();
-                                            var playerImage = $('#player_image').val();
-                                    
-                                            if (jerseyNum.length === 0 || playerName.length === 0 || playerCountry.length === 0 || playerPosition === "" || playerRole.length === 0 || !playerImage) {
-                                                isValid = false;
-                                            } else if (!validateJerseyNum(jerseyNum) || !validateAlpha(playerName) || !validateAlpha(playerCountry) || !validateAlpha(playerRole) || !validateImage(playerImage)) {
-                                                isValid = false;
-                                            }
-                                    
-                                            $('#submitBtn').prop('disabled', !isValid);
-                                        }
-                                    
-                                        disableErrorMessages(); // Call this to disable error messages initially
-                                    
-                                        $('#jersey_num').keyup(function() {
-                                            var jerseyNum = $(this).val().trim();
-                                            if (jerseyNum.length === 0) {
-                                                $('#err_jersey_num').text('Jersey number is required');
-                                            } else if (!validateJerseyNum(jerseyNum)) {
-                                                $('#err_jersey_num').text('Jersey number must contain only numbers');
-                                            } else {
-                                                $('#err_jersey_num').text('');
-                                            }
-                                            toggleSubmitButton();
-                                        });
-                                    
-                                        $('#player_name').keyup(function() {
-                                            var playerName = $(this).val().trim();
-                                            if (playerName.length === 0) {
-                                                $('#err_player_name').text('Player name is required');
-                                            } else if (!validateAlpha(playerName)) {
-                                                $('#err_player_name').text('Player name must contain only alphabets');
-                                            } else {
-                                                $('#err_player_name').text('');
-                                            }
-                                            toggleSubmitButton();
-                                        });
-                                    
-                                        $('#player_country').keyup(function() {
-                                            var playerCountry = $(this).val().trim();
-                                            if (playerCountry.length === 0) {
-                                                $('#err_player_country').text('Player country is required');
-                                            } else if (!validateAlpha(playerCountry)) {
-                                                $('#err_player_country').text('Player country must contain only alphabets');
-                                            } else {
-                                                $('#err_player_country').text('');
-                                            }
-                                            toggleSubmitButton();
-                                        });
-                                    
-                                        $('#player_position').change(function() {
-                                            var playerPosition = $(this).val();
-                                            if (playerPosition === "") {
-                                                $('#err_player_position').text('Player position is required');
-                                            } else {
-                                                $('#err_player_position').text('');
-                                            }
-                                            toggleSubmitButton();
-                                        });
-                                    
-                                        $('#player_role').keyup(function() {
-                                            var playerRole = $(this).val().trim();
-                                            if (playerRole.length === 0) {
-                                                $('#err_player_role').text('Player role is required');
-                                            } else if (!validateAlpha(playerRole)) {
-                                                $('#err_player_role').text('Player role must contain only alphabets');
-                                            } else {
-                                                $('#err_player_role').text('');
-                                            }
-                                            toggleSubmitButton();
-                                        });
-                                    
-                                        $('#player_image').change(function() {
-                                            var playerImage = $(this).val();
-                                            if (!validateImage(playerImage)) {
-                                                $('#err_player_image').text('Invalid image file. Allowed formats: jpg, jpeg, png');
-                                            } else {
-                                                $('#err_player_image').text('');
-                                            }
-                                            toggleSubmitButton();
-                                        });
-                                    
-                                        // Form submission handling
-                                        $('#add-player-form').submit(function(event) {
-                                            event.preventDefault(); // Prevent default form submission
-                                    
-                                            var jerseyNum = $('#jersey_num').val().trim();
-                                            var playerName = $('#player_name').val().trim();
-                                            var playerCountry = $('#player_country').val().trim();
-                                            var playerPosition = $('#player_position').val();
-                                            var playerRole = $('#player_role').val().trim();
-                                            var playerImage = $('#player_image').val();
-                                    
-                                            // Perform final validation before submission
-                                            if (jerseyNum.length === 0 || playerName.length === 0 || playerCountry.length === 0 || playerPosition === "" || playerRole.length === 0 || !playerImage ||
-                                                !validateJerseyNum(jerseyNum) || !validateAlpha(playerName) || !validateAlpha(playerCountry) || !validateAlpha(playerRole) || !validateImage(playerImage)) {
-                                                alert('Please complete all required fields correctly.');
-                                                return;
-                                            }
-                                    
-                                            // Submit the form via AJAX or perform further processing
-                                            $.ajax({
-                                                url: $(this).attr('action'),
-                                                type: $(this).attr('method'),
-                                                data: new FormData(this), // Include file data
-                                                contentType: false,
-                                                processData: false,
-                                                success: function(response) {
-                                                    // Handle success response
-                                                    alert('Player added successfully!');
-                                                    // Optionally redirect to another page
-                                                    window.location.href = '/admin_add_player'; // Update with actual redirect URL
-                                                },
-                                                error: function(xhr, status, error) {
-                                                    // Handle error response
-                                                    console.error('Error submitting form:', error);
-                                                    alert('Failed to add player. Please try again later.');
-                                                }
-                                            });
-                                        });
-                                    
-                                        function validateJerseyNum(num) {
-                                            var re = /^\d+$/; // Only numeric values
-                                            return re.test(num);
-                                        }
-                                    
-                                        function validateAlpha(str) {
-                                            var re = /^[a-zA-Z]+$/; // Only alphabets
-                                            return re.test(str);
-                                        }
-                                    
-                                        function validateImage(file) {
-                                            var allowedExtensions = ['jpg', 'jpeg', 'png'];
-                                            var fileExtension = file.split('.').pop().toLowerCase();
-                                            return allowedExtensions.includes(fileExtension);
-                                        }
-                                    });
-                                    </script>
-                                    
-                            </body>
-                            </html>
+                                <!-- Submit Button -->
+                                <div class="flex justify-center mt-10">
+                                    <button type="submit" id="submitBtn" class="submit-btn">
+                                        Add Player
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Add this JavaScript before the closing body tag -->
+    <script>
+    document.getElementById('submitBtn').addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        // Create FormData object
+        const formData = new FormData();
+        
+        // Add all form fields to FormData
+        formData.append('jersey_num', document.getElementById('jersey_num').value);
+        formData.append('player_name', document.getElementById('player_name').value);
+        formData.append('player_country', document.getElementById('player_country').value);
+        formData.append('player_position', document.getElementById('player_position').value);
+        formData.append('player_role', document.getElementById('player_role').value);
+        formData.append('date_of_birth', document.getElementById('date_of_birth').value);
+        formData.append('height', document.getElementById('height').value);
+        formData.append('weight', document.getElementById('weight').value);
+        formData.append('appearances', document.getElementById('appearances').value);
+        formData.append('goals', document.getElementById('goals').value);
+        formData.append('assists', document.getElementById('assists').value);
+        formData.append('clean_sheets', document.getElementById('clean_sheets').value);
+        formData.append('yellow_cards', document.getElementById('yellow_cards').value);
+        formData.append('red_cards', document.getElementById('red_cards').value);
+        formData.append('joined_date', document.getElementById('joined_date').value);
+        formData.append('contract_end_date', document.getElementById('contract_end_date').value);
+        formData.append('biography', document.getElementById('biography').value);
+        formData.append('season', document.getElementById('season').value);
+        formData.append('competition', document.getElementById('competition').value);
+        formData.append('minutes_played', document.getElementById('minutes_played').value);
+        
+        // Handle file upload
+        const imageFile = document.getElementById('player_image').files[0];
+        if (imageFile) {
+            formData.append('player_image', imageFile);
+        }
+
+        // Add achievements
+        const achievements = [];
+        const achievementTitles = document.querySelectorAll('[name="achievement_title"]');
+        const achievementDates = document.querySelectorAll('[name="achievement_date"]');
+        const achievementDescriptions = document.querySelectorAll('[name="achievement_description"]');
+
+        for (let i = 0; i < achievementTitles.length; i++) {
+            if (achievementTitles[i].value) {  // Only add if title exists
+                achievements.push({
+                    title: achievementTitles[i].value,
+                    date: achievementDates[i].value,
+                    description: achievementDescriptions[i].value
+                });
+            }
+        }
+
+        formData.append('achievements', JSON.stringify(achievements));
+
+        // Send POST request to your backend
+        fetch('{% url "admin_add_player" %}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Player and achievements added successfully!');
+                window.location.href = '{% url "admin_squad_list" %}';
+            } else {
+                alert('Error: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while adding the player');
+        });
+    });
+
+    // Add dynamic achievement fields
+    document.getElementById('addMoreAchievement').addEventListener('click', function() {
+        const container = document.querySelector('.achievement-container');
+        const newFields = document.createElement('div');
+        newFields.className = 'achievement-fields mb-4 pt-4 border-t border-gray-200';
+        newFields.innerHTML = `
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="form-label">Achievement Title</label>
+                    <input type="text" 
+                           name="achievement_title" 
+                           class="modern-input" 
+                           placeholder="e.g., Champions League Winner">
+                </div>
+                <div>
+                    <label class="form-label">Achievement Date</label>
+                    <input type="date" 
+                           name="achievement_date" 
+                           class="modern-input">
+                </div>
+                <div class="md:col-span-2">
+                    <label class="form-label">Achievement Description</label>
+                    <textarea name="achievement_description" 
+                            class="modern-input" 
+                            rows="3" 
+                            placeholder="Describe the achievement..."></textarea>
+                </div>
+            </div>
+            <div class="flex justify-end mt-2">
+                <button type="button" 
+                        class="remove-achievement px-4 py-2 text-sm text-red-600 border border-red-600 rounded-lg hover:bg-red-50 transition-colors">
+                    Remove
+                </button>
+            </div>
+        `;
+
+        container.appendChild(newFields);
+
+        // Add remove functionality
+        newFields.querySelector('.remove-achievement').addEventListener('click', function() {
+            newFields.remove();
+        });
+    });
+    </script>
+</body>
+</html>
 
                       
                      

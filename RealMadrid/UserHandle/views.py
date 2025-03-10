@@ -56,6 +56,7 @@ from PIL import Image
 from .models import UploadedImage  # Assuming you have a model for storing images
 from .models import IdentifyPlayer
 from django.utils.html import strip_tags
+from .models import Player, SeasonStats, PlayerHistory, PlayerAchievement
 
 
 
@@ -1746,10 +1747,123 @@ def admin_add_subcategory(request):
 
     return render(request, 'admin_add_subcategory.html', {'category_list': categories})
 
-@never_cache
+
+from decimal import Decimal, InvalidOperation
+from django.core.exceptions import ValidationError
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.shortcuts import render
+from .models import Player, Position, SeasonStats  # Added SeasonStats import
+import logging
+logger = logging.getLogger(__name__)
+
+@csrf_exempt
 def admin_add_player(request):
+    if request.method == 'POST':
+        try:
+            # Helper function to convert to Decimal or None
+            def to_decimal(value):
+                if not value or value == '':
+                    return None
+                try:
+                    # Replace comma with dot if present and strip any spaces
+                    cleaned_value = str(value).replace(',', '.').strip()
+                    return Decimal(cleaned_value)
+                except (InvalidOperation, ValueError):
+                    logger.error(f"Invalid decimal value: {value}")
+                    return None
+
+            # Log the incoming data for debugging
+            logger.info(f"Height value received: {request.POST.get('height')}")
+            logger.info(f"Weight value received: {request.POST.get('weight')}")
+
+            # Convert height and weight first
+            height = to_decimal(request.POST.get('height'))
+            weight = to_decimal(request.POST.get('weight'))
+
+            # Create new player object
+            player = Player(
+                jersey_num=request.POST.get('jersey_num'),
+                player_name=request.POST.get('player_name'),
+                player_country=request.POST.get('player_country'),
+                player_position=Position.objects.get(id=request.POST.get('player_position')),
+                player_role=request.POST.get('player_role'),
+                date_of_birth=request.POST.get('date_of_birth') or None,
+                height=height,
+                weight=weight,
+                appearances=int(request.POST.get('appearances') or 0),
+                goals=int(request.POST.get('goals') or 0),
+                assists=int(request.POST.get('assists') or 0),
+                clean_sheets=int(request.POST.get('clean_sheets') or 0),
+                yellow_cards=int(request.POST.get('yellow_cards') or 0),
+                red_cards=int(request.POST.get('red_cards') or 0),
+                biography=request.POST.get('biography', ''),
+                joined_date=request.POST.get('joined_date') or None,
+                contract_end_date=request.POST.get('contract_end_date') or None,
+            )
+
+            if 'player_image' in request.FILES:
+                player.player_image = request.FILES['player_image']
+
+            player.save()
+
+            # Create season stats if provided
+            season = request.POST.get('season')
+            competition = request.POST.get('competition')
+            if season and competition:
+                SeasonStats.objects.create(
+                    player=player,
+                    season=season,
+                    competition=competition,
+                    appearances=int(request.POST.get('appearances') or 0),
+                    goals=int(request.POST.get('goals') or 0),
+                    assists=int(request.POST.get('assists') or 0),
+                    minutes_played=int(request.POST.get('minutes_played') or 0)
+                )
+            
+            # Handle achievements
+            achievements = json.loads(request.POST.get('achievements', '[]'))
+            for achievement in achievements:
+                PlayerAchievement.objects.create(
+                    player=player,  # player object from your existing code
+                    title=achievement['title'],
+                    description=achievement['description'],
+                    date=achievement['date'] if achievement['date'] else None
+                )
+
+            return JsonResponse({'success': True})
+        except InvalidOperation as e:
+            logger.error(f"Invalid decimal operation: {str(e)}")
+            return JsonResponse({
+                'success': False, 
+                'error': f'Please enter valid numbers for height and weight: {str(e)}'
+            })
+        except ValueError as e:
+            logger.error(f"Value error: {str(e)}")
+            return JsonResponse({
+                'success': False, 
+                'error': f'Invalid number format: {str(e)}'
+            })
+        except ValidationError as e:
+            logger.error(f"Validation error: {str(e)}")
+            return JsonResponse({
+                'success': False, 
+                'error': f'Validation error: {str(e)}'
+            })
+        except Exception as e:
+            logger.error(f"Unexpected error: {str(e)}")
+            return JsonResponse({
+                'success': False, 
+                'error': f'An unexpected error occurred: {str(e)}'
+            })
+    
+    # For GET requests, render the template
     positions = Position.objects.all()
-    return render(request, 'admin_add_player.html', {'position_list': positions})
+    return render(request, 'admin_add_player.html', {'positions': positions})
+
+
+
+
 
 def admin_view_store(request):
     # Fetch all categories
@@ -3138,5 +3252,82 @@ def process_ticket_payment(request, order_number):
 
 
 def player_detail(request, player_id):
+    # Fetch the player and related data
     player = get_object_or_404(Player, id=player_id)
-    return render(request, 'player_detail.html', {'player': player})
+    season_stats = SeasonStats.objects.filter(player=player)
+    player_history = PlayerHistory.objects.filter(player=player)
+    achievements = PlayerAchievement.objects.filter(player=player)
+    
+    context = {
+        'player': player,
+        'season_stats': season_stats,
+        'player_history': player_history,
+        'achievements': achievements,
+    }
+    return render(request, 'player_detail.html', context)
+
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from .models import Player, Position
+
+@csrf_exempt
+def admin_add_player(request):
+    if request.method == 'POST':
+        try:
+            # Create new player object
+            player = Player(
+                jersey_num=request.POST.get('jersey_num'),
+                player_name=request.POST.get('player_name'),
+                player_country=request.POST.get('player_country'),
+                player_position=Position.objects.get(id=request.POST.get('player_position')),
+                player_role=request.POST.get('player_role'),
+                date_of_birth=request.POST.get('date_of_birth') or None,
+                height=request.POST.get('height') or None,
+                weight=request.POST.get('weight') or None,
+                appearances=request.POST.get('appearances', 0),
+                goals=request.POST.get('goals', 0),
+                assists=request.POST.get('assists', 0),
+                clean_sheets=request.POST.get('clean_sheets', 0),
+                yellow_cards=request.POST.get('yellow_cards', 0),
+                red_cards=request.POST.get('red_cards', 0),
+                biography=request.POST.get('biography', ''),
+                joined_date=request.POST.get('joined_date') or None,
+                contract_end_date=request.POST.get('contract_end_date') or None,
+            )
+
+            if 'player_image' in request.FILES:
+                player.player_image = request.FILES['player_image']
+
+            player.save()
+
+            # Create season stats if provided
+            season = request.POST.get('season')
+            competition = request.POST.get('competition')
+            if season and competition:
+                SeasonStats.objects.create(
+                    player=player,
+                    season=season,
+                    competition=competition,
+                    appearances=request.POST.get('appearances', 0),
+                    goals=request.POST.get('goals', 0),
+                    assists=request.POST.get('assists', 0),
+                    minutes_played=request.POST.get('minutes_played', 0)
+                )
+            
+            # Handle achievements
+            achievements = json.loads(request.POST.get('achievements', '[]'))
+            for achievement in achievements:
+                PlayerAchievement.objects.create(
+                    player=player,  # player object from your existing code
+                    title=achievement['title'],
+                    description=achievement['description'],
+                    date=achievement['date'] if achievement['date'] else None
+                )
+
+            return JsonResponse({'success': True})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+    
+    # For GET requests, render the template
+    positions = Position.objects.all()
+    return render(request, 'admin_add_player.html', {'positions': positions})

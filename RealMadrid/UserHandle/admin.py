@@ -3,7 +3,8 @@ from .models import (
     Users, Position, Player, News, Category, SubCategory, Item, ItemImage, ItemSize,
     Cart, CartItem, Wishlist, WishlistItem, Order, OrderItem, Payment, Shipping,
     Stand, Section, Match, TicketOrder, TicketItem, TicketPayment, QuizQuestion,
-    UploadedImage, IdentifyPlayer, PlayerCredentials, PlayerTask
+    UploadedImage, IdentifyPlayer, PlayerCredentials, PlayerTask, PlayerAchievement,
+    PlayerHistory, SeasonStats
 )
 
 class UsersAdmin(admin.ModelAdmin):
@@ -15,9 +16,24 @@ class PositionAdmin(admin.ModelAdmin):
     search_fields = ('position',)
 
 class PlayerAdmin(admin.ModelAdmin):
-    list_display = ('jersey_num', 'player_name', 'player_country', 'player_position', 'player_role', 'player_image')
-    search_fields = ('player_name', 'player_country', 'player_role')
-    list_filter = ('player_position',)
+    list_display = ('jersey_num', 'player_name', 'player_country', 'player_position', 'appearances', 'goals', 'assists')
+    search_fields = ('player_name', 'player_country')
+    list_filter = ('player_position', 'player_country')
+    date_hierarchy = 'joined_date'
+    fieldsets = (
+        ('Basic Information', {
+            'fields': ('jersey_num', 'player_name', 'player_country', 'player_position', 'player_role', 'player_image')
+        }),
+        ('Physical Details', {
+            'fields': ('date_of_birth', 'height', 'weight')
+        }),
+        ('Statistics', {
+            'fields': ('appearances', 'goals', 'assists', 'clean_sheets', 'yellow_cards', 'red_cards')
+        }),
+        ('Contract Information', {
+            'fields': ('biography', 'joined_date', 'contract_end_date')
+        })
+    )
 
 class NewsAdmin(admin.ModelAdmin):
     list_display = ('title', 'description', 'news_image','date_created')
@@ -230,6 +246,26 @@ class PlayerTaskAdmin(admin.ModelAdmin):
         }),
     )
 
+class PlayerAchievementAdmin(admin.ModelAdmin):
+    list_display = ('player', 'title', 'date')
+    search_fields = ('player__player_name', 'title')
+    list_filter = ('date',)
+    date_hierarchy = 'date'
+
+class PlayerHistoryAdmin(admin.ModelAdmin):
+    list_display = ('player', 'club', 'start_date', 'end_date', 'appearances', 'goals')
+    search_fields = ('player__player_name', 'club')
+    list_filter = ('club', 'start_date')
+    date_hierarchy = 'start_date'
+
+class SeasonStatsAdmin(admin.ModelAdmin):
+    list_display = ('player', 'season', 'competition', 'appearances', 'goals', 'assists', 'minutes_played')
+    search_fields = ('player__player_name', 'season', 'competition')
+    list_filter = ('season', 'competition')
+    
+    class Meta:
+        unique_together = ('player', 'season', 'competition')
+
 # Register the models with the admin site
 admin.site.register(Users, UsersAdmin)
 admin.site.register(Position, PositionAdmin)
@@ -259,3 +295,6 @@ admin.site.register(QuizQuestion, QuizQuestionAdmin)
 admin.site.register(UploadedImage, UploadedImageAdmin)  # Register the UploadedImage model
 admin.site.register(IdentifyPlayer, IdentifyPlayerAdmin)  # Register the IdentifyPlayer model
 admin.site.register(PlayerTask, PlayerTaskAdmin)  # Register the PlayerTask model
+admin.site.register(PlayerAchievement, PlayerAchievementAdmin)
+admin.site.register(PlayerHistory, PlayerHistoryAdmin)
+admin.site.register(SeasonStats, SeasonStatsAdmin)
