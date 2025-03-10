@@ -1,0 +1,106 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .header {
+            background-color: #1a365d;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .logo {
+            max-width: 120px;
+            margin: 0 auto;
+        }
+        .content {
+            padding: 20px;
+        }
+        .order-details {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .ticket {
+            background-color: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        .total {
+            font-size: 20px;
+            font-weight: bold;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            background-color: #f1f5f9;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <img src="{% static 'madrid_images/real-madrid-logo.png' %}" alt="Real Madrid Logo" class="logo">
+        <h1>Booking Confirmation</h1>
+    </div>
+
+    <div class="content">
+        <p>Dear Customer,</p>
+        <p>Thank you for booking tickets with Real Madrid FC. Your booking has been confirmed!</p>
+
+        <div class="order-details">
+            <h2>Order Details</h2>
+            <p><strong>Order Number:</strong> {{ order.order_number }}</p>
+            
+            <h3>Match Information</h3>
+            <p><strong>Teams:</strong> {{ match_details.home_team }} vs {{ match_details.away_team }}</p>
+            <div class="match-datetime">
+                <p><strong>Date:</strong> {{ match_details.date }}</p>
+                <p><strong>Time:</strong> {{ match_details.time }}</p>
+            </div>
+            <p><strong>Venue:</strong> {{ match_details.venue }}</p>
+            <p><strong>Event:</strong> {{ match_details.competition }}</p>
+        </div>
+
+        <h3>Your Tickets</h3>
+        {% for ticket in ticket_items %}
+        <div class="ticket">
+            <h4>Ticket #{{ forloop.counter }}</h4>
+            <p><strong>Stand:</strong> {{ ticket.stand.name }}</p>
+            <p><strong>Section:</strong> {{ ticket.section.name }}</p>
+            <p><strong>Seat:</strong> {{ ticket.seat_number }}</p>
+        </div>
+        {% endfor %}
+
+        <div class="total">
+            Total Amount Paid: ₹{{ order.total_price }}
+        </div>
+
+        <p>Important Notes:</p>
+        <ul>
+            <li>Please arrive at least 1 hour before the match start time</li>
+            <li>Bring a valid ID proof along with your tickets</li>
+            <li>This email serves as your ticket confirmation</li>
+        </ul>
+    </div>
+
+    <div class="footer">
+        <p>This is an automated email. Please do not reply to this message.</p>
+        <p>© Real Madrid FC. All rights reserved.</p>
+    </div>
+</body>
+</html> 

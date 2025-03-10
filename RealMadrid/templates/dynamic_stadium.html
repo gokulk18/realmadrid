@@ -18,6 +18,7 @@
     <script src="//unpkg.com/alpinejs" defer></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <style>
         .hover-zoom:hover {
             transform: scale(1.05);
@@ -205,11 +206,9 @@
         <div class="mb-8 text-center">
             <h2 class="text-3xl font-bold mb-4">{{ match.home_team }} vs {{ match.away_team }}</h2>
             <p class="text-lg">{{ match.competition }}</p>
-            <p class="text-lg">
-                {% timezone "Asia/Kolkata" %}
-                    {{ match.date|date:"l, F d, Y" }} • {{ match.date|date:"g:i A" }} IST
-                {% endtimezone %}
-            </p>
+            <div class="match-time">
+                {{ match.kickoff_time }}
+            </div>
             <p class="text-lg">{{ match.venue }}</p>
         </div>
 
@@ -619,7 +618,6 @@
             return;
         }
 
-        // Send booking request to server
         fetch(`/process-ticket-booking/{{ match.id }}/`, {
             method: 'POST',
             headers: {
@@ -627,7 +625,7 @@
                 'X-CSRFToken': '{{ csrf_token }}'
             },
             body: JSON.stringify({
-                seats: selectedSeats  // Send seats array inside an object
+                seats: selectedSeats
             })
         })
         .then(response => response.json())

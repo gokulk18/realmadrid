@@ -141,15 +141,14 @@ class WishlistItem(models.Model):
     
     
 class Order(models.Model):
-    ORDER_STATUS_CHOICES = [
+    STATUS_CHOICES = (
         ('Pending', 'Pending'),
-        ('Processing', 'Processing'),
-        ('Shipped', 'Shipped'),
-        ('Delivered', 'Delivered'),
-        ('Cancelled', 'Cancelled')
-    ]
-
-    user = models.ForeignKey(Users, on_delete=models.SET_NULL, null=True, blank=True)
+        ('Confirmed', 'Confirmed'),
+        ('Cancelled', 'Cancelled'),
+    )
+    
+    user = models.ForeignKey(Users, on_delete=models.CASCADE)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Confirmed')
     order_number = models.CharField(max_length=20, unique=True, editable=False)
     full_name = models.CharField(max_length=100)
     email = models.EmailField()
@@ -161,7 +160,6 @@ class Order(models.Model):
     city = models.CharField(max_length=100)
     zipcode = models.CharField(max_length=20)
     total = models.DecimalField(max_digits=10, decimal_places=2)
-    status = models.CharField(max_length=20, choices=ORDER_STATUS_CHOICES, default='Pending')
     is_paid = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

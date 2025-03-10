@@ -1,7 +1,7 @@
 import razorpay  # Add this import for Razorpay integration
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from django.core.mail import send_mail
+from django.core.mail import send_mail, EmailMultiAlternatives
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
@@ -55,6 +55,7 @@ from django.core.files.storage import FileSystemStorage
 from PIL import Image
 from .models import UploadedImage  # Assuming you have a model for storing images
 from .models import IdentifyPlayer
+from django.utils.html import strip_tags
 
 
 
@@ -276,7 +277,12 @@ def schedule(request):
 
     for fixture in all_fixtures:
         utc_date = parse_datetime(fixture['utcDate'])
-        if utc_date and fixture['homeTeam']['name'] == 'Real Madrid CF':
+        # Check if this is a home game and has all required data
+        if (utc_date and 
+            fixture['homeTeam']['name'] == 'Real Madrid CF' and 
+            'awayTeam' in fixture and 
+            fixture['awayTeam'].get('name')):  # Add these checks
+            
             if utc_date.tzinfo is None:
                 utc_date = make_aware(utc_date)
             
@@ -284,18 +290,22 @@ def schedule(request):
                 ist_date = utc_date.astimezone(ist_timezone)
                 
                 # Create or update the Match object in the database
-                Match.objects.update_or_create(
-                    match_id=fixture['id'],
-                    defaults={
-                        'home_team': fixture['homeTeam']['name'],
-                        'away_team': fixture['awayTeam']['name'],
-                        'utc_date': utc_date,
-                        'ist_date': ist_date,
-                        'competition': fixture['competition']['name'],
-                        'status': fixture['status'],
-                        'venue': fixture.get('venue'),
-                    }
-                )
+                try:
+                    Match.objects.update_or_create(
+                        match_id=fixture['id'],
+                        defaults={
+                            'home_team': fixture['homeTeam']['name'],
+                            'away_team': fixture['awayTeam']['name'],
+                            'utc_date': utc_date,
+                            'ist_date': ist_date,
+                            'competition': fixture['competition']['name'],
+                            'status': fixture['status'],
+                            'venue': fixture.get('venue', 'Santiago Bernabéu'),  # Set default venue
+                        }
+                    )
+                except Exception as e:
+                    print(f"Error creating match: {e}")
+                    continue
 
     # Fetch upcoming home fixtures from the database
     upcoming_home_fixtures = Match.objects.filter(
@@ -303,31 +313,86 @@ def schedule(request):
         utc_date__gt=current_time
     ).order_by('utc_date')
 
-    context = {
-        'fixtures': upcoming_home_fixtures,
-        # ... existing context ...
-    }
+    # Initialize user_tickets as None
+    user_tickets = None
 
-    # Add user information to context
+    # Get user's ticket bookings if they are logged in
     if request.user.is_authenticated:
         user = request.user
-        context.update({
+        user_tickets = TicketOrder.objects.filter(
+            user=user,
+            match__utc_date__gt=current_time
+        ).select_related('match').prefetch_related('tickets')
+        
+        context = {
+            'fixtures': upcoming_home_fixtures,
+            'user_tickets': user_tickets,
             'user_name': user.username,
             'user_email': user.email,
-            'user_phone': getattr(user, 'phone', None),  # Optional: if you have a phone field in the User model
-        })
+            'user_phone': getattr(user, 'phone', None),
+        }
     elif 'user_id' in request.session:
         try:
             user = Users.objects.get(id=request.session['user_id'])
-            context.update({
+            # Get ticket orders for the session user
+            user_tickets = TicketOrder.objects.filter(
+                user=user,
+                match__utc_date__gt=current_time
+            ).select_related('match').prefetch_related('tickets')
+            
+            context = {
+                'fixtures': upcoming_home_fixtures,
+                'user_tickets': user_tickets,
                 'user_name': user.name,
                 'user_email': user.email,
-                'user_phone': user.phone,  # Add other user-specific details if needed
-            })
+                'user_phone': user.phone,
+            }
         except Users.DoesNotExist:
-            pass  # Handle the case where the user does not exist
+            context = {
+                'fixtures': upcoming_home_fixtures,
+            }
+    else:
+        context = {
+            'fixtures': upcoming_home_fixtures,
+        }
 
     return render(request, 'schedule.html', context)
+
+def cancel_ticket(request, order_id):
+    if request.method == 'POST':
+        # Check if user is authenticated or has session
+        if request.user.is_authenticated:
+            order = get_object_or_404(TicketOrder, id=order_id, user=request.user)
+        elif 'user_id' in request.session:
+            order = get_object_or_404(TicketOrder, id=order_id, user_id=request.session['user_id'])
+        else:
+            messages.error(request, 'Please log in to cancel tickets.')
+            return redirect('login')
+        
+        # Check if order is already cancelled
+        if order.status == 'Cancelled':
+            messages.error(request, 'This ticket has already been cancelled.')
+            return redirect('schedule')
+        
+        try:
+            # Update order status
+            order.status = 'Cancelled'
+            order.save()
+            
+            # Release the seats back to available
+            ticket_items = TicketItem.objects.filter(order=order)
+            for ticket in ticket_items:
+                if hasattr(ticket, 'seat'):
+                    ticket.seat.is_available = True
+                    ticket.seat.save()
+            
+            messages.success(request, 'Your ticket has been successfully cancelled.')
+        except Exception as e:
+            messages.error(request, f'An error occurred while cancelling your ticket: {str(e)}')
+        
+        return redirect('schedule')
+    
+    return redirect('schedule')
 
 
 
@@ -689,13 +754,50 @@ def booking_success(request, order_number):
 
     # Get ticket items
     ticket_items = order.tickets.all()
+    
+    # Get match details directly from the order's match
+    match = order.match
+    
+    # Convert match time to IST and format separately for date and time
+    ist_timezone = pytz.timezone('Asia/Kolkata')
+    match_time = match.utc_date.astimezone(ist_timezone)
+    
+    match_details = {
+        'home_team': match.home_team,
+        'away_team': match.away_team,
+        'date': match_time.strftime('%B %d, %Y'),
+        'time': match_time.strftime('%I:%M %p IST'),
+        'venue': match.venue or 'Santiago Bernabéu',
+        'competition': match.competition
+    }
 
+    # Prepare email content
     context = {
         'order': order,
+        'match_details': match_details,
         'ticket_items': ticket_items,
-        'total_tickets': ticket_items.count()
     }
     
+    # Render HTML email template
+    html_content = render_to_string('email/booking_confirmation.html', context)
+    text_content = strip_tags(html_content)  # Plain text version of email
+    
+    # Create email
+    subject = f'Real Madrid FC - Booking Confirmation #{order.order_number}'
+    from_email = settings.DEFAULT_FROM_EMAIL
+    to_email = order.email
+
+    # Send email
+    email = EmailMultiAlternatives(
+        subject=subject,
+        body=text_content,
+        from_email=from_email,
+        to=[to_email]
+    )
+    email.attach_alternative(html_content, "text/html")
+    email.send()
+
+    # Return the normal booking success response
     return render(request, 'booking_success.html', context)
 
 
@@ -2392,6 +2494,25 @@ def previous_results(request):
         'past_matches': past_matches,
     }
     
+    # Add user context
+    if request.user.is_authenticated:
+        user = request.user
+        context.update({
+            'user_name': user.username,
+            'user_email': user.email,
+            'user_phone': getattr(user, 'phone', None),
+        })
+    elif 'user_id' in request.session:
+        try:
+            user = Users.objects.get(id=request.session['user_id'])
+            context.update({
+                'user_name': user.name,
+                'user_email': user.email,
+                'user_phone': user.phone,
+            })
+        except Users.DoesNotExist:
+            pass
+
     return render(request, 'previous_results.html', context)
 
 
@@ -2577,14 +2698,19 @@ def dynamic_stadium(request, match_id):
         stand_code = item.stand.name[0]  # First letter of stand name (N, S, E, W)
         booked_seats.add(f"{stand_code}-{item.seat_number}")
 
+    # Convert kickoff time to IST and format it
+    ist_timezone = pytz.timezone('Asia/Kolkata')
+    kickoff_time = match.utc_date.astimezone(ist_timezone)
+    formatted_kickoff_time = kickoff_time.strftime('%B %d, %Y %I:%M %p IST')
+
     context = {
         'match': {
             'id': match.match_id,
             'home_team': match.home_team,
             'away_team': match.away_team,
             'competition': match.competition,
-            'kickoff_time': match.ist_date,
-            'venue': match.venue,
+            'kickoff_time': formatted_kickoff_time,  # Use the formatted time
+            'venue': match.venue or 'Santiago Bernabéu',
         },
         'stands_sections': stands_sections,
         'booked_seats': list(booked_seats),  # Convert set to list for JSON serialization
@@ -2761,15 +2887,13 @@ def trainer_assign_task(request):
     return render(request, 'trainer_assign_task.html', context)
 
 @csrf_exempt
-@transaction.atomic
 def process_ticket_booking(request, match_id):
     if request.method != 'POST':
         return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
     try:
-        # Parse the JSON data from request body
         data = json.loads(request.body)
-        seats = data.get('seats', [])  # Get the seats array from the request
+        seats = data.get('seats', [])
         
         if not seats:
             return JsonResponse({'success': False, 'error': 'No seats selected'})
@@ -2785,29 +2909,15 @@ def process_ticket_booking(request, match_id):
         else:
             return JsonResponse({'success': False, 'error': 'User not authenticated'})
 
-        # Calculate booking fee
-        booking_fee = 50  # Fixed booking fee per ticket
+        # Calculate total price and booking fee
+        booking_fee = 00  # Fixed booking fee per ticket
         total_booking_fee = booking_fee * len(seats)
-
-        # Create temporary order
-        order = TicketOrder.objects.create(
-            user=user,
-            match=match,
-            full_name=user.name,
-            email=user.email,
-            phone=user.phone,
-            total_price=0,  # Will update after adding items
-            booking_fee=total_booking_fee,
-            status='Pending',
-            payment_deadline=timezone.now() + timezone.timedelta(minutes=15)  # 15 minutes to complete payment
-        )
-
-        # Create temporary ticket items
         total_price = 0
+        seat_details = []
+
+        # Verify seat availability and calculate price
         for seat_number in seats:
             stand_code, seat_num = seat_number.split('-')
-            
-            # Map stand code to stand object
             stand_map = {
                 'N': 'North Stand',
                 'S': 'South Stand',
@@ -2823,123 +2933,118 @@ def process_ticket_booking(request, match_id):
                 order__match=match,
                 stand=stand,
                 section=section,
-                seat_number=seat_num
+                seat_number=seat_num,
+                order__status='Confirmed'
             ).exists():
-                # Rollback transaction
-                transaction.set_rollback(True)
                 return JsonResponse({
                     'success': False,
                     'error': f'Seat {seat_number} is already booked'
                 })
-
-            # Create ticket item
-            ticket_item = TicketItem.objects.create(
-                order=order,
-                stand=stand,
-                section=section,
-                seat_number=seat_num,
-                price=section.price
-            )
-            total_price += section.price
-
-        # Update order total price
-        order.total_price = total_price + total_booking_fee
-        order.save()
-
-        # Create payment record
-        payment = TicketPayment.objects.create(
-            ticket_order=order,
-            payment_method='Pending',  # Will be updated after payment
-            transaction_id=f'TXN-{order.order_number}',
-            amount_paid=order.total_price,
-            status='Pending'
-        )
-
-        return JsonResponse({
-            'success': True,
-            'redirect_url': reverse('ticket_payment', kwargs={'order_number': order.order_number}),
-            'order_number': order.order_number,
-            'total_amount': float(order.total_price)
-        })
-
-    except json.JSONDecodeError:
-        return JsonResponse({'success': False, 'error': 'Invalid JSON data'})
-    except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)})
-
-def ticket_payment(request, order_number):
-    # Get the order
-    order = get_object_or_404(TicketOrder, order_number=order_number, status__in=['Pending', 'Payment_Initiated'])
-    
-    # Ensure the order belongs to the current user
-    if request.user.is_authenticated:
-        if order.user != request.user:
-            raise Http404
-    elif 'user_id' in request.session:
-        if order.user.id != request.session['user_id']:
-            raise Http404
-    else:
-        raise Http404
-
-    # Check if payment deadline has passed
-    if order.payment_deadline and order.payment_deadline < timezone.now():
-        order.status = 'Cancelled'
-        order.save()
-        messages.error(request, "Payment session expired. Please book again.")
-        return redirect('dynamic_stadium', match_id=order.match.match_id)
-
-    try:
-        # Initialize Razorpay client
-        client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
-        
-        if order.status == 'Pending':
-            # Create Razorpay order
-            razorpay_order = client.order.create({
-                'amount': int(order.total_price * 100),  # Amount in paise
-                'currency': 'INR',
-                'receipt': order.order_number,
-                'payment_capture': 1  # Auto capture payment
+            
+            total_price += 300  # Fixed price of 300 per seat
+            seat_details.append({
+                'stand': stand,
+                'section': section,
+                'seat_number': seat_num,
+                'price': 300
             })
 
-            # Update order with Razorpay order ID
-            order.razorpay_order_id = razorpay_order['id']
-            order.status = 'Payment_Initiated'
+        final_amount = total_price + total_booking_fee
+
+        # Create order
+        order = TicketOrder.objects.create(
+            user=user,
+            match=match,
+            full_name=user.name,
+            email=user.email,
+            phone=user.phone,
+            total_price=final_amount,
+            booking_fee=total_booking_fee,
+            status='Confirmed'  # Set status to Confirmed directly
+        )
+
+        # Create ticket items
+        for seat in seat_details:
+            TicketItem.objects.create(
+                order=order,
+                stand=seat['stand'],
+                section=seat['section'],
+                seat_number=seat['seat_number'],
+                price=seat['price']
+            )
+
+        # Return success response with redirect URL
+        return JsonResponse({
+            'success': True,
+            'redirect_url': reverse('booking_success', kwargs={'order_number': order.order_number})
+        })
+
+    except Exception as e:
+        logger.error(f"Error in process_ticket_booking: {str(e)}")
+        return JsonResponse({'success': False, 'error': str(e)})
+
+@csrf_exempt
+@require_POST
+def verify_ticket_payment(request, order_number):
+    try:
+        data = json.loads(request.body)
+        
+        # Get the order
+        order = get_object_or_404(TicketOrder, order_number=order_number)
+        
+        # Verify the payment signature
+        client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+        
+        # Create parameters dict for signature verification
+        params_dict = {
+            'razorpay_payment_id': data.get('razorpay_payment_id'),
+            'razorpay_order_id': data.get('razorpay_order_id'),
+            'razorpay_signature': data.get('razorpay_signature')
+        }
+
+        try:
+            # Verify signature
+            client.utility.verify_payment_signature(params_dict)
+            
+            # Update order status
+            order.status = 'Confirmed'
+            order.is_paid = True
             order.save()
 
-            # Create or update payment record
-            payment, created = TicketPayment.objects.get_or_create(
+            # Create payment record
+            TicketPayment.objects.create(
                 ticket_order=order,
-                defaults={
-                    'payment_method': 'Razorpay',
-                    'razorpay_order_id': razorpay_order['id'],
-                    'transaction_id': f'TXN-{order.order_number}',
-                    'amount_paid': order.total_price,
-                    'status': 'Initiated'
-                }
+                payment_method='Razorpay',
+                razorpay_payment_id=data.get('razorpay_payment_id'),
+                razorpay_order_id=data.get('razorpay_order_id'),
+                razorpay_signature=data.get('razorpay_signature'),
+                transaction_id=f'TXN-{order.order_number}',
+                amount_paid=order.total_price,
+                status='Completed',
+                completed_at=timezone.now()
             )
-            if not created:
-                payment.razorpay_order_id = razorpay_order['id']
-                payment.status = 'Initiated'
-                payment.save()
-        else:
-            # Get existing Razorpay order
-            razorpay_order = client.order.fetch(order.razorpay_order_id)
-            payment = TicketPayment.objects.get(ticket_order=order)
 
-        # Prepare context for template
-        context = {
-            'order': order,
-            'razorpay_key_id': settings.RAZORPAY_KEY_ID,
-            'razorpay_order_id': razorpay_order['id'],
-            'order_total_price_paise': int(order.total_price * 100)
-        }
-        return render(request, 'ticket_payment.html', context)
-    
+            # Generate success URL
+            success_url = reverse('booking_success', kwargs={'order_number': order.order_number})
+            
+            return JsonResponse({
+                'success': True,
+                'redirect_url': success_url
+            })
+
+        except Exception as e:
+            # Payment verification failed
+            order.status = 'Failed'
+            order.save()
+            logger.error(f"Payment verification failed for order {order_number}: {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': 'Payment verification failed'
+            })
+
     except Exception as e:
-        # Log the error and show a user-friendly message
-        logger.error(f"Razorpay error for order {order_number}: {str(e)}")
-        messages.error(request, "Unable to initialize payment. Please try again.")
-        return redirect('dynamic_stadium', match_id=order.match.match_id)
+        logger.error(f"Error in verify_ticket_payment: {str(e)}")
+        return JsonResponse({'success': False, 'error': str(e)})
 
 @csrf_exempt
 @transaction.atomic
@@ -3029,3 +3134,9 @@ def process_ticket_payment(request, order_number):
         return JsonResponse({'success': False, 'error': 'Invalid JSON data'})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)})
+
+
+
+def player_detail(request, player_id):
+    player = get_object_or_404(Player, id=player_id)
+    return render(request, 'player_detail.html', {'player': player})

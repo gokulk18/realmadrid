@@ -70,55 +70,57 @@
         };
 
         // Razorpay integration
-        var options = {
-            "key": "{{ razorpay_key_id }}", 
-            "amount": "{{ order_total_price_paise }}", 
-            "currency": "INR",
-            "name": "Real Madrid FC",
-            "description": "Ticket Order: {{ order.order_number }}",
-            "image": "{% static 'madrid_images/real-madrid-logo.png' %}",
-            "order_id": "{{ razorpay_order_id }}", 
-            "handler": function (response) {
-                fetch('/process-ticket-payment/{{ order.order_number }}/', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': '{{ csrf_token }}'
-                    },
-                    body: JSON.stringify({
-                        razorpay_payment_id: response.razorpay_payment_id,
-                        razorpay_order_id: response.razorpay_order_id,
-                        razorpay_signature: response.razorpay_signature
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        window.location.href = data.redirect_url;
-                    } else {
-                        alert(data.error || 'Payment verification failed');
-                        window.location.href = "{% url 'dynamic_stadium' order.match.match_id %}";
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('An error occurred. Please try again.');
-                    window.location.href = "{% url 'dynamic_stadium' order.match.match_id %}";
-                });
-            },
-            "prefill": {
-                "name": "{{ order.full_name }}",
-                "email": "{{ order.email }}",
-                "contact": "{{ order.phone }}"
-            },
-            "theme": {
-                "color": "#3B82F6"
+        function proceedToBooking() {
+            if (selectedSeats.length === 0) {
+                alert('Please select at least one seat to proceed.');
+                return;
             }
-        };
-        var rzp = new Razorpay(options);
-        document.getElementById('rzp-button').onclick = function(e){
-            rzp.open();
-            e.preventDefault();
+
+            fetch(`/process-ticket-booking/{{ match.id }}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    seats: selectedSeats
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log('Payment data:', data);
+                    var options = {
+                        key: data.key,
+                        amount: data.amount,
+                        currency: data.currency,
+                        name: "Real Madrid FC",
+                        description: "Match Ticket Booking",
+                        order_id: data.order_id,
+                        prefill: {
+                            name: data.user_name,
+                            email: data.user_email,
+                            contact: data.user_phone
+                        },
+                        handler: function (response) {
+                            console.log('Payment response:', response);
+                            verifyPayment(response, data.order_number);
+                        },
+                        theme: {
+                            color: "#3b82f6"
+                        }
+                    };
+                    var rzp = new Razorpay(options);
+                    rzp.open();
+                } else {
+                    console.error('Error:', data.error);
+                    alert(data.error || 'An error occurred while processing your booking.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while processing your booking.');
+            });
         }
     </script>
 </body>
