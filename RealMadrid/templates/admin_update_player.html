@@ -18,57 +18,355 @@
     <link rel="icon" type="image/svg+xml" href="assets/images/logo.svg">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <script defer src="{% static 'js/main.js' %}"></script>
+
+    <style>
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #ccc;
+        }
+        .tab {
+            font-family: RMNeue, Arial, Helvetica; /* Font family */
+            font-size: 1rem;
+            font-weight: 500;
+            color: #5E6A83;
+            padding: 10px 20px;
+            cursor: pointer;
+            text-decoration: none;
+            border-bottom: 2px solid transparent;
+            transition: color 0.3s, border-bottom-color 0.3s;
+        }
+        .tab:hover {
+            color: #000;
+        }
+        .tab.active {
+            color: #3b82f6;
+            border-bottom-color: #3b82f6;
+        }
+        .tab-content {
+            display: none;
+            padding: 20px;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .alert {
+            padding: 15px;
+            color: #fff;
+            background-color: #4caf50;
+            border-radius: 5px;
+            position: relative;
+            transition: opacity 1s ease-out;
+            opacity: 1;
+            display: block;
+        }
+
+        .alert.hide {
+            opacity: 0;
+        }
+
+        .alert-container {
+            position: relative;
+        }
+
+        /* Updated styles for select and options */
+        select {
+            color: #000000 !important;
+            background-color: #ffffff !important;
+        }
+
+        select option {
+            color: #000000 !important;
+            background-color: #ffffff !important;
+            padding: 8px !important;
+        }
+
+        /* Additional specific styles */
+        #position {
+            color: #000000 !important;
+        }
+
+        #position option {
+            color: #000000 !important;
+            background-color: #ffffff !important;
+            padding: 8px !important;
+        }
+
+        /* Style for when option is selected/hovered */
+        #position option:checked,
+        #position option:hover {
+            background-color: #e5e7eb !important;
+            color: #000000 !important;
+        }
+
+        /* Style for the select when opened */
+        #position:focus {
+            color: #000000 !important;
+            background-color: #ffffff !important;
+        }
+
+        /* Style for the dropdown menu */
+        select::-ms-expand {
+            background-color: #333333;
+        }
+
+        select:-moz-focusring {
+            color: transparent !important;
+            text-shadow: 0 0 0 #000 !important;
+        }
+
+        /* Modern Card Styles */
+        .form-card {
+            background: linear-gradient(145deg, #ffffff, #f5f7fa);
+            border-radius: 20px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            backdrop-filter: blur(10px);
+        }
+
+        .form-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.12);
+        }
+
+        /* Modern Input Styles */
+        .modern-input {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 12px 16px;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .modern-input:focus {
+            background: #fff;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+            outline: none;
+        }
+
+        /* Select Dropdown Styling */
+        .modern-select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236B7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-position: right 12px center;
+            background-repeat: no-repeat;
+            background-size: 20px;
+            padding-right: 40px !important;
+        }
+
+        /* Card Headers */
+        .card-header {
+            position: relative;
+            padding-bottom: 12px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .card-header::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 60px;
+            height: 2px;
+            background: #3b82f6;
+        }
+
+        /* Form Labels */
+        .form-label {
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 8px;
+            display: block;
+            font-size: 0.9rem;
+        }
+
+        /* Submit Button Enhancement */
+        .submit-btn {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2);
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px -2px rgba(59, 130, 246, 0.3);
+        }
+
+        /* Additional styles for file input */
+        input[type="file"].modern-input {
+            padding: 8px;
+        }
+
+        /* Style for the image preview */
+        .image-preview {
+            max-width: 200px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        .history-entry {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .history-entry:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .remove-history {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+        }
+
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+
+        /* Modal Animation */
+        .transition-transform {
+            transition-property: transform;
+        }
+
+        .duration-300 {
+            transition-duration: 300ms;
+        }
+
+        .ease-out {
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Modal Backdrop */
+        .modal-backdrop {
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        /* Modal Content Animation */
+        .modal-content {
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-10%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        /* Success Icon Animation */
+        .success-icon {
+            animation: scaleIn 0.3s ease-out;
+        }
+
+        @keyframes scaleIn {
+            from {
+                transform: scale(0);
+            }
+            to {
+                transform: scale(1);
+            }
+        }
+
+        /* Button Hover Effects */
+        .modal-button {
+            transition: all 0.2s ease-in-out;
+        }
+
+        .modal-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Modal animations */
+        @keyframes modalIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .animate-modal-in {
+            animation: modalIn 0.3s ease-out forwards;
+        }
+
+        /* Modal backdrop */
+        .bg-opacity-50 {
+            --tw-bg-opacity: 0.5;
+        }
+
+        /* Modal content styles */
+        .shadow-xl {
+            --tw-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            box-shadow: var(--tw-shadow);
+        }
+
+        /* Button hover effect */
+        .hover\:bg-emerald-700:hover {
+            background-color: rgb(4, 120, 87);
+        }
+
+        /* Success icon container */
+        .bg-emerald-100 {
+            background-color: rgb(209, 250, 229);
+        }
+
+        /* Success icon color */
+        .text-emerald-600 {
+            color: rgb(5, 150, 105);
+        }
+
+        /* Transition effects */
+        .transition-all {
+            transition-property: all;
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+            transition-duration: 150ms;
+        }
+
+        /* Modal container */
+        .max-w-md {
+            max-width: 28rem;
+        }
+    </style>
 </head>
-<style>
-.tabs {
-  display: flex;
-  border-bottom: 2px solid #ccc;
-}
-.tab {
-    font-family: RMNeue, Arial, Helvetica; /* Font family */
-
-  font-size: 1rem;
-  font-weight: 500;
-  color: #5E6A83;
-  padding: 10px 20px;
-  cursor: pointer;
-  text-decoration: none;
-  border-bottom: 2px solid transparent;
-  transition: color 0.3s, border-bottom-color 0.3s;
-}
-.tab:hover {
-  color: #000;
-}
-.tab.active {
-  color: #3b82f6;
-  border-bottom-color: #3b82f6;
-}
-.tab-content {
-  display: none;
-  padding: 20px;
-}
-.tab-content.active {
-  display: block;
-}
-.alert {
-    padding: 15px;
-    color: #fff;
-    background-color: #4caf50; /* Green (or use dynamic color based on message type) */
-    border-radius: 5px;
-    position: relative;
-    transition: opacity 1s ease-out;
-    opacity: 1; /* Start fully visible */
-    display: block; /* Ensure it's initially displayed */
-}
-
-.alert.hide {
-    opacity: 0; /* Fade out */
-}
-
-.alert-container {
-    position: relative;
-}
-</style>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -260,287 +558,393 @@
     </div>
 </header>
 
-            <main class="flex-1 overflow-y-auto">
-                <div class="px-4  sm:px-6">
-                    <div>
-                        <h1 class="text-2xl font-low text-gray-700 sm:text-1xl">    Dashboard
-</h1>
-
-                        <div class="hidden  overflow-y-auto text-sm lg:items-center lg:flex whitespace-nowrap">
-                            <a href="index.html#" class="text-gray-600 hover:underline">
-                                Pages
-                            </a>
-
-                            <span class="mx-1 text-gray-500">
-                                /
-                            </span>
-
-                            <a href="index.html#" class="text-indigo-600 hover:underline">
-                                    Add Member
-                            </a>
+            <main class="flex-1 overflow-y-auto bg-gray-50">
+                <div class="px-4 sm:px-6">
+                    <div class="container mx-auto py-8">
+                        {% if messages %}
+                        <div class="alert-container mb-6">
+                            {% for message in messages %}
+                                {% if 'update_player' in message.tags %}
+                                    <div class="alert {{ message.tags }} transform transition-all duration-300 hover:scale-102">
+                                        {{ message }}
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
                         </div>
-                    </div>
-                    <br>
+                        {% endif %}
 
-                    <body>
-    
-    
+                        <!-- Modern Tabs -->
+                        <div class="tabs bg-white rounded-xl shadow-md mb-8 p-1 inline-flex gap-2">
+                            <a href="#" class="tab active font-semibold px-6 py-3 rounded-lg transition-all duration-300" id="updateMemberTab">Update Player</a>
+                            <a href="{% url 'admin_squad_list' %}" class="tab font-semibold px-6 py-3 rounded-lg transition-all duration-300">Show Squad</a>
+                        </div>
 
+                        <!-- Main content grid with improved spacing -->
+                        <div class="grid grid-cols-1 gap-8">
+                            <form id="playerForm" action="{% url 'admin_update_player' player.id %}" method="post" enctype="multipart/form-data">
+                                {% csrf_token %}
+                                
+                                <!-- Basic Player Information -->
+                                <div class="form-card p-8 mb-8">
+                                    <div class="card-header">
+                                        <h3 class="text-xl font-semibold text-gray-800">Basic Information</h3>
+                                    </div>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="form-label">Jersey Number</label>
+                                            <input type="text" id="jersey_num" name="jersey_num" value="{{ player.jersey_num }}" required class="modern-input">
+                                            <span id="err_jersey_num" class="text-red-600 text-sm"></span>
+                                        </div>
+                                        <div>
+                                            <label class="form-label">Player Name</label>
+                                            <input type="text" id="player_name" name="player_name" value="{{ player.player_name }}" required class="modern-input">
+                                            <span id="err_player_name" class="text-red-600 text-sm"></span>
+                                        </div>
+                                        <div>
+                                            <label class="form-label">Country</label>
+                                            <input type="text" id="player_country" name="player_country" value="{{ player.player_country }}" required class="modern-input">
+                                            <span id="err_player_country" class="text-red-600 text-sm"></span>
+                                        </div>
+                                        <div>
+                                            <label class="form-label">Position</label>
+                                            <select id="player_position" name="player_position" required class="modern-input modern-select">
+                                                {% for position in position_list %}
+                                                    <option value="{{ position.id }}" {% if position.id == player.player_position.id %}selected{% endif %}>
+                                                        {{ position.position }}
+                                                    </option>
+                                                {% endfor %}
+                                            </select>
+                                            <span id="err_player_position" class="text-red-600 text-sm"></span>
+                                        </div>
+                                        <div>
+                                            <label class="form-label">Role</label>
+                                            <input type="text" id="player_role" name="player_role" value="{{ player.player_role }}" required class="modern-input">
+                                            <span id="err_player_role" class="text-red-600 text-sm"></span>
+                                        </div>
+                                        <div>
+                                            <label class="form-label">Player Image</label>
+                                            {% if player.player_image %}
+                                                <img src="{{ player.player_image.url }}" alt="Current Player Image" class="mb-2 max-w-[200px]">
+                                            {% endif %}
+                                            <input type="file" id="player_image" name="player_image" accept="image/*" class="modern-input">
+                                        </div>
+                                    </div>
+                                </div>
 
-                      <div class="tabs">
-                        <a href="#" class="tab active" id="addMemberTab">Update Player</a>
-                        <a href="{% url 'admin_squad_list' %}" class="tab" id="">Show Squad</a>
-                    </div>
-                    
-                      <br>
-                      <br>
-                      <div class="container text-center">
-                        <div class="row">
-                            <div class="col-sm-8">
-                                <h1 class="text-2xl font-semibold text-center text-[#0F2145] capitalize lg:text-3xl dark:text-[#0F2145]">Update Player Details</h1>
-                                <br>
-                            
-                                <section class="max-w-4xl p-6 mx-auto bg-white rounded-md shadow-md dark:bg-gray-800">
-                                    <br>
-                                    <form id="add-player-form" action="{% url 'admin_update_player' player.id %}" method="post" enctype="multipart/form-data">
-                                        {% csrf_token %}
-                                        <div class="max-w-xs space-y-6 mt-4 mx-auto">
-                                            <div class="flex flex-col">
-                                                <label class="text-gray-700 dark:text-gray-200 mb-1" for="jersey_num" style="text-align: left;">Player Jersey Number:
-                                                    <span id="err_jersey_num" class="text-red-600"></span>
-                                                </label>
-                                                <input id="jersey_num" name="jersey_num" type="text" placeholder="enter player jersey number" class="input input-bordered input-primary w-full rounded-lg" value="{{ player.jersey_num }}" />
-                                            </div>
+                                <!-- Physical Information -->
+                                <div class="form-card p-8 mb-8">
+                                    <div class="card-header">
+                                        <h3 class="text-xl font-semibold text-gray-800">Physical Information</h3>
+                                    </div>
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div>
+                                            <label class="form-label">Date of Birth</label>
+                                            <input type="date" id="date_of_birth" name="date_of_birth" value="{{ player.date_of_birth|date:'Y-m-d' }}" class="modern-input">
+                                            <span id="err_date_of_birth" class="text-red-600 text-sm"></span>
+                                        </div>
+                                        <div>
+                                            <label class="form-label">Height (m)</label>
+                                            <input type="number" step="0.01" min="0" max="3" id="height" name="height" 
+                                                value="{{ player.height }}" class="modern-input"
+                                                onchange="this.value = parseFloat(this.value).toFixed(2)">
+                                            <span id="err_height" class="text-red-600 text-sm"></span>
+                                        </div>
+                                        <div>
+                                            <label class="form-label">Weight (kg)</label>
+                                            <input type="number" step="0.01" min="0" max="150" id="weight" name="weight" 
+                                                value="{{ player.weight }}" class="modern-input"
+                                                onchange="this.value = parseFloat(this.value).toFixed(2)">
+                                            <span id="err_weight" class="text-red-600 text-sm"></span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Statistics -->
+                                <div class="form-card p-8 mb-8">
+                                    <div class="card-header">
+                                        <h3 class="text-xl font-semibold text-gray-800">Career Statistics</h3>
+                                    </div>
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div>
+                                            <label class="form-label">Appearances</label>
+                                            <input type="number" id="appearances" name="appearances" value="{{ player.appearances }}" class="modern-input">
+                                            <span id="err_appearances" class="text-red-600 text-sm"></span>
+                                        </div>
+                                        <div>
+                                            <label class="form-label">Goals</label>
+                                            <input type="number" id="goals" name="goals" value="{{ player.goals }}" class="modern-input">
+                                            <span id="err_goals" class="text-red-600 text-sm"></span>
+                                        </div>
+                                        <div>
+                                            <label class="form-label">Assists</label>
+                                            <input type="number" id="assists" name="assists" value="{{ player.assists }}" class="modern-input">
+                                            <span id="err_assists" class="text-red-600 text-sm"></span>
+                                        </div>
+                                        <div>
+                                            <label class="form-label">Clean Sheets</label>
+                                            <input type="number" id="clean_sheets" name="clean_sheets" value="{{ player.clean_sheets }}" class="modern-input">
+                                            <span id="err_clean_sheets" class="text-red-600 text-sm"></span>
+                                        </div>
+                                        <div>
+                                            <label class="form-label">Yellow Cards</label>
+                                            <input type="number" id="yellow_cards" name="yellow_cards" value="{{ player.yellow_cards }}" class="modern-input">
+                                            <span id="err_yellow_cards" class="text-red-600 text-sm"></span>
+                                        </div>
+                                        <div>
+                                            <label class="form-label">Red Cards</label>
+                                            <input type="number" id="red_cards" name="red_cards" value="{{ player.red_cards }}" class="modern-input">
+                                            <span id="err_red_cards" class="text-red-600 text-sm"></span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Contract Information -->
+                                <div class="form-card p-8 mb-8">
+                                    <div class="card-header">
+                                        <h3 class="text-xl font-semibold text-gray-800">Contract Information</h3>
+                                    </div>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="form-label">Joined Date</label>
+                                            <input type="date" id="joined_date" name="joined_date" value="{{ player.joined_date|date:'Y-m-d' }}" class="modern-input">
+                                            <span id="err_joined_date" class="text-red-600 text-sm"></span>
+                                        </div>
+                                        <div>
+                                            <label class="form-label">Contract End Date</label>
+                                            <input type="date" id="contract_end_date" name="contract_end_date" value="{{ player.contract_end_date|date:'Y-m-d' }}" class="modern-input">
+                                            <span id="err_contract_end_date" class="text-red-600 text-sm"></span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Biography -->
+                                <div class="form-card p-8 mb-8">
+                                    <div class="card-header">
+                                        <h3 class="text-xl font-semibold text-gray-800">Biography</h3>
+                                    </div>
+                                    <div>
+                                        <label class="form-label">Player Biography</label>
+                                        <textarea id="biography" name="biography" rows="4" class="modern-input">{{ player.biography }}</textarea>
+                                    </div>
+                                </div>
+
+                                <!-- Season Stats -->
+                                <div class="form-card p-8 mb-8">
+                                    <div class="card-header">
+                                        <h3 class="text-xl font-semibold text-gray-800">Current Season Statistics</h3>
+                                    </div>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="form-label">Season</label>
+                                            <input type="text" id="season" name="season" value="{{ player.season }}" class="modern-input">
+                                            <span id="err_season" class="text-red-600 text-sm"></span>
+                                        </div>
+                                        <div>
+                                            <label class="form-label">Competition</label>
+                                            <input type="text" id="competition" name="competition" value="{{ player.competition }}" class="modern-input">
+                                            <span id="err_competition" class="text-red-600 text-sm"></span>
+                                        </div>
+                                        <div>
+                                            <label class="form-label">Minutes Played</label>
+                                            <input type="number" id="minutes_played" name="minutes_played" value="{{ player.minutes_played }}" class="modern-input">
+                                            <span id="err_minutes_played" class="text-red-600 text-sm"></span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Player History Information -->
+                                <div class="form-card p-8 mb-8">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <h3 class="text-xl font-semibold text-gray-800">Previous Club History</h3>
+                                        <button type="button" id="addHistoryBtn" class="btn btn-primary btn-sm">
+                                            <i class="fas fa-plus"></i> Add Club History
+                                        </button>
+                                    </div>
                                     
-                                            <div class="flex flex-col">
-                                                <label class="text-gray-700 dark:text-gray-200 mb-1" for="player_name" style="text-align: left;">Player Name:
-                                                    <span id="err_player_name" class="text-red-600"></span>
-                                                </label>
-                                                <input id="player_name" name="player_name" type="text" placeholder="enter player name" class="input input-bordered input-primary w-full rounded-lg" value="{{ player.player_name }}" />
+                                    <div id="historyContainer">
+                                        {% for history in player_histories %}
+                                        <div class="history-entry border rounded p-4 mb-4">
+                                            <div class="d-flex justify-content-end mb-2">
+                                                <button type="button" class="remove-history btn btn-danger btn-sm">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
                                             </div>
-                                    
-                                            <div class="flex flex-col">
-                                                <label class="text-gray-700 dark:text-gray-200 mb-1" for="player_country" style="text-align: left;">Player Country:
-                                                    <span id="err_player_country" class="text-red-600"></span>
-                                                </label>
-                                                <input id="player_country" name="player_country" type="text" placeholder="enter player country" class="input input-bordered input-primary w-full rounded-lg" value="{{ player.player_country }}" />
-                                            </div>
-                                    
-                                            <div class="flex flex-col">
-                                                <label class="text-gray-700 dark:text-gray-200 mb-1" for="player_position" style="text-align: left;">
-                                                    Player Position:
-                                                    <span id="err_player_position" class="text-red-600"></span>
-                                                </label>
-                                                <select id="player_position" name="player_position" class="input input-bordered input-primary w-full rounded-lg">
-                                                    <option value="" disabled>Choose...</option>
-                                                    {% for position in position_list %}
-                                                        <option value="{{ position.id }}" {% if position.id == player.player_position.id %}selected{% endif %}>{{ position.position }}</option>
-                                                    {% endfor %}
-                                                </select>
-                                            </div>
-                                    
-                                            <div class="flex flex-col">
-                                                <label class="text-gray-700 dark:text-gray-200 mb-1" for="player_role" style="text-align: left;">Player Role:
-                                                    <span id="err_player_role" class="text-red-600"></span>
-                                                </label>
-                                                <input id="player_role" name="player_role" type="text" placeholder="enter player role" class="input input-bordered input-primary w-full rounded-lg" value="{{ player.player_role }}" />
-                                            </div>
-                                    
-                                            <div class="flex flex-col">
-                                                <label for="player_image" class="form-label" style="text-align: left;">Player Image:
-                                                    <span id="err_player_image" class="text-red-600"></span>
-                                                </label>
-                                                <div class="mb-2">
-                                                    {% if player.player_image %}
-                                                        <img src="{{ player.player_image.url }}" alt="Player Image" style="max-width: 200px; max-height: 200px; object-fit: cover;">
-                                                    {% else %}
-                                                        <p>No image available</p>
-                                                    {% endif %}
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <input type="hidden" name="history_ids[]" value="{{ history.id }}">
+                                                <div>
+                                                    <label class="form-label">Previous Club</label>
+                                                    <input type="text" name="club[]" value="{{ history.club }}" class="modern-input" required>
                                                 </div>
-                                                <input class="form-control" name="player_image" type="file" id="player_image">
-                                            </div>
-                                    
-                                            <div class="flex justify-center mt-6">
-                                                <input type="submit" id="submitBtn" name="submit1" value="Update Player" class="btn btn-primary" />
+                                                <div>
+                                                    <label class="form-label">Start Date</label>
+                                                    <input type="date" name="start_date[]" value="{{ history.start_date|date:'Y-m-d' }}" class="modern-input" required>
+                                                </div>
+                                                <div>
+                                                    <label class="form-label">End Date</label>
+                                                    <input type="date" name="end_date[]" value="{{ history.end_date|date:'Y-m-d' }}" class="modern-input">
+                                                </div>
+                                                <div>
+                                                    <label class="form-label">Appearances</label>
+                                                    <input type="number" name="prev_appearances[]" value="{{ history.appearances }}" class="modern-input" min="0" required>
+                                                </div>
+                                                <div>
+                                                    <label class="form-label">Goals</label>
+                                                    <input type="number" name="prev_goals[]" value="{{ history.goals }}" class="modern-input" min="0" required>
+                                                </div>
                                             </div>
                                         </div>
-                                    </form>
-                                </section>
-                            </div>
-                            <script>
-                                $(document).ready(function() {
-                                    // Function to disable error messages
-                                    function disableErrorMessages() {
-                                        $('#err_jersey_num').text('');
-                                        $('#err_player_name').text('');
-                                        $('#err_player_country').text('');
-                                        $('#err_player_position').text('');
-                                        $('#err_player_role').text('');
-                                        $('#err_player_image').text('');
-                                    }
-                                
-                                    // Function to enable or disable the submit button
-                                    function toggleSubmitButton() {
-                                        var isValid = true;
-                                
-                                        var jerseyNum = $('#jersey_num').val().trim();
-                                        var playerName = $('#player_name').val().trim();
-                                        var playerCountry = $('#player_country').val().trim();
-                                        var playerPosition = $('#player_position').val();
-                                        var playerRole = $('#player_role').val().trim();
-                                        var playerImage = $('#player_image').val();
-                                
-                                        // Validate inputs
-                                        if (jerseyNum.length === 0 || playerName.length === 0 || playerCountry.length === 0 || playerPosition === "" || playerRole.length === 0) {
-                                            isValid = false;
-                                        } else if (!validateJerseyNum(jerseyNum) || !validateAlpha(playerName) || !validateAlpha(playerCountry) || !validateAlpha(playerRole)) {
-                                            isValid = false;
-                                        }
-                                
-                                        // Validate image only if a new file is selected
-                                        if (playerImage && !validateImage(playerImage)) {
-                                            isValid = false;
-                                            $('#err_player_image').text('Invalid image file. Allowed formats: jpg, jpeg, png');
-                                        } else {
-                                            $('#err_player_image').text('');
-                                        }
-                                
-                                        // Disable or enable the submit button based on validation
-                                        $('#submitBtn').prop('disabled', !isValid);
-                                    }
-                                
-                                    // Initially enable the submit button
-                                    $('#submitBtn').prop('disabled', false);
-                                
-                                    // Event handlers for input fields
-                                    $('#jersey_num').keyup(function() {
-                                        var jerseyNum = $(this).val().trim();
-                                        if (jerseyNum.length === 0) {
-                                            $('#err_jersey_num').text('Jersey number is required');
-                                        } else if (!validateJerseyNum(jerseyNum)) {
-                                            $('#err_jersey_num').text('Jersey number must contain only numbers');
-                                        } else {
-                                            $('#err_jersey_num').text('');
-                                        }
-                                        toggleSubmitButton();
-                                    });
-                                
-                                    $('#player_name').keyup(function() {
-                                        var playerName = $(this).val().trim();
-                                        if (playerName.length === 0) {
-                                            $('#err_player_name').text('Player name is required');
-                                        } else if (!validateAlpha(playerName)) {
-                                            $('#err_player_name').text('Player name must contain only alphabets');
-                                        } else {
-                                            $('#err_player_name').text('');
-                                        }
-                                        toggleSubmitButton();
-                                    });
-                                
-                                    $('#player_country').keyup(function() {
-                                        var playerCountry = $(this).val().trim();
-                                        if (playerCountry.length === 0) {
-                                            $('#err_player_country').text('Player country is required');
-                                        } else if (!validateAlpha(playerCountry)) {
-                                            $('#err_player_country').text('Player country must contain only alphabets');
-                                        } else {
-                                            $('#err_player_country').text('');
-                                        }
-                                        toggleSubmitButton();
-                                    });
-                                
-                                    $('#player_position').change(function() {
-                                        var playerPosition = $(this).val();
-                                        if (playerPosition === "") {
-                                            $('#err_player_position').text('Player position is required');
-                                        } else {
-                                            $('#err_player_position').text('');
-                                        }
-                                        toggleSubmitButton();
-                                    });
-                                
-                                    $('#player_role').keyup(function() {
-                                        var playerRole = $(this).val().trim();
-                                        if (playerRole.length === 0) {
-                                            $('#err_player_role').text('Player role is required');
-                                        } else if (!validateAlpha(playerRole)) {
-                                            $('#err_player_role').text('Player role must contain only alphabets');
-                                        } else {
-                                            $('#err_player_role').text('');
-                                        }
-                                        toggleSubmitButton();
-                                    });
-                                
-                                    $('#player_image').change(function() {
-                                        var playerImage = $(this).val();
-                                        // If a new image file is selected, validate it
-                                        if (playerImage) {
-                                            if (!validateImage(playerImage)) {
-                                                $('#err_player_image').text('Invalid image file. Allowed formats: jpg, jpeg, png');
-                                            } else {
-                                                $('#err_player_image').text('');
-                                            }
-                                        } else {
-                                            $('#err_player_image').text(''); // Clear error if no new image is selected
-                                        }
-                                        toggleSubmitButton();
-                                    });
-                                
-                                    // Form submission handling
-                                    $('#add-player-form').submit(function(event) {
-                                        event.preventDefault(); // Prevent default form submission
-                                
-                                        var jerseyNum = $('#jersey_num').val().trim();
-                                        var playerName = $('#player_name').val().trim();
-                                        var playerCountry = $('#player_country').val().trim();
-                                        var playerPosition = $('#player_position').val();
-                                        var playerRole = $('#player_role').val().trim();
-                                        var playerImage = $('#player_image').val();
-                                
-                                        // Perform final validation before submission
-                                        if (jerseyNum.length === 0 || playerName.length === 0 || playerCountry.length === 0 || playerPosition === "" || playerRole.length === 0 || (playerImage && !validateImage(playerImage)) ||
-                                            !validateJerseyNum(jerseyNum) || !validateAlpha(playerName) || !validateAlpha(playerCountry) || !validateAlpha(playerRole)) {
-                                            alert('Please complete all required fields correctly.');
-                                            return;
-                                        }
-                                
-                                        // Submit the form via AJAX or perform further processing
-                                        $.ajax({
-                                            url: $(this).attr('action'),
-                                            type: $(this).attr('method'),
-                                            data: new FormData(this), // Include file data
-                                            contentType: false,
-                                            processData: false,
-                                            success: function(response) {
-                                                // Handle success response
-                                                alert('Player updated successfully!');
-                                                // Redirect to another page
-                                                window.location.href = '{% url "admin_squad_list" %}'; // Update with actual redirect URL
-                                            },
-                                            error: function(xhr, status, error) {
-                                                // Handle error response
-                                                console.error('Error submitting form:', error);
-                                                alert('Failed to update player. Please try again later.');
-                                            }
-                                        });
-                                    });
-                                
-                                    // Validation functions
-                                    function validateJerseyNum(num) {
-                                        var re = /^\d+$/; // Only numeric values
-                                        return re.test(num);
-                                    }
-                                
-                                    function validateAlpha(str) {
-                                        var re = /^[a-zA-Z]+$/; // Only alphabets
-                                        return re.test(str);
-                                    }
-                                
-                                    function validateImage(file) {
-                                        var allowedExtensions = ['jpg', 'jpeg', 'png'];
-                                        var fileExtension = file.split('.').pop().toLowerCase();
-                                        return allowedExtensions.includes(fileExtension);
-                                    }
-                                });
-                                </script>
-                                
+                                        {% endfor %}
+                                    </div>
+                                </div>
+
+                                <!-- Submit Button -->
+                                <div class="flex justify-center mt-10">
+                                    <button type="submit" class="submit-btn">
+                                        Update Player
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity"></div>
+            
+            <div class="relative bg-white rounded-lg max-w-md w-full mx-auto shadow-xl transform transition-all">
+                <!-- Modal header -->
+                <div class="py-6 px-6 lg:px-8 text-center relative">
+                    <div class="mb-6">
+                        <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-emerald-100 mb-4">
+                            <svg class="h-8 w-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-900 mb-2">Success!</h3>
+                        <p class="text-gray-600" id="modalMessage">Player updated successfully</p>
+                    </div>
+                    
+                    <!-- Modal button -->
+                    <button id="modalOkButton" class="w-full inline-flex justify-center items-center px-6 py-3 text-base font-medium text-white bg-emerald-600 border border-transparent rounded-md shadow-sm hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors duration-200">
+                        Continue
+                        <svg class="ml-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('playerForm');
+        const successModal = document.getElementById('successModal');
+        const modalOkButton = document.getElementById('modalOkButton');
+        const modalMessage = document.getElementById('modalMessage');
+        
+        function showModal(message) {
+            modalMessage.textContent = message;
+            successModal.classList.remove('hidden');
+            successModal.querySelector('.bg-white').classList.add('animate-modal-in');
+        }
+
+        function hideModal() {
+            successModal.classList.add('hidden');
+        }
+
+        modalOkButton.addEventListener('click', function() {
+            hideModal();
+            window.location.href = '{% url "admin_squad_list" %}';
+        });
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(form);
+            
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showModal(data.message || 'Player updated successfully');
+                } else {
+                    alert(data.error || 'An error occurred');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while updating the player');
+            });
+        });
+    });
+    </script>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const historyContainer = document.getElementById('historyContainer');
+        const addHistoryBtn = document.getElementById('addHistoryBtn');
+
+        // Template for new history entry
+        const historyTemplate = `
+            <div class="history-entry border rounded p-4 mb-4">
+                <div class="d-flex justify-content-end mb-2">
+                    <button type="button" class="remove-history btn btn-danger btn-sm">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input type="hidden" name="history_ids[]" value="">
+                    <div>
+                        <label class="form-label">Previous Club</label>
+                        <input type="text" name="club[]" class="modern-input" required>
+                    </div>
+                    <div>
+                        <label class="form-label">Start Date</label>
+                        <input type="date" name="start_date[]" class="modern-input" required>
+                    </div>
+                    <div>
+                        <label class="form-label">End Date</label>
+                        <input type="date" name="end_date[]" class="modern-input">
+                    </div>
+                    <div>
+                        <label class="form-label">Appearances</label>
+                        <input type="number" name="prev_appearances[]" class="modern-input" min="0" required>
+                    </div>
+                    <div>
+                        <label class="form-label">Goals</label>
+                        <input type="number" name="prev_goals[]" class="modern-input" min="0" required>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Add new history entry
+        addHistoryBtn.addEventListener('click', function() {
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = historyTemplate.trim();
+            historyContainer.appendChild(tempDiv.firstChild);
+        });
+
+        // Remove history entry
+        historyContainer.addEventListener('click', function(e) {
+            if (e.target.closest('.remove-history')) {
+                const historyEntry = e.target.closest('.history-entry');
+                historyEntry.remove();
+            }
+        });
+    });
+    </script>
+</body>
+</html>

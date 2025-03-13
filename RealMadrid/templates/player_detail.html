@@ -90,63 +90,138 @@
             color: var(--primary-color);
         }
 
+        .timeline {
+            position: relative;
+            padding-left: 15px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, var(--primary-color), var(--secondary-color));
+        }
+
         .timeline .card {
             border: none;
-            border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-            transition: var(--transition);
-            margin-left: 20px;
-            border-left: 4px solid var(--primary-color);
+            border-radius: 12px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+            margin-bottom: 0.8rem;
         }
 
         .timeline .card:hover {
-            transform: translateX(10px);
-        }
-
-        .table {
-            border-radius: 15px;
-            overflow: hidden;
+            transform: translateX(5px);
             box-shadow: 0 5px 15px rgba(0,0,0,0.08);
         }
 
-        .table thead {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            color: white;
+        .timeline-dot {
+            position: absolute;
+            left: -19px;
+            top: 50%;
+            width: 8px;
+            height: 8px;
+            background: var(--accent-color);
+            border-radius: 50%;
+            transform: translateY(-50%);
+            border: 2px solid white;
+            box-shadow: 0 0 0 2px var(--primary-color);
         }
 
-        .table thead th {
-            border: none;
-            padding: 1rem;
+        .club-info {
+            padding: 0.5rem;
         }
 
-        .biography-card {
-            border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-            transition: var(--transition);
-            background: white;
-            padding: 2rem;
-            line-height: 1.8;
-        }
-
-        .player-info {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 1.5rem;
-            border-radius: 15px;
-            backdrop-filter: blur(10px);
-        }
-
-        .player-info p {
-            margin-bottom: 0.8rem;
+        .card-title {
+            color: var(--primary-color);
             font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.3rem;
+        }
+
+        .date-badge {
+            font-size: 0.8rem;
+            padding: 0.2rem 0.8rem;
+            background: var(--accent-color);
+            border-radius: 12px;
+            color: var(--primary-color);
+        }
+
+        .stats-container {
+            display: flex;
+            gap: 0.8rem;
+        }
+
+        .stat-box {
+            flex: 1;
+            padding: 0.8rem;
+            background: white;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            transition: transform 0.2s ease;
+        }
+
+        .stat-box:hover {
+            transform: translateY(-2px);
+        }
+
+        .stat-icon {
+            color: var(--primary-color);
+            font-size: 0.9rem;
+            margin-bottom: 0.2rem;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            line-height: 1;
+            margin: 0.2rem 0;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .description-box {
+            font-size: 0.9rem;
+            color: #555;
+            line-height: 1.4;
+            padding: 0.5rem;
         }
 
         @media (max-width: 768px) {
-            .player-header {
-                padding: 2rem 0;
+            .timeline {
+                padding-left: 12px;
             }
-            
-            .stats-card {
-                margin-bottom: 1rem;
+
+            .timeline-dot {
+                left: -16px;
+                width: 6px;
+                height: 6px;
+            }
+
+            .stats-container {
+                gap: 0.5rem;
+            }
+
+            .stat-box {
+                padding: 0.5rem;
+            }
+
+            .stat-value {
+                font-size: 1.2rem;
+            }
+
+            .card-body {
+                padding: 0.8rem;
             }
         }
     </style>
@@ -173,7 +248,7 @@
                             </div>
                             <div class="col-md-6">
                                 <p><strong>Date of Birth:</strong> {{ player.date_of_birth|date:"F j, Y" }}</p>
-                                <p><strong>Height:</strong> {{ player.height }}cm</p>
+                                <p><strong>Height:</strong> {{ player.height }}m</p>
                                 <p><strong>Weight:</strong> {{ player.weight }}kg</p>
                                 <p><strong>Joined:</strong> {{ player.joined_date|date:"F j, Y" }}</p>
                             </div>
@@ -272,12 +347,37 @@
         <div class="timeline">
             {% for history in player_history %}
             <div class="card mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">{{ history.club }}</h5>
-                    <h6 class="card-subtitle mb-2 text-muted">
-                        {{ history.start_date|date:"Y" }} - {{ history.end_date|date:"Y" }}
-                    </h6>
-                    <p class="card-text">{{ history.description }}</p>
+                <div class="card-body position-relative">
+                    <div class="timeline-dot"></div>
+                    <div class="row align-items-center g-3">
+                        <div class="col-md-3">
+                            <div class="club-info">
+                                <h5 class="card-title">{{ history.club }}</h5>
+                                <span class="date-badge">
+                                    {{ history.start_date|date:"Y" }} - {{ history.end_date|date:"Y" }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="stats-container">
+                                <div class="stat-box">
+                                    <i class="fas fa-running stat-icon"></i>
+                                    <div class="stat-value">{{ history.appearances }}</div>
+                                    <div class="stat-label">Appearances</div>
+                                </div>
+                                <div class="stat-box">
+                                    <i class="fas fa-futbol stat-icon"></i>
+                                    <div class="stat-value">{{ history.goals }}</div>
+                                    <div class="stat-label">Goals</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="description-box">
+                                {{ history.description }}
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
             {% endfor %}
@@ -288,7 +388,7 @@
         <div class="achievements-container">
             {% for achievement in achievements %}
             <span class="achievement-badge">
-                {{ achievement.title }} ({{ achievement.year }})
+                {{ achievement.title }} 
             </span>
             {% endfor %}
         </div>
@@ -305,5 +405,8 @@
     <!-- Bootstrap JS and dependencies -->
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js"></script>
+
+    <!-- Add Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </body>
 </html>

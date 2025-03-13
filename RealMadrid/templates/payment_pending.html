@@ -1,0 +1,140 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Processing - Real Madrid FC</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uikit@3.21.6/dist/css/uikit.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/uikit@3.21.6/dist/js/uikit.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/uikit@3.21.6/dist/js/uikit-icons.min.js"></script>
+</head>
+<body class="bg-gray-100">
+    <!-- Header -->
+    <header class="bg-white shadow-md">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <a href="/" class="flex items-center">
+                    <img src="{% static 'madrid_images/real-madrid-logo.png' %}" alt="Real Madrid Logo" class="h-12">
+                    <span class="ml-3 text-xl font-bold">Real Madrid FC</span>
+                </a>
+                <nav>
+                    <ul class="flex space-x-6">
+                        <li><a href="/" class="text-gray-700 hover:text-blue-600">Home</a></li>
+                        <li><a href="/schedule" class="text-gray-700 hover:text-blue-600">Tickets</a></li>
+                        <li><a href="/profile" class="text-gray-700 hover:text-blue-600">Profile</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container mx-auto px-4 py-12">
+        <div class="max-w-3xl mx-auto bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="p-6">
+                <div class="flex items-center justify-center mb-6">
+                    <img src="{% static 'madrid_images/real-madrid-logo.png' %}" alt="Real Madrid Logo" class="h-16">
+                </div>
+                
+                <div class="text-center mb-8">
+                    <h1 class="text-2xl font-bold text-yellow-600">Payment Processing</h1>
+                    <p class="text-gray-600 mt-2">We're currently processing your payment.</p>
+                </div>
+                
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                    <div class="flex items-start">
+                        <svg class="w-5 h-5 text-yellow-600 mt-0.5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                        </svg>
+                        <div>
+                            <p class="text-yellow-700 font-medium">Your payment is being processed.</p>
+                            <p class="text-yellow-600 mt-1">This page will automatically refresh to check the status of your payment. Please do not close this window.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="border-t border-gray-200 py-4 mb-6">
+                    <h2 class="text-xl font-semibold mb-4">Order Details</h2>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-gray-600">Order Number:</p>
+                            <p class="font-medium">{{ order.order_number }}</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-600">Date:</p>
+                            <p class="font-medium">{{ order.created_at|date:"F j, Y" }}</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-600">Status:</p>
+                            <p class="font-medium text-yellow-600">{{ order.status }}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-6">
+                    <h2 class="text-xl font-semibold mb-4">Match Details</h2>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <p class="font-bold text-lg">{{ order.match.home_team }} vs {{ order.match.away_team }}</p>
+                                <p class="text-gray-600">{{ order.match.utc_date|date:"F j, Y - g:i A" }}</p>
+                                <p class="text-gray-600">{{ order.match.venue }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="text-center">
+                    <p class="text-gray-600 mb-6">Please wait while we confirm your payment. This usually takes less than a minute.</p>
+                    <div class="flex justify-center space-x-4">
+                        <a href="{% url 'verify_ticket_payment' order.order_number %}" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">
+                            Check Status
+                        </a>
+                        <a href="{% url 'schedule' %}" class="bg-gray-200 text-gray-800 px-6 py-3 rounded-lg hover:bg-gray-300 transition-colors">
+                            Back to Schedule
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white mt-12">
+        <div class="container mx-auto px-4 py-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Real Madrid FC</h3>
+                    <p class="text-gray-400">The official ticket booking platform for Real Madrid matches.</p>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Quick Links</h3>
+                    <ul class="space-y-2">
+                        <li><a href="/" class="text-gray-400 hover:text-white">Home</a></li>
+                        <li><a href="/schedule" class="text-gray-400 hover:text-white">Tickets</a></li>
+                        <li><a href="/profile" class="text-gray-400 hover:text-white">Profile</a></li>
+                        <li><a href="/contact" class="text-gray-400 hover:text-white">Contact</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Contact Us</h3>
+                    <p class="text-gray-400">Email: support@realmadrid.com</p>
+                    <p class="text-gray-400">Phone: +34 123 456 789</p>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-8 pt-6 text-center">
+                <p class="text-gray-400">&copy; 2023 Real Madrid FC. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Refresh the page every 10 seconds to check payment status
+        setTimeout(function() {
+            window.location.reload();
+        }, 10000);
+    </script>
+</body>
+</html>

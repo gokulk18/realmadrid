@@ -226,6 +226,29 @@ select option:not(:checked) {
     transform: translateY(-2px);
     box-shadow: 0 6px 12px -2px rgba(59, 130, 246, 0.3);
 }
+
+.season-stat-entry {
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.season-stat-entry:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.remove-season-stat {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+
+.remove-season-stat:hover {
+    background-color: rgba(239, 68, 68, 0.1);
+}
 </style>
 
 <script>
@@ -608,21 +631,72 @@ select option:not(:checked) {
 
                                 <!-- Season Stats -->
                                 <div class="form-card p-8 mb-8">
-                                    <div class="card-header">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
                                         <h3 class="text-xl font-semibold text-gray-800">Current Season Statistics</h3>
+                                        <button type="button" id="addSeasonStatBtn" class="px-4 py-2 text-sm text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 transition-colors">
+                                            + Add League Statistics
+                                        </button>
                                     </div>
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div>
-                                            <label class="form-label">Season</label>
-                                            <input type="text" id="season" name="season" placeholder="2023/2024" class="modern-input">
-                                        </div>
-                                        <div>
-                                            <label class="form-label">Competition</label>
-                                            <input type="text" id="competition" name="competition" placeholder="LaLiga" class="modern-input">
-                                        </div>
-                                        <div>
-                                            <label class="form-label">Minutes Played</label>
-                                            <input type="number" id="minutes_played" name="minutes_played" value="0" class="modern-input">
+                                    
+                                    <div id="seasonStatsContainer">
+                                        <div class="season-stat-entry border rounded p-4 mb-4">
+                                            <div class="flex justify-end mb-2">
+                                                <button type="button" class="remove-season-stat text-red-500 hover:text-red-700">
+                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div>
+                                                    <label class="form-label">Season</label>
+                                                    <input type="text" 
+                                                           name="season[]" 
+                                                           placeholder="2023/2024" 
+                                                           class="modern-input" 
+                                                           required>
+                                                </div>
+                                                <div>
+                                                    <label class="form-label">Competition</label>
+                                                    <input type="text" 
+                                                           name="competition[]" 
+                                                           placeholder="LaLiga" 
+                                                           class="modern-input" 
+                                                           required>
+                                                </div>
+                                                <div>
+                                                    <label class="form-label">Appearances</label>
+                                                    <input type="number" 
+                                                           name="season_appearances[]" 
+                                                           value="0" 
+                                                           min="0" 
+                                                           class="modern-input">
+                                                </div>
+                                                <div>
+                                                    <label class="form-label">Goals</label>
+                                                    <input type="number" 
+                                                           name="season_goals[]" 
+                                                           value="0" 
+                                                           min="0" 
+                                                           class="modern-input">
+                                                </div>
+                                                <div>
+                                                    <label class="form-label">Assists</label>
+                                                    <input type="number" 
+                                                           name="season_assists[]" 
+                                                           value="0" 
+                                                           min="0" 
+                                                           class="modern-input">
+                                                </div>
+                                                <div>
+                                                    <label class="form-label">Minutes Played</label>
+                                                    <input type="number" 
+                                                           name="minutes_played[]" 
+                                                           value="0" 
+                                                           min="0" 
+                                                           class="modern-input">
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -664,6 +738,62 @@ select option:not(:checked) {
                                                         id="addMoreAchievement" 
                                                         class="px-4 py-2 text-sm text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 transition-colors">
                                                     + Add Another Achievement
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Career History section -->
+                                <div class="form-card p-8 mb-8">
+                                    <div class="card-header">
+                                        <h3 class="text-xl font-semibold text-gray-800">Career History</h3>
+                                    </div>
+                                    <div class="career-history-container">
+                                        <div class="career-history-fields mb-4">
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div>
+                                                    <label class="form-label">Previous Club</label>
+                                                    <input type="text" 
+                                                           name="previous_club" 
+                                                           class="modern-input" 
+                                                           placeholder="e.g., Manchester United">
+                                                </div>
+                                                <div>
+                                                    <label class="form-label">Start Date</label>
+                                                    <input type="date" 
+                                                           name="career_start_date" 
+                                                           class="modern-input"
+                                                           required>
+                                                </div>
+                                                <div>
+                                                    <label class="form-label">End Date</label>
+                                                    <input type="date" 
+                                                           name="career_end_date" 
+                                                           class="modern-input">
+                                                </div>
+                                                <div>
+                                                    <label class="form-label">Appearances</label>
+                                                    <input type="number" 
+                                                           name="career_appearances" 
+                                                           class="modern-input"
+                                                           min="0"
+                                                           value="0">
+                                                </div>
+                                                <div>
+                                                    <label class="form-label">Goals</label>
+                                                    <input type="number" 
+                                                           name="career_goals" 
+                                                           class="modern-input"
+                                                           min="0"
+                                                           value="0">
+                                                </div>
+                                            </div>
+                                            <div class="flex justify-end mt-4">
+                                                <button type="button" 
+                                                        id="addMoreCareerHistory" 
+                                                        class="px-4 py-2 text-sm text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 transition-colors">
+                                                    + Add Another Club
                                                 </button>
                                             </div>
                                         </div>
@@ -738,6 +868,28 @@ select option:not(:checked) {
 
         formData.append('achievements', JSON.stringify(achievements));
 
+        // Update the career history collection in form submission
+        const careerHistory = [];
+        const previousClubs = document.querySelectorAll('[name="previous_club"]');
+        const careerStartDates = document.querySelectorAll('[name="career_start_date"]');
+        const careerEndDates = document.querySelectorAll('[name="career_end_date"]');
+        const careerAppearances = document.querySelectorAll('[name="career_appearances"]');
+        const careerGoals = document.querySelectorAll('[name="career_goals"]');
+
+        for (let i = 0; i < previousClubs.length; i++) {
+            if (previousClubs[i].value) {  // Only add if club name exists
+                careerHistory.push({
+                    club: previousClubs[i].value,
+                    start_date: careerStartDates[i].value,
+                    end_date: careerEndDates[i].value || null,
+                    appearances: parseInt(careerAppearances[i].value) || 0,
+                    goals: parseInt(careerGoals[i].value) || 0
+                });
+            }
+        }
+
+        formData.append('career_history', JSON.stringify(careerHistory));
+
         // Send POST request to your backend
         fetch('{% url "admin_add_player" %}', {
             method: 'POST',
@@ -761,37 +913,53 @@ select option:not(:checked) {
         });
     });
 
-    // Add dynamic achievement fields
-    document.getElementById('addMoreAchievement').addEventListener('click', function() {
-        const container = document.querySelector('.achievement-container');
+    // Update the dynamic career history fields addition
+    document.getElementById('addMoreCareerHistory').addEventListener('click', function() {
+        const container = document.querySelector('.career-history-container');
         const newFields = document.createElement('div');
-        newFields.className = 'achievement-fields mb-4 pt-4 border-t border-gray-200';
+        newFields.className = 'career-history-fields mb-4 pt-4 border-t border-gray-200';
         newFields.innerHTML = `
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label class="form-label">Achievement Title</label>
+                    <label class="form-label">Previous Club</label>
                     <input type="text" 
-                           name="achievement_title" 
+                           name="previous_club" 
                            class="modern-input" 
-                           placeholder="e.g., Champions League Winner">
+                           placeholder="e.g., Manchester United">
                 </div>
                 <div>
-                    <label class="form-label">Achievement Date</label>
+                    <label class="form-label">Start Date</label>
                     <input type="date" 
-                           name="achievement_date" 
+                           name="career_start_date" 
+                           class="modern-input"
+                           required>
+                </div>
+                <div>
+                    <label class="form-label">End Date</label>
+                    <input type="date" 
+                           name="career_end_date" 
                            class="modern-input">
                 </div>
-                <div class="md:col-span-2">
-                    <label class="form-label">Achievement Description</label>
-                    <textarea name="achievement_description" 
-                            class="modern-input" 
-                            rows="3" 
-                            placeholder="Describe the achievement..."></textarea>
+                <div>
+                    <label class="form-label">Appearances</label>
+                    <input type="number" 
+                           name="career_appearances" 
+                           class="modern-input"
+                           min="0"
+                           value="0">
+                </div>
+                <div>
+                    <label class="form-label">Goals</label>
+                    <input type="number" 
+                           name="career_goals" 
+                           class="modern-input"
+                           min="0"
+                           value="0">
                 </div>
             </div>
             <div class="flex justify-end mt-2">
                 <button type="button" 
-                        class="remove-achievement px-4 py-2 text-sm text-red-600 border border-red-600 rounded-lg hover:bg-red-50 transition-colors">
+                        class="remove-career-history px-4 py-2 text-sm text-red-600 border border-red-600 rounded-lg hover:bg-red-50 transition-colors">
                     Remove
                 </button>
             </div>
@@ -800,8 +968,94 @@ select option:not(:checked) {
         container.appendChild(newFields);
 
         // Add remove functionality
-        newFields.querySelector('.remove-achievement').addEventListener('click', function() {
+        newFields.querySelector('.remove-career-history').addEventListener('click', function() {
             newFields.remove();
+        });
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const seasonStatsContainer = document.getElementById('seasonStatsContainer');
+        const addSeasonStatBtn = document.getElementById('addSeasonStatBtn');
+
+        // Template for new season stats entry
+        const seasonStatTemplate = `
+            <div class="season-stat-entry border rounded p-4 mb-4">
+                <div class="flex justify-end mb-2">
+                    <button type="button" class="remove-season-stat text-red-500 hover:text-red-700">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="form-label">Season</label>
+                        <input type="text" 
+                               name="season[]" 
+                               placeholder="2023/2024" 
+                               class="modern-input" 
+                               required>
+                    </div>
+                    <div>
+                        <label class="form-label">Competition</label>
+                        <input type="text" 
+                               name="competition[]" 
+                               placeholder="LaLiga" 
+                               class="modern-input" 
+                               required>
+                    </div>
+                    <div>
+                        <label class="form-label">Appearances</label>
+                        <input type="number" 
+                               name="season_appearances[]" 
+                               value="0" 
+                               min="0" 
+                               class="modern-input">
+                    </div>
+                    <div>
+                        <label class="form-label">Goals</label>
+                        <input type="number" 
+                               name="season_goals[]" 
+                               value="0" 
+                               min="0" 
+                               class="modern-input">
+                    </div>
+                    <div>
+                        <label class="form-label">Assists</label>
+                        <input type="number" 
+                               name="season_assists[]" 
+                               value="0" 
+                               min="0" 
+                               class="modern-input">
+                    </div>
+                    <div>
+                        <label class="form-label">Minutes Played</label>
+                        <input type="number" 
+                               name="minutes_played[]" 
+                               value="0" 
+                               min="0" 
+                               class="modern-input">
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Add new season stats entry
+        addSeasonStatBtn.addEventListener('click', function() {
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = seasonStatTemplate.trim();
+            seasonStatsContainer.appendChild(tempDiv.firstChild);
+        });
+
+        // Remove season stats entry
+        seasonStatsContainer.addEventListener('click', function(e) {
+            if (e.target.closest('.remove-season-stat')) {
+                const statEntry = e.target.closest('.season-stat-entry');
+                // Don't remove if it's the last entry
+                if (seasonStatsContainer.children.length > 1) {
+                    statEntry.remove();
+                }
+            }
         });
     });
     </script>
