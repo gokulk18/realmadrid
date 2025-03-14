@@ -57,6 +57,13 @@ from .models import UploadedImage  # Assuming you have a model for storing image
 from .models import IdentifyPlayer
 from django.utils.html import strip_tags
 from .models import Player, SeasonStats, PlayerHistory, PlayerAchievement
+import json
+import uuid
+from django.core.cache import cache
+from .models import Match  # Adjust based on your actual models
+from decimal import Decimal, ROUND_HALF_UP
+from django.db import IntegrityError
+from django.db import connection
 
 
 
@@ -3002,251 +3009,171 @@ def trainer_assign_task(request):
 
 @csrf_exempt
 def process_ticket_booking(request, match_id):
+    """
+    Process ticket booking after Razorpay payment
+    """
     if request.method != 'POST':
         return JsonResponse({'success': False, 'error': 'Invalid request method'})
-
+    
     try:
         data = json.loads(request.body)
+        
+        # Extract and log payment details
+        razorpay_payment_id = data.get('razorpay_payment_id')
+        booking_id = data.get('booking_id')
         seats = data.get('seats', [])
+        amount = data.get('amount', 0)
+        booking_fee = data.get('booking_fee', 0)
+        total_amount = data.get('total_amount', 0)
         
-        if not seats:
-            return JsonResponse({'success': False, 'error': 'No seats selected'})
-
+        print(f"Processing booking: {booking_id}")
+        print(f"Seats: {seats}")
+        print(f"Payment ID: {razorpay_payment_id}")
+        
         # Get match details
-        match = get_object_or_404(Match, match_id=match_id)
-        
-        # Get user
-        if request.user.is_authenticated:
-            user = request.user
-        elif 'user_id' in request.session:
-            user = get_object_or_404(Users, id=request.session['user_id'])
-        else:
-            return JsonResponse({'success': False, 'error': 'User not authenticated'})
-
-        # Calculate total price and booking fee
-        booking_fee = 00  # Fixed booking fee per ticket
-        total_booking_fee = booking_fee * len(seats)
-        total_price = 0
-        seat_details = []
-
-        # Verify seat availability and calculate price
-        for seat_number in seats:
-            stand_code, seat_num = seat_number.split('-')
-            stand_map = {
-                'N': 'North Stand',
-                'S': 'South Stand',
-                'E': 'East Stand',
-                'W': 'West Stand'
-            }
-            
-            stand = get_object_or_404(Stand, name=stand_map[stand_code])
-            section = Section.objects.filter(stand=stand).first()
-            
-            # Check if seat is already booked
-            if TicketItem.objects.filter(
-                order__match=match,
-                stand=stand,
-                section=section,
-                seat_number=seat_num,
-                order__status='Confirmed'
-            ).exists():
-                return JsonResponse({
-                    'success': False,
-                    'error': f'Seat {seat_number} is already booked'
-                })
-            
-            total_price += 300  # Fixed price of 300 per seat
-            seat_details.append({
-                'stand': stand,
-                'section': section,
-                'seat_number': seat_num,
-                'price': 300
-            })
-
-        final_amount = total_price + total_booking_fee
-
-        # Create order
-        order = TicketOrder.objects.create(
-            user=user,
-            match=match,
-            full_name=user.name,
-            email=user.email,
-            phone=user.phone,
-            total_price=final_amount,
-            booking_fee=total_booking_fee,
-            status='Confirmed'  # Set status to Confirmed directly
-        )
-
-        # Create ticket items
-        for seat in seat_details:
-            TicketItem.objects.create(
-                order=order,
-                stand=seat['stand'],
-                section=seat['section'],
-                seat_number=seat['seat_number'],
-                price=seat['price']
-            )
-
-        # Return success response with redirect URL
-        return JsonResponse({
-            'success': True,
-            'redirect_url': reverse('booking_success', kwargs={'order_number': order.order_number})
-        })
-
-    except Exception as e:
-        logger.error(f"Error in process_ticket_booking: {str(e)}")
-        return JsonResponse({'success': False, 'error': str(e)})
-
-@csrf_exempt
-@require_POST
-def verify_ticket_payment(request, order_number):
-    try:
-        data = json.loads(request.body)
-        
-        # Get the order
-        order = get_object_or_404(TicketOrder, order_number=order_number)
-        
-        # Verify the payment signature
-        client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
-        
-        # Create parameters dict for signature verification
-        params_dict = {
-            'razorpay_payment_id': data.get('razorpay_payment_id'),
-            'razorpay_order_id': data.get('razorpay_order_id'),
-            'razorpay_signature': data.get('razorpay_signature')
-        }
-
         try:
-            # Verify signature
-            client.utility.verify_payment_signature(params_dict)
+            match = Match.objects.get(match_id=match_id)
+            print(f"Found match: {match}")
+        except Match.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Match not found'})
+        
+        # Process each step separately to identify where the error occurs
+        try:
+            # Create ticket order
+            ticket_order = TicketOrder.objects.create(
+                order_number=booking_id,
+                user_id=request.user.id if request.user.is_authenticated else None,
+                match=match,
+                full_name=request.user.name if request.user.is_authenticated else 'Guest',
+                email=request.user.email if request.user.is_authenticated else '',
+                phone=request.user.phone if request.user.is_authenticated else '',
+                total_price=total_amount,
+                booking_fee=booking_fee,
+                status='Confirmed',
+                is_paid=True
+            )
+            print(f"Created ticket order: {ticket_order.order_number}")
             
-            # Update order status
-            order.status = 'Confirmed'
-            order.is_paid = True
-            order.save()
-
+            # Calculate price per seat
+            price_per_seat = Decimal(amount) / Decimal(len(seats)) if seats else Decimal('0.00')
+            price_per_seat = price_per_seat.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)  # Round to 2 decimal places
+            
+            # Process seats one by one
+            for seat in seats:
+                try:
+                    print(f"Processing seat: {seat}")
+                    
+                    # Parse seat format (e.g., "N-1" for North Stand, seat 1)
+                    parts = seat.split('-')
+                    if len(parts) != 2:
+                        print(f"Invalid seat format: {seat}")
+                        continue
+                        
+                    stand_code, seat_number_str = parts
+                    
+                    # Convert seat_number to integer
+                    try:
+                        seat_number = int(seat_number_str)
+                    except ValueError:
+                        print(f"Invalid seat number: {seat_number_str}")
+                        continue
+                    
+                    # Map stand code to stand object
+                    stand_map = {
+                        'N': 'North Stand',
+                        'S': 'South Stand',
+                        'E': 'East Stand',
+                        'W': 'West Stand'
+                    }
+                    
+                    stand_name = stand_map.get(stand_code, stand_code)
+                    print(f"Stand name: {stand_name}")
+                    
+                    # Get or create stand
+                    try:
+                        stand = Stand.objects.get(name=stand_name)
+                        print(f"Found existing stand: {stand}")
+                    except Stand.DoesNotExist:
+                        stand = Stand.objects.create(name=stand_name)
+                        print(f"Created new stand: {stand}")
+                    
+                    # Get or create section
+                    try:
+                        section = Section.objects.filter(stand=stand).first()
+                        if not section:
+                            # Create with minimal required fields
+                            section = Section.objects.create(
+                                name=f"Default {stand_name}",
+                                stand=stand,
+                                price=Decimal('300.00'),
+                                seats=[]  # Use empty list instead of json.dumps([])
+                            )
+                            print(f"Created new section: {section}")
+                        else:
+                            print(f"Found existing section: {section}")
+                    except Exception as e:
+                        print(f"Error creating section: {str(e)}")
+                        raise
+                    
+                    # Create ticket item
+                    try:
+                        ticket_item = TicketItem.objects.create(
+                            order=ticket_order,
+                            stand=stand,
+                            section=section,
+                            seat_number=seat_number,  # Now properly converted to int
+                            price=price_per_seat  # Now properly calculated and rounded
+                        )
+                        print(f"Created ticket item: {ticket_item}")
+                    except IntegrityError as ie:
+                        print(f"Integrity error creating ticket item: {str(ie)}")
+                        # Check if this is a duplicate seat
+                        existing = TicketItem.objects.filter(
+                            order=ticket_order,
+                            stand=stand,
+                            section=section,
+                            seat_number=seat_number
+                        ).exists()
+                        if existing:
+                            print(f"Seat {seat_number} already exists for this order")
+                        else:
+                            raise
+                    except Exception as e:
+                        print(f"Error creating ticket item: {str(e)}")
+                        print(f"Type: {type(e)}")
+                        raise
+                        
+                except Exception as seat_error:
+                    print(f"Error processing seat {seat}: {str(seat_error)}")
+                    # Continue with next seat instead of failing the whole booking
+                    continue
+            
             # Create payment record
-            TicketPayment.objects.create(
-                ticket_order=order,
+            payment = TicketPayment.objects.create(
+                ticket_order=ticket_order,
                 payment_method='Razorpay',
-                razorpay_payment_id=data.get('razorpay_payment_id'),
-                razorpay_order_id=data.get('razorpay_order_id'),
-                razorpay_signature=data.get('razorpay_signature'),
-                transaction_id=f'TXN-{order.order_number}',
-                amount_paid=order.total_price,
+                razorpay_payment_id=razorpay_payment_id,
+                transaction_id=razorpay_payment_id,
+                amount_paid=total_amount,
                 status='Completed',
                 completed_at=timezone.now()
             )
-
-            # Generate success URL
-            success_url = reverse('booking_success', kwargs={'order_number': order.order_number})
+            print(f"Created payment record: {payment}")
             
             return JsonResponse({
                 'success': True,
-                'redirect_url': success_url
+                'order_number': ticket_order.order_number,
+                'redirect_url': f'/booking-success/{ticket_order.order_number}/'
             })
-
-        except Exception as e:
-            # Payment verification failed
-            order.status = 'Failed'
-            order.save()
-            logger.error(f"Payment verification failed for order {order_number}: {str(e)}")
-            return JsonResponse({
-                'success': False,
-                'error': 'Payment verification failed'
-            })
-
+            
+        except Exception as process_error:
+            print(f"Error in booking process: {str(process_error)}")
+            raise
+    
     except Exception as e:
-        logger.error(f"Error in verify_ticket_payment: {str(e)}")
-        return JsonResponse({'success': False, 'error': str(e)})
-
-@csrf_exempt
-@transaction.atomic
-def process_ticket_payment(request, order_number):
-    if request.method != 'POST':
-        return JsonResponse({'success': False, 'error': 'Invalid request method'})
-
-    try:
-        # Parse the JSON data from request body
-        data = json.loads(request.body)
-        razorpay_payment_id = data.get('razorpay_payment_id')
-        razorpay_order_id = data.get('razorpay_order_id')
-        razorpay_signature = data.get('razorpay_signature')
-        
-        # Get the order
-        order = get_object_or_404(TicketOrder, order_number=order_number)
-        
-        # Ensure the order belongs to the current user
-        if request.user.is_authenticated:
-            if order.user != request.user:
-                raise Http404
-        elif 'user_id' in request.session:
-            if order.user.id != request.session['user_id']:
-                raise Http404
-        else:
-            raise Http404
-
-        # Check if order is still pending
-        if order.status != 'Pending':
-            return JsonResponse({
-                'success': False,
-                'error': 'Order has already been processed'
-            })
-
-        # Initialize Razorpay client
-        client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
-        
-        # Verify payment signature
-        params_dict = {
-            'razorpay_payment_id': razorpay_payment_id,
-            'razorpay_order_id': razorpay_order_id,
-            'razorpay_signature': razorpay_signature
-        }
-        
-        try:
-            client.utility.verify_payment_signature(params_dict)
-        except Exception as e:
-            return JsonResponse({
-                'success': False,
-                'error': 'Invalid payment signature'
-            })
-
-        # Payment verified successfully, update order status
-        order.status = 'Confirmed'
-        order.save()
-
-        # Update payment record
-        payment = TicketPayment.objects.get(ticket_order=order)
-        payment.payment_method = 'Razorpay'
-        payment.transaction_id = razorpay_payment_id
-        payment.status = 'Completed'
-        payment.save()
-
-        # Send confirmation email
-        try:
-            subject = 'Real Madrid FC - Ticket Booking Confirmation'
-            message = render_to_string('emails/ticket_confirmation.html', {
-                'order': order,
-                'tickets': order.tickets.all()
-            })
-            send_mail(
-                subject,
-                message,
-                settings.DEFAULT_FROM_EMAIL,
-                [order.email],
-                html_message=message
-            )
-        except Exception as e:
-            logger.error(f'Failed to send confirmation email for order {order.order_number}: {str(e)}')
-
-        return JsonResponse({
-            'success': True,
-            'redirect_url': reverse('booking_success', kwargs={'order_number': order.order_number})
-        })
-
-    except json.JSONDecodeError:
-        return JsonResponse({'success': False, 'error': 'Invalid JSON data'})
-    except Exception as e:
+        print(f"Error processing ticket booking: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return JsonResponse({'success': False, 'error': str(e)})
 
 
@@ -3331,3 +3258,227 @@ def admin_add_player(request):
     # For GET requests, render the template
     positions = Position.objects.all()
     return render(request, 'admin_add_player.html', {'positions': positions})
+
+# Initialize Razorpay client
+razorpay_client = razorpay.Client(
+    auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET)
+)
+
+@csrf_exempt
+@require_POST
+def create_temp_booking(request, match_id):
+    """
+    Create a temporary booking and initialize Razorpay order
+    """
+    try:
+        data = json.loads(request.body)
+        seats = data.get('seats', [])
+        amount = data.get('amount', 0)
+        
+        if not seats:
+            return JsonResponse({'success': False, 'error': 'No seats selected'})
+        
+        # Get match details
+        try:
+            match = Match.objects.get(match_id=match_id)
+        except Match.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Match not found'})
+        
+        # Check if seats are already booked
+        # This assumes your seats are stored in the format "Stand-Number" (e.g., "N-1")
+        booked_tickets = TicketItem.objects.filter(
+            order__match=match, 
+            order__status__in=['Confirmed', 'Payment_Initiated']
+        ).values_list('seat_number', flat=True)
+        
+        # Convert booked_tickets to the same format as incoming seats for comparison
+        formatted_booked_tickets = [f"{ticket}" for ticket in booked_tickets]
+        unavailable_seats = [seat for seat in seats if seat in formatted_booked_tickets]
+        
+        if unavailable_seats:
+            return JsonResponse({
+                'success': False, 
+                'error': f'Seats {", ".join(unavailable_seats)} are no longer available'
+            })
+        
+        # Generate a unique booking ID
+        booking_id = str(uuid.uuid4())
+        
+        # Calculate booking fee (5% of total amount)
+        booking_fee = round(amount * 0.05, 2)
+        total_amount = amount + booking_fee
+        
+        # Create Razorpay order
+        razorpay_order = razorpay_client.order.create({
+            'amount': int(total_amount * 100),  # Amount in paise
+            'currency': 'INR',
+            'receipt': booking_id,
+            'payment_capture': 1  # Auto-capture payment
+        })
+        
+        # Store temporary booking data in cache
+        # Cache key will expire after 15 minutes (900 seconds)
+        temp_booking = {
+            'booking_id': booking_id,
+            'match_id': match_id,
+            'seats': seats,
+            'amount': amount,
+            'booking_fee': booking_fee,
+            'total_amount': total_amount,
+            'razorpay_order_id': razorpay_order['id'],
+            'user_id': request.user.id if request.user.is_authenticated else None,
+            'timestamp': str(timezone.now())
+        }
+        
+        cache.set(f'temp_booking_{booking_id}', temp_booking, 900)
+        
+        # Get user details for Razorpay prefill
+        user_name = ""
+        user_email = ""
+        user_phone = ""
+        
+        if request.user.is_authenticated:
+            user_name = request.user.name
+            user_email = request.user.email
+            user_phone = request.user.phone
+        
+        return JsonResponse({
+            'success': True,
+            'booking_id': booking_id,
+            'razorpay_key': settings.RAZORPAY_KEY_ID,
+            'order_id': razorpay_order['id'],
+            'amount': int(total_amount * 100),  # Amount in paise
+            'user_name': user_name,
+            'user_email': user_email,
+            'user_phone': user_phone
+        })
+        
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+@csrf_exempt
+@require_POST
+def verify_payment(request):
+    """
+    Verify Razorpay payment and confirm booking
+    """
+    try:
+        data = json.loads(request.body)
+        razorpay_payment_id = data.get('razorpay_payment_id')
+        razorpay_order_id = data.get('razorpay_order_id')
+        razorpay_signature = data.get('razorpay_signature')
+        booking_id = data.get('booking_id')
+        
+        # Verify the payment signature
+        params_dict = {
+            'razorpay_payment_id': razorpay_payment_id,
+            'razorpay_order_id': razorpay_order_id,
+            'razorpay_signature': razorpay_signature
+        }
+        
+        try:
+            razorpay_client.utility.verify_payment_signature(params_dict)
+        except Exception:
+            return JsonResponse({'success': False, 'error': 'Invalid payment signature'})
+        
+        # Get the temporary booking from cache
+        temp_booking = cache.get(f'temp_booking_{booking_id}')
+        
+        if not temp_booking:
+            return JsonResponse({'success': False, 'error': 'Booking expired or not found'})
+        
+        # Process the confirmed booking
+        with transaction.atomic():
+            # Get match
+            match = Match.objects.get(match_id=temp_booking['match_id'])
+            
+            # Create ticket order
+            ticket_order = TicketOrder.objects.create(
+                user_id=temp_booking['user_id'],
+                match=match,
+                full_name=data.get('user_name', 'Guest'),
+                email=data.get('user_email', ''),
+                phone=data.get('user_phone', ''),
+                total_price=temp_booking['total_amount'],
+                booking_fee=temp_booking['booking_fee'],
+                status='Confirmed',
+                razorpay_order_id=razorpay_order_id,
+                is_paid=True
+            )
+            
+            # Create ticket items
+            for seat in temp_booking['seats']:
+                # Parse seat format (e.g., "N-1" for North Stand, seat 1)
+                stand_code, seat_number = seat.split('-')
+                
+                # Map stand code to stand object
+                stand_map = {
+                    'N': 'North',
+                    'S': 'South',
+                    'E': 'East',
+                    'W': 'West'
+                }
+                
+                stand_name = stand_map.get(stand_code, stand_code)
+                
+                # Get stand and section
+                stand = Stand.objects.get(name=stand_name)
+                # Assuming you have a default section for each stand
+                section = Section.objects.filter(stand=stand).first()
+                
+                # Create ticket item
+                TicketItem.objects.create(
+                    order=ticket_order,
+                    stand=stand,
+                    section=section,
+                    seat_number=seat_number,
+                    price=temp_booking['amount'] / len(temp_booking['seats'])
+                )
+            
+            # Create payment record
+            TicketPayment.objects.create(
+                ticket_order=ticket_order,
+                payment_method='Razorpay',
+                razorpay_payment_id=razorpay_payment_id,
+                razorpay_order_id=razorpay_order_id,
+                razorpay_signature=razorpay_signature,
+                transaction_id=razorpay_payment_id,
+                amount_paid=temp_booking['total_amount'],
+                status='Completed',
+                completed_at=timezone.now()
+            )
+            
+            # Clear the temporary booking from cache
+            cache.delete(f'temp_booking_{booking_id}')
+            
+            return JsonResponse({
+                'success': True,
+                'redirect_url': f'/booking-success/{ticket_order.order_number}/'
+            })
+            
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+@csrf_exempt
+@require_POST
+def cancel_temp_booking(request):
+    """
+    Cancel a temporary booking
+    """
+    try:
+        data = json.loads(request.body)
+        booking_id = data.get('booking_id')
+        
+        if not booking_id:
+            return JsonResponse({'success': False, 'error': 'Booking ID is required'})
+        
+        # Delete the temporary booking from cache
+        cache.delete(f'temp_booking_{booking_id}')
+        
+        return JsonResponse({'success': True})
+        
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+
+

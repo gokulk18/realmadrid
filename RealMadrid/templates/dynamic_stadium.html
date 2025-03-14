@@ -618,27 +618,174 @@
             return;
         }
 
-        fetch(`/process-ticket-booking/{{ match.id }}/`, {
+        // Calculate total amount
+        const totalAmount = selectedSeats.length * 300; // Assuming ₹300 per seat
+        const bookingFee = Math.round(totalAmount * 0.05); // 5% booking fee
+        const finalAmount = totalAmount + bookingFee;
+
+        // Generate a unique booking ID
+        const bookingId = 'TKT-' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        
+        // Store booking data temporarily
+        const bookingData = {
+            match_id: '{{ match.id }}',
+            seats: selectedSeats,
+            amount: totalAmount,
+            booking_fee: bookingFee,
+            total_amount: finalAmount
+        };
+        
+        // Store in sessionStorage for retrieval after payment
+        sessionStorage.setItem('temp_booking_' + bookingId, JSON.stringify(bookingData));
+        
+        // Initialize Razorpay options
+        const options = {
+            key: 'rzp_test_7FTQA5xPrTVrqk', // Your Razorpay Key ID
+            amount: finalAmount * 100, // Amount in paise
+            currency: "INR",
+            name: "Real Madrid FC",
+            description: "Match Ticket Booking",
+            image: "{% static 'madrid_images/real-madrid-logo.png' %}",
+            handler: function (response) {
+                // Payment successful - process booking
+                processSuccessfulPayment(response, bookingId);
+            },
+            prefill: {
+                name: "{{ user_name|default:'' }}",
+                email: "{{ user.email|default:'' }}",
+                contact: "{{ user.phone|default:'' }}"
+            },
+            notes: {
+                booking_id: bookingId,
+                match_id: "{{ match.id }}",
+                seats: selectedSeats.join(',')
+            },
+            theme: {
+                color: "#3b82f6"
+            },
+            modal: {
+                ondismiss: function() {
+                    console.log("Payment modal dismissed");
+                    // Clean up temporary data
+                    sessionStorage.removeItem('temp_booking_' + bookingId);
+                }
+            }
+        };
+        
+        // Create Razorpay instance and open payment modal
+        const rzp = new Razorpay(options);
+        rzp.open();
+        
+        // Handle payment failures
+        rzp.on('payment.failed', function (response) {
+            console.error("Payment failed:", response.error);
+            alert("Payment failed: " + response.error.description);
+            // Clean up temporary data
+            sessionStorage.removeItem('temp_booking_' + bookingId);
+        });
+    }
+
+    function processSuccessfulPayment(paymentResponse, bookingId) {
+        // Get the stored booking data
+        const bookingData = JSON.parse(sessionStorage.getItem('temp_booking_' + bookingId));
+        
+        if (!bookingData) {
+            alert('Booking data not found. Please try again.');
+            return;
+        }
+        
+        // Show loading indicator
+        const loadingHtml = `
+            <div id="payment-processing" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div class="bg-white p-6 rounded-lg shadow-lg text-center">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                    <p class="text-lg font-semibold">Processing your booking...</p>
+                    <p class="text-sm text-gray-600">Please do not close this window.</p>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', loadingHtml);
+        
+        // Prepare data for server
+        const serverData = {
+            razorpay_payment_id: paymentResponse.razorpay_payment_id,
+            razorpay_order_id: paymentResponse.razorpay_order_id || '',
+            razorpay_signature: paymentResponse.razorpay_signature || '',
+            booking_id: bookingId,
+            seats: bookingData.seats,
+            amount: bookingData.amount,
+            booking_fee: bookingData.booking_fee,
+            total_amount: bookingData.total_amount
+        };
+        
+        // Get CSRF token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        
+        // Send data to server to complete booking
+        fetch('/process-ticket-booking/{{ match.id }}/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRFToken': '{{ csrf_token }}'
+                'X-CSRFToken': getCookie('csrftoken')
             },
-            body: JSON.stringify({
-                seats: selectedSeats
-            })
+            body: JSON.stringify(serverData)
         })
         .then(response => response.json())
         .then(data => {
+            // Remove loading indicator
+            document.getElementById('payment-processing').remove();
+            
+            // Clean up temporary data
+            sessionStorage.removeItem('temp_booking_' + bookingId);
+            
             if (data.success) {
-                window.location.href = data.redirect_url;
+                // Show success message
+                const successHtml = `
+                    <div id="booking-success" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                        <div class="bg-white p-6 rounded-lg shadow-lg text-center max-w-md">
+                            <div class="text-green-500 mb-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                            </div>
+                            <h2 class="text-2xl font-bold mb-2">Booking Successful!</h2>
+                            <p class="mb-4">Your tickets have been booked successfully.</p>
+                            <p class="text-sm text-gray-600 mb-4">Order Number: ${data.order_number}</p>
+                            <button onclick="window.location.href='${data.redirect_url}'" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                                View Booking Details
+                            </button>
+                        </div>
+                    </div>
+                `;
+                document.body.insertAdjacentHTML('beforeend', successHtml);
+                
+                // Redirect after a short delay
+                setTimeout(() => {
+                    window.location.href = data.redirect_url;
+                }, 3000);
             } else {
                 alert(data.error || 'An error occurred while processing your booking.');
             }
         })
         .catch(error => {
+            // Remove loading indicator
+            document.getElementById('payment-processing').remove();
+            
             console.error('Error:', error);
-            alert('An error occurred while processing your booking.');
+            alert('An error occurred while processing your booking. Please contact support with your payment ID: ' + paymentResponse.razorpay_payment_id);
         });
     }
 </script>
