@@ -341,6 +341,7 @@ class TicketItem(models.Model):
     section = models.ForeignKey(Section, on_delete=models.CASCADE)
     seat_number = models.PositiveIntegerField(null=True, blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
+    is_available = models.BooleanField(default=False)
 
     class Meta:
         unique_together = ('order', 'stand', 'section', 'seat_number')

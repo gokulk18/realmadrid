@@ -185,8 +185,8 @@ class TicketOrderAdmin(admin.ModelAdmin):
     readonly_fields = ('order_number',)
 
 class TicketItemAdmin(admin.ModelAdmin):
-    list_display = ('order', 'stand', 'section', 'seat_number', 'price')
-    list_filter = ('stand', 'section')
+    list_display = ('order', 'stand', 'section', 'seat_number', 'price', 'is_available')
+    list_filter = ('stand', 'section', 'is_available')
     search_fields = ('order__order_number', 'order__full_name')
 
 class TicketPaymentAdmin(admin.ModelAdmin):

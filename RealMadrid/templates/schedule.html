@@ -295,16 +295,12 @@
                                     </svg>
                                     <span class="font-bold text-lg">₹{{ order.total_price }}</span>
                                 </div>
-                                {% comment %} {% if order.status != 'Cancelled' %}
-                                <form method="POST" action="{% url 'cancel_ticket' order.id %}" 
-                                      onsubmit="return confirm('Are you sure you want to cancel this ticket?');">
-                                    {% csrf_token %}
-                                    <button type="submit" 
-                                            class="bg-red-500 text-white py-2 px-6 rounded-full hover:bg-red-600 transition duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50">
-                                        Cancel Ticket
-                                    </button>
-                                </form>
-                                {% endif %} {% endcomment %}
+                                {% if order.status != 'Cancelled' %}
+                                <a href="{% url 'cancel_ticket' order.id %}" 
+                                   class="bg-red-500 text-white py-2 px-6 rounded-full hover:bg-red-600 transition duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50 inline-block">
+                                    Cancel Ticket
+                                </a>
+                                {% endif %}
                             </div>
                         </div>
                     </div>

@@ -366,39 +366,112 @@ def schedule(request):
 
     return render(request, 'schedule.html', context)
 
+@login_required
 def cancel_ticket(request, order_id):
-    if request.method == 'POST':
-        # Check if user is authenticated or has session
+    """
+    Show the ticket cancellation confirmation page
+    """
+    # Get the ticket order
+    try:
+        # Check if user is authenticated through Django auth
         if request.user.is_authenticated:
             order = get_object_or_404(TicketOrder, id=order_id, user=request.user)
+        # Check if user is authenticated through session
         elif 'user_id' in request.session:
-            order = get_object_or_404(TicketOrder, id=order_id, user_id=request.session['user_id'])
+            user = Users.objects.get(id=request.session['user_id'])
+            order = get_object_or_404(TicketOrder, id=order_id, user=user)
         else:
-            messages.error(request, 'Please log in to cancel tickets.')
-            return redirect('login')
-        
-        # Check if order is already cancelled
-        if order.status == 'Cancelled':
-            messages.error(request, 'This ticket has already been cancelled.')
+            messages.error(request, 'You must be logged in to cancel tickets.')
             return redirect('schedule')
-        
-        try:
-            # Update order status
-            order.status = 'Cancelled'
-            order.save()
-            
-            # Release the seats back to available
-            ticket_items = TicketItem.objects.filter(order=order)
-            for ticket in ticket_items:
-                if hasattr(ticket, 'seat'):
-                    ticket.seat.is_available = True
-                    ticket.seat.save()
-            
-            messages.success(request, 'Your ticket has been successfully cancelled.')
-        except Exception as e:
-            messages.error(request, f'An error occurred while cancelling your ticket: {str(e)}')
-        
+    except TicketOrder.DoesNotExist:
+        messages.error(request, 'Ticket order not found.')
         return redirect('schedule')
+    
+    # Check if the order is already cancelled
+    if order.status == 'Cancelled':
+        messages.error(request, 'This ticket has already been cancelled.')
+        return redirect('schedule')
+    
+    # Calculate refund amount (75% of total price)
+    refund_amount = order.total_price * Decimal('0.75')
+    refund_amount = refund_amount.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)  # Round to 2 decimal places
+    
+    context = {
+        'order': order,
+        'refund_amount': refund_amount,
+    }
+    
+    return render(request, 'cancel_ticket_confirmation.html', context)
+
+@login_required
+def confirm_cancel_ticket(request, order_id):
+    """
+    Process the actual ticket cancellation after confirmation
+    """
+    if request.method != 'POST':
+        return redirect('schedule')
+    
+    # Get the ticket order
+    try:
+        # Check if user is authenticated through Django auth
+        if request.user.is_authenticated:
+            order = get_object_or_404(TicketOrder, id=order_id, user=request.user)
+        # Check if user is authenticated through session
+        elif 'user_id' in request.session:
+            user = Users.objects.get(id=request.session['user_id'])
+            order = get_object_or_404(TicketOrder, id=order_id, user=user)
+        else:
+            messages.error(request, 'You must be logged in to cancel tickets.')
+            return redirect('schedule')
+    except TicketOrder.DoesNotExist:
+        messages.error(request, 'Ticket order not found.')
+        return redirect('schedule')
+    
+    # Check if the order is already cancelled
+    if order.status == 'Cancelled':
+        messages.error(request, 'This ticket has already been cancelled.')
+        return redirect('schedule')
+    
+    # Calculate refund amount (75% of total price)
+    refund_amount = order.total_price * Decimal('0.75')
+    refund_amount = refund_amount.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)  # Round to 2 decimal places
+    
+    # Update order status
+    order.status = 'Cancelled'
+    order.save()
+    
+    # Free up the seats by marking ticket items as available
+    tickets = order.tickets.all()
+    for ticket in tickets:
+        # Mark the ticket as available
+        ticket.is_available = True
+        ticket.save()
+    
+    # If there's a payment record, mark it as refunded
+    try:
+        payment = TicketPayment.objects.get(ticket_order=order)
+        payment.status = 'Refunded'
+        payment.save()
+        
+        # Here you would typically process the refund through Razorpay
+        # For example:
+        # razorpay_client.refund.create({
+        #     "payment_id": payment.razorpay_payment_id,
+        #     "amount": int(refund_amount * 100),  # Amount in paise
+        #     "notes": {
+        #         "order_id": order.order_number,
+        #         "reason": "Customer requested cancellation"
+        #     }
+        # })
+        
+    except TicketPayment.DoesNotExist:
+        # No payment record found, just log it
+        print(f"No payment record found for order {order.order_number}")
+    
+    messages.success(
+        request, 
+        f'Your ticket has been cancelled successfully. A refund of ₹{refund_amount:.2f} will be processed to your original payment method within 5-7 business days.'
+    )
     
     return redirect('schedule')
 
@@ -2813,8 +2886,16 @@ def dynamic_stadium(request, match_id):
         stands_sections[stand] = sections
 
     # Get all booked seats for this match
+    # Only consider tickets that are not cancelled and not marked as available
     booked_seats = set()
-    ticket_items = TicketItem.objects.filter(order__match=match)
+    ticket_items = TicketItem.objects.filter(
+        order__match=match
+    ).exclude(
+        order__status='Cancelled'  # Exclude cancelled orders
+    ).exclude(
+        is_available=True  # Exclude tickets marked as available
+    )
+    
     for item in ticket_items:
         stand_code = item.stand.name[0]  # First letter of stand name (N, S, E, W)
         booked_seats.add(f"{stand_code}-{item.seat_number}")

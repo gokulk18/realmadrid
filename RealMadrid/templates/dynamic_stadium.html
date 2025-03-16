@@ -455,6 +455,7 @@
 
 <script>
     const bookedSeats = {{ booked_seats|safe }};
+    let currentPreviewSeat = null;
 
     function isSeatBooked(seatNumber) {
         return bookedSeats.includes(seatNumber);
