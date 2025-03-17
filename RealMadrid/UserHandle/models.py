@@ -4,6 +4,7 @@ from django.utils.crypto import get_random_string
 from django.core.validators import MinValueValidator
 from django.utils import timezone
 import json
+from django.conf import settings
 
 class Users(AbstractUser):
     name = models.CharField(max_length=255)
@@ -408,20 +409,33 @@ class PlayerCredentials(models.Model):
         return f"{self.player.player_name}'s credentials"
 
 class PlayerTask(models.Model):
-    title = models.CharField(max_length=200)
-    description = models.TextField()
-    assigned_players = models.ManyToManyField(Player, related_name='assigned_tasks')
-    due_date = models.DateTimeField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    status = models.CharField(max_length=20, choices=[
+    TASK_STATUS = (
         ('pending', 'Pending'),
         ('completed', 'Completed'),
-        ('overdue', 'Overdue')
-    ], default='pending')
-    video_required = models.BooleanField(default=True)
-
+        ('evaluated', 'Evaluated'),
+    )
+    
+    EXERCISE_TYPES = (
+        ('pushup', 'Push-Ups'),
+        ('squat', 'Squats'),
+        ('jump', 'Jumps'),
+        ('sprint', 'Sprints'),
+        ('burpee', 'Burpees'),
+        ('lunge', 'Lunges'),
+        ('other', 'Other'),
+    )
+    
+    player = models.ForeignKey(Player, related_name='tasks', on_delete=models.CASCADE)
+    assigned_by = models.ForeignKey(Users, related_name='assigned_tasks', on_delete=models.CASCADE)
+    exercise_type = models.CharField(max_length=20, choices=EXERCISE_TYPES)
+    repetitions = models.IntegerField(help_text="Number of repetitions to perform")
+    instructions = models.TextField(blank=True)
+    due_date = models.DateField()
+    assigned_date = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=20, choices=TASK_STATUS, default='pending')
+    
     def __str__(self):
-        return self.title
+        return f"{self.player.player_name} - {self.get_exercise_type_display()} x{self.repetitions}"
 
 class PlayerAchievement(models.Model):
     player = models.ForeignKey(Player, related_name='achievements', on_delete=models.CASCADE)
@@ -457,3 +471,37 @@ class SeasonStats(models.Model):
     
     def __str__(self):
         return f"{self.player.player_name} - {self.season} {self.competition}"
+
+class PlayerVideo(models.Model):
+    task = models.ForeignKey(PlayerTask, related_name='videos', on_delete=models.CASCADE)
+    video = models.FileField(upload_to='player_videos/')
+    processed_video = models.FileField(upload_to='processed_videos/', null=True, blank=True)
+    pose_data = models.JSONField(null=True, blank=True)
+    upload_date = models.DateTimeField(auto_now_add=True)
+    processed_at = models.DateTimeField(null=True, blank=True)
+    trainer_comment = models.TextField(blank=True)
+    
+    def __str__(self):
+        return f"{self.task.player.player_name} - {self.task.get_exercise_type_display()}"
+    
+    def process_video(self):
+        from .utils import detect_pose
+        import os
+        from django.utils import timezone
+        
+        video_path = os.path.join(settings.MEDIA_ROOT, self.video.name)
+        result = detect_pose(video_path)
+        
+        if result:
+            relative_path = os.path.relpath(result['processed_video'], settings.MEDIA_ROOT)
+            self.processed_video = relative_path
+            self.pose_data = result['pose_data']
+            self.processed_at = timezone.now()
+            
+            # Update task status
+            self.task.status = 'completed'
+            self.task.save()
+            
+            self.save()
+            return True
+        return False

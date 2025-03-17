@@ -228,22 +228,21 @@ class PlayerCredentialsAdmin(admin.ModelAdmin):
     readonly_fields = ('created_at', 'updated_at')
 
 class PlayerTaskAdmin(admin.ModelAdmin):
-    list_display = ('title', 'due_date', 'status', 'video_required', 'created_at')
-    list_filter = ('status', 'video_required', 'created_at', 'due_date')
-    search_fields = ('title', 'description')
-    filter_horizontal = ('assigned_players',)
-    readonly_fields = ('created_at',)
+    list_display = ('exercise_type', 'player', 'repetitions', 'status', 'assigned_date')
+    list_filter = ('exercise_type', 'status', 'assigned_date')
+    search_fields = ('player__player_name', 'exercise_type', 'instructions')
+    readonly_fields = ('assigned_date',)
+    raw_id_fields = ('player', 'assigned_by')
     fieldsets = (
-        ('Task Information', {
-            'fields': ('title', 'description', 'due_date', 'video_required')
+        (None, {
+            'fields': ('player', 'assigned_by', 'exercise_type', 'repetitions')
         }),
-        ('Assignment Details', {
-            'fields': ('assigned_players', 'status')
+        ('Details', {
+            'fields': ('instructions', 'due_date', 'status')
         }),
         ('Metadata', {
-            'fields': ('created_at',),
-            'classes': ('collapse',)
-        }),
+            'fields': ('assigned_date',)
+        })
     )
 
 class PlayerAchievementAdmin(admin.ModelAdmin):

@@ -64,10 +64,192 @@ from .models import Match  # Adjust based on your actual models
 from decimal import Decimal, ROUND_HALF_UP
 from django.db import IntegrityError
 from django.db import connection
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
+from .models import Order, TicketItem
+from io import BytesIO
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus import Paragraph, Table, TableStyle, Image, Spacer
+from reportlab.lib.units import cm, mm, inch
+from reportlab.lib.enums import TA_CENTER, TA_LEFT
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+import qrcode
+from django.conf import settings
+import os
+from datetime import datetime
+from PIL import Image as PILImage
+import textwrap
+from reportlab.lib.colors import HexColor
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.utils import timezone
+from datetime import timedelta
+import json
+from collections import defaultdict
+from .models import PlayerVideo, Player
 
 
+def is_admin(user):
+    return user.is_staff or user.is_superuser
 
-logger = logging.getLogger(__name__)
+@login_required
+@user_passes_test(is_admin)
+def admin_ticket_stats(request):
+    # Fetch only home matches for Real Madrid
+    matches = Match.objects.filter(home_team='Real Madrid CF').order_by('utc_date')
+    selected_match = None
+    context = {'matches': matches}
+    
+    if request.method == 'POST' and request.POST.get('match_id'):
+        match_id = request.POST.get('match_id')
+        try:
+            selected_match = Match.objects.get(match_id=match_id)
+            
+            # Get all ticket orders for this match
+            ticket_orders = TicketOrder.objects.filter(match=selected_match)
+            
+            # Get all stands in the venue
+            stands = Stand.objects.all()
+            
+            # Calculate total seats available (from all sections in all stands)
+            total_seats = 0
+            for stand in stands:
+                sections = Section.objects.filter(stand=stand)
+                for section in sections:
+                    total_seats += len(section.seats)
+            
+            # Calculate stats
+            confirmed_orders = ticket_orders.filter(status='Confirmed')
+            cancelled_orders = ticket_orders.filter(status='Cancelled')
+            
+            # Count tickets
+            tickets_sold = TicketItem.objects.filter(order__in=confirmed_orders, is_available=True).count()
+            cancelled_tickets = TicketItem.objects.filter(order__in=cancelled_orders).count()
+            tickets_available = total_seats - tickets_sold
+            
+            # Calculate percentages
+            tickets_sold_percentage = (tickets_sold / total_seats * 100) if total_seats > 0 else 0
+            cancelled_percentage = (cancelled_tickets / (tickets_sold + cancelled_tickets) * 100) if (tickets_sold + cancelled_tickets) > 0 else 0
+            available_percentage = (tickets_available / total_seats * 100) if total_seats > 0 else 0
+            
+            # Calculate revenue from ticket payments
+            payments = TicketPayment.objects.filter(ticket_order__in=confirmed_orders, status='Completed')
+            total_revenue = sum(payment.amount_paid for payment in payments)
+            avg_ticket_price = (total_revenue / tickets_sold) if tickets_sold > 0 else 0
+            
+            # Get stand-wise booking data
+            stand_stats = []
+            stand_names = []
+            tickets_sold_counts = []
+            tickets_available_counts = []
+            
+            for stand in stands:
+                # Get all sections for this stand
+                sections = Section.objects.filter(stand=stand)
+                
+                # Calculate stand capacity
+                stand_capacity = sum(len(section.seats) for section in sections)
+                
+                # Count sold tickets for this stand
+                stand_sold = TicketItem.objects.filter(
+                    order__in=confirmed_orders,
+                    stand=stand,
+                    is_available=True
+                ).count()
+                
+                # Count cancelled tickets for this stand
+                stand_cancelled = TicketItem.objects.filter(
+                    order__in=cancelled_orders,
+                    stand=stand
+                ).count()
+                
+                # Calculate available tickets
+                stand_available = stand_capacity - stand_sold
+                
+                # Calculate revenue for this stand
+                stand_tickets = TicketItem.objects.filter(
+                    order__in=confirmed_orders,
+                    stand=stand,
+                    is_available=True
+                )
+                stand_revenue = sum(ticket.price for ticket in stand_tickets)
+                
+                # Calculate percentage sold
+                sold_percentage = (stand_sold / stand_capacity * 100) if stand_capacity > 0 else 0
+                
+                stand_stats.append({
+                    'name': stand.name,
+                    'capacity': stand_capacity,
+                    'sold': stand_sold,
+                    'sold_percentage': sold_percentage,
+                    'available': stand_available,
+                    'revenue': stand_revenue,
+                    'cancelled': stand_cancelled
+                })
+                
+                stand_names.append(stand.name)
+                tickets_sold_counts.append(stand_sold)
+                tickets_available_counts.append(stand_available)
+            
+            # Get sales trend data (last 30 days)
+            today = timezone.now().date()
+            thirty_days_ago = today - timedelta(days=30)
+            
+            # Initialize all dates in the range
+            date_range = [(thirty_days_ago + timedelta(days=i)).strftime('%Y-%m-%d') 
+                          for i in range((today - thirty_days_ago).days + 1)]
+            
+            # Count bookings per day
+            daily_bookings = defaultdict(int)
+            for booking in bookings.filter(booking_date__gte=thirty_days_ago, status='confirmed'):
+                booking_date = booking.booking_date.strftime('%Y-%m-%d')
+                daily_bookings[booking_date] += 1
+            
+            # Create the daily sales data list
+            daily_sales = [daily_bookings.get(date, 0) for date in date_range]
+            
+            # Get ticket categories data
+            ticket_categories = ['VIP', 'Premium', 'Standard', 'Economy']  # Example categories
+            category_counts = []
+            
+            # Count bookings by category
+            for category in ticket_categories:
+                category_count = bookings.filter(
+                    ticket_type=category, 
+                    status='confirmed'
+                ).count()
+                category_counts.append(category_count)
+            
+            # Add all data to context
+            context.update({
+                'selected_match': selected_match,
+                'tickets_sold': tickets_sold,
+                'total_seats': total_seats,
+                'tickets_available': tickets_available,
+                'tickets_sold_percentage': tickets_sold_percentage,
+                'available_percentage': available_percentage,
+                'cancelled_tickets': cancelled_tickets,
+                'cancelled_percentage': cancelled_percentage,
+                'total_revenue': total_revenue,
+                'avg_ticket_price': avg_ticket_price,
+                'stand_stats': stand_stats,
+                'stand_names': json.dumps(stand_names),
+                'tickets_sold_counts': json.dumps(tickets_sold_counts),
+                'tickets_available_counts': json.dumps(tickets_available_counts),
+                'sales_dates': json.dumps(date_range),
+                'daily_sales': json.dumps(daily_sales),
+                'ticket_categories': json.dumps(ticket_categories),
+                'category_counts': json.dumps(category_counts),
+            })
+            
+        except Match.DoesNotExist:
+            pass  # Handle case where match doesn't exist
+    
+    return render(request, 'admin_ticket_stats.html', context)
 
 
 
@@ -3060,33 +3242,8 @@ def player_dashboard(request):
     
     return render(request, 'player_dashboard.html', context)
 
-def trainer_assign_task(request):
-    players = Player.objects.all().order_by('player_name')
-    
-    if request.method == 'POST':
-        title = request.POST.get('title')
-        description = request.POST.get('description')
-        due_date = request.POST.get('due_date')
-        video_required = request.POST.get('video_required') == 'on'
-        player_ids = request.POST.getlist('players')
-
-        task = PlayerTask.objects.create(
-            title=title,
-            description=description,
-            due_date=due_date,
-            video_required=video_required
-        )
-        
-        # Add selected players to the task
-        task.assigned_players.add(*player_ids)
-        messages.success(request, 'Task assigned successfully!')
-        return redirect('trainer_assign_task')
-
-    context = {
-        'players': players,
-        'assigned_tasks': PlayerTask.objects.all().order_by('-created_at')
-    }
-    return render(request, 'trainer_assign_task.html', context)
+# def trainer_assign_task(request):
+#     return render(request, 'trainer_assign_task.html')
 
 @csrf_exempt
 def process_ticket_booking(request, match_id):
@@ -3560,5 +3717,483 @@ def cancel_temp_booking(request):
         
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)})
+
+def generate_ticket_pdf(request, order_id):
+    # Get the ticket order details
+    ticket_order = get_object_or_404(TicketOrder, id=order_id)
+    ticket_items = TicketItem.objects.filter(order=ticket_order)
+    match = ticket_order.match
+    
+    # Create a file-like buffer to receive PDF data
+    buffer = BytesIO()
+    
+    # Set up fonts - try to load premium fonts
+    font_dir = os.path.join(settings.STATIC_ROOT, 'fonts')
+    try:
+        # Register premium fonts
+        pdfmetrics.registerFont(TTFont('Montserrat', os.path.join(font_dir, 'Montserrat-Regular.ttf')))
+        pdfmetrics.registerFont(TTFont('MontserratBold', os.path.join(font_dir, 'Montserrat-Bold.ttf')))
+        pdfmetrics.registerFont(TTFont('MontserratSemiBold', os.path.join(font_dir, 'Montserrat-SemiBold.ttf')))
+        pdfmetrics.registerFont(TTFont('MontserratLight', os.path.join(font_dir, 'Montserrat-Light.ttf')))
+        
+        base_font = "Montserrat"
+        bold_font = "MontserratBold"
+        semibold_font = "MontserratSemiBold"
+        light_font = "MontserratLight"
+    except:
+        # Fallback to standard fonts
+        base_font = "Helvetica"
+        bold_font = "Helvetica-Bold"
+        semibold_font = "Helvetica-Bold"
+        light_font = "Helvetica"
+        
+    # Real Madrid premium color palette
+    rm_blue = HexColor('#0B2C5F')  # Dark blue
+    rm_gold = HexColor('#FCBB30')  # Gold
+    rm_white = HexColor('#FFFFFF')  # White
+    rm_navy = HexColor('#022044')  # Navy blue (darker)
+    rm_silver = HexColor('#C0C0C0')  # Silver accent
+    
+    # Create the PDF object using a premium ticket size
+    pagesize = (8.5*inch, 3.5*inch)  # Premium ticket dimensions
+    p = canvas.Canvas(buffer, pagesize=pagesize)
+    width, height = pagesize
+    
+    # Load image assets
+    logo_path = os.path.join(settings.STATIC_ROOT, 'images/real-madrid-logo.png')
+    stadium_path = os.path.join(settings.STATIC_ROOT, 'images/bernabeu.jpg')
+    pattern_path = os.path.join(settings.STATIC_ROOT, 'images/rm_pattern.png')
+    trophy_path = os.path.join(settings.STATIC_ROOT, 'images/champions_trophy.png')
+    player_path = os.path.join(settings.STATIC_ROOT, 'images/player_silhouette.png')
+    
+    # Process each ticket as a separate page with premium design
+    for i, ticket in enumerate(ticket_items):
+        # Main background gradient (dark blue to navy)
+        p.setFillColorRGB(0.04, 0.13, 0.26)  # Start with dark blue
+        p.rect(0, 0, width, height, fill=1, stroke=0)
+        
+        # Add decorative pattern if available
+        if os.path.exists(pattern_path):
+            p.saveState()
+            p.setFillColorRGB(0.05, 0.16, 0.35, alpha=0.7)  # Slightly lighter blue with transparency
+            p.drawImage(pattern_path, 0, 0, width=width, height=height, mask='auto')
+            p.restoreState()
+        
+        # Add stadium image as a strip on the left
+        if os.path.exists(stadium_path):
+            p.drawImage(stadium_path, 0.3*cm, 0.3*cm, width=2.5*cm, height=height-0.6*cm, mask='auto')
+            
+            # Add overlay to ensure text is readable
+            p.setFillColorRGB(0.04, 0.13, 0.26, alpha=0.6)  # Semi-transparent dark blue
+            p.rect(0.3*cm, 0.3*cm, 2.5*cm, height-0.6*cm, fill=1, stroke=0)
+        
+        # Add decorative gold accent lines
+        p.setStrokeColor(rm_gold)
+        p.setLineWidth(1.5)
+        p.line(3.1*cm, 0.3*cm, 3.1*cm, height-0.3*cm)  # Vertical line separating stadium image
+        
+        # Instead of using arc with stroke(), draw a curved line at top
+        # This is a simpler approach that accomplishes a similar visual effect
+        p.setStrokeColor(rm_gold)
+        p.setLineWidth(2)
+        
+        # Draw multiple small line segments to create a curved effect at the top
+        curve_start_x = 3.1*cm
+        curve_end_x = width-0.6*cm
+        curve_width = curve_end_x - curve_start_x
+        curve_top = height-0.3*cm
+        
+        # Draw multiple small lines to simulate a curve (simple half-circle approximation)
+        segments = 20
+        for j in range(segments+1):
+            x1 = curve_start_x + (j-1) * curve_width / segments
+            y1 = curve_top - 0.8*cm * (1 - ((j-1)/segments*2-1)**2) if j > 0 else curve_top
+            
+            x2 = curve_start_x + j * curve_width / segments
+            y2 = curve_top - 0.8*cm * (1 - ((j)/segments*2-1)**2)
+            
+            if j > 0:  # Skip first iteration as it would start from nowhere
+                p.line(x1, y1, x2, y2)
+        
+        # Add Real Madrid logo with glowing effect
+        if os.path.exists(logo_path):
+            # Draw white circle behind logo for glow effect
+            p.setFillColor(rm_white)
+            p.circle(3.8*cm, height-0.8*cm, 0.65*cm, fill=1, stroke=0)
+            
+            # Draw the logo
+            p.drawImage(logo_path, 3.2*cm, height-1.4*cm, width=1.2*cm, height=1.2*cm, mask='auto')
+        
+        # Add trophy icon if available
+        if os.path.exists(trophy_path):
+            p.drawImage(trophy_path, width-1.7*cm, height-1.4*cm, width=1.2*cm, height=1.2*cm, mask='auto')
+        
+        # Header text - Club name with emoji
+        p.setFillColor(rm_white)
+        p.setFont(bold_font, 14)
+        p.drawString(4.7*cm, height-0.9*cm, "REAL MADRID C.F. 🏆")
+        
+        # Gold divider below header
+        p.setStrokeColor(rm_gold)
+        p.setLineWidth(0.5)
+        p.line(3.3*cm, height-1.5*cm, width-0.3*cm, height-1.5*cm)
+        
+        # Match information - stylish card-like design
+        # White card background with slight transparency
+        p.setFillColorRGB(1, 1, 1, alpha=0.9)
+        p.roundRect(3.3*cm, height-3.2*cm, width-3.6*cm, 1.5*cm, 3*mm, fill=1, stroke=0)
+        
+        # Match teams with vs in gold
+        p.setFillColor(rm_blue)
+        p.setFont(bold_font, 12)
+        home_team = match.home_team
+        away_team = match.away_team
+        home_width = p.stringWidth(home_team, bold_font, 12)
+        
+        # Draw team names in blue with VS in gold
+        team_y = height-2*cm
+        p.drawString(3.5*cm, team_y, home_team)
+        
+        # VS in gold
+        p.setFillColor(rm_gold)
+        p.setFont(bold_font, 12)
+        vs_text = "vs"
+        vs_width = p.stringWidth(vs_text, bold_font, 12)
+        vs_x = 3.5*cm + home_width + 0.3*cm
+        p.drawString(vs_x, team_y, vs_text)
+        
+        # Away team
+        p.setFillColor(rm_blue)
+        p.drawString(vs_x + vs_width + 0.3*cm, team_y, away_team)
+        
+        # Competition with trophy emoji
+        p.setFont(semibold_font, 10)
+        p.setFillColor(rm_blue)
+        comp_text = f"🏆 {match.competition}"
+        p.drawCentredString((3.3*cm + width-3.6*cm)/2, height-2.5*cm, comp_text)
+        
+        # Date and time with emoji
+        try:
+            match_date = match.ist_date
+            date_string = match_date.strftime("%d %b %Y")
+            time_string = match_date.strftime("%I:%M %p")
+            
+            p.setFont(base_font, 8)
+            date_text = f"📅 {date_string}"
+            time_text = f"⏰ {time_string}"
+            
+            p.drawCentredString((3.3*cm + width-3.6*cm)/2, height-2.9*cm, date_text)
+            p.drawCentredString((3.3*cm + width-3.6*cm)/2, height-3.1*cm, time_text)
+        except:
+            # Fallback if date processing fails
+            p.setFont(base_font, 8)
+            p.drawCentredString((3.3*cm + width-3.6*cm)/2, height-3*cm, "📅 Match Day")
+        
+        # Set up vertical "OFFICIAL MATCH TICKET" text on left side
+        p.saveState()
+        p.translate(1.5*cm, height/2)
+        p.rotate(90)
+        p.setFillColor(rm_white)
+        p.setFont(bold_font, 12)
+        p.drawCentredString(0, 0, "OFFICIAL MATCH TICKET")
+        p.restoreState()
+        
+        # Player silhouette if available
+        if os.path.exists(player_path):
+            p.drawImage(player_path, width-3.3*cm, 0.4*cm, width=3*cm, height=height-0.8*cm, mask='auto')
+            
+            # Add overlay to ensure text is readable
+            p.setFillColorRGB(0.04, 0.13, 0.26, alpha=0.7)  # Semi-transparent dark blue
+            p.rect(width-3.3*cm, 0.4*cm, 3*cm, height-0.8*cm, fill=1, stroke=0)
+        
+        # Ticket details in an attractive card
+        # Card background
+        p.setFillColor(rm_white)
+        p.roundRect(3.3*cm, 0.4*cm, width-6.6*cm, 1.6*cm, 3*mm, fill=1, stroke=0)
+        
+        # Card header
+        p.setFillColor(rm_gold)
+        p.roundRect(3.3*cm, 1.7*cm, width-6.6*cm, 0.3*cm, radius=3*mm, fill=1, stroke=0)
+        
+        # Header text
+        p.setFillColor(rm_navy)
+        p.setFont(bold_font, 8)
+        p.drawCentredString(3.3*cm + (width-6.6*cm)/2, 1.75*cm, "TICKET DETAILS")
+        
+        # Ticket information
+        p.setFillColor(rm_navy)
+        
+        # Two columns layout for ticket details
+        col1_x = 3.5*cm
+        col2_x = 5.0*cm
+        
+        # Row 1
+        text_y = 1.4*cm
+        p.setFont(semibold_font, 8)
+        p.drawString(col1_x, text_y, "ORDER #:")
+        p.setFont(base_font, 8)
+        p.drawString(col2_x, text_y, f"{ticket_order.order_number[:8]}...")
+        
+        # Row 2
+        text_y = 1.1*cm
+        p.setFont(semibold_font, 8)
+        p.drawString(col1_x, text_y, "STAND:")
+        p.setFont(base_font, 8)
+        p.drawString(col2_x, text_y, f"{ticket.stand.name}")
+        
+        # Row 3
+        text_y = 0.8*cm
+        p.setFont(semibold_font, 8)
+        p.drawString(col1_x, text_y, "SECTION:")
+        p.setFont(base_font, 8)
+        p.drawString(col2_x, text_y, f"{ticket.section.name}")
+        
+        # Row 4
+        text_y = 0.5*cm
+        p.setFont(semibold_font, 8)
+        p.drawString(col1_x, text_y, "SEAT:")
+        p.setFont(base_font, 8)
+        p.drawString(col2_x, text_y, f"{ticket.seat_number}")
+        
+        # Gold price bubble on right side
+        price_x = width - 2.2*cm
+        price_y = height/2
+        
+        # Gold circle for price
+        p.setFillColor(rm_gold)
+        p.circle(price_x, price_y, 0.9*cm, fill=1, stroke=0)
+        
+        # Price text
+        p.setFillColor(rm_navy)
+        p.setFont(bold_font, 12)
+        price_text = f"₹{ticket.price}"
+        price_width = p.stringWidth(price_text, bold_font, 12)
+        p.drawString(price_x - price_width/2, price_y - 0.2*cm, price_text)
+        
+        # "PRICE" label
+        p.setFont(semibold_font, 8)
+        label_width = p.stringWidth("PRICE", semibold_font, 8)
+        p.drawString(price_x - label_width/2, price_y + 0.3*cm, "PRICE")
+        
+        # Generate QR code
+        qr = qrcode.QRCode(
+            version=1,
+            error_correction=qrcode.constants.ERROR_CORRECT_H,
+            box_size=10,
+            border=0,
+        )
+        qr.add_data(f"{ticket_order.order_number}-{ticket.id}")
+        qr.make(fit=True)
+        
+        qr_img = qr.make_image(fill_color="black", back_color="white")
+        qr_img_path = os.path.join(settings.MEDIA_ROOT, f'qr_temp_{ticket_order.order_number}_{ticket.id}.png')
+        qr_img.save(qr_img_path)
+        
+        # White background for QR code
+        p.setFillColor(rm_white)
+        p.roundRect(width-2.1*cm, 0.4*cm, 1.7*cm, 1.7*cm, 3*mm, fill=1, stroke=0)
+        
+        # Draw QR code
+        p.drawImage(qr_img_path, width-2*cm, 0.5*cm, width=1.5*cm, height=1.5*cm, mask='auto')
+        
+        # Add scan text under QR
+        p.setFont(base_font, 6)
+        p.setFillColor(rm_navy)
+        p.drawCentredString(width-1.25*cm, 0.3*cm, "SCAN FOR ENTRY 📱")
+        
+        # Add decorative element at bottom
+        p.setStrokeColor(rm_gold)
+        p.setLineWidth(1)
+        p.line(0.3*cm, 0.15*cm, width-0.3*cm, 0.15*cm)
+        
+        # Add ticket info footer
+        p.setFont(light_font, 5)
+        p.setFillColor(rm_silver)
+        terms = "✨ Keep this ticket safe • No refunds or exchanges • Subject to club terms & conditions • ⚽️ #HalaMadrid ⚽️"
+        p.drawCentredString(width/2, 0.07*cm, terms)
+        
+        # Clean up temp QR file
+        if os.path.exists(qr_img_path):
+            os.remove(qr_img_path)
+            
+        if i < len(ticket_items) - 1:
+            p.showPage()  # Add a new page for the next ticket
+    
+    # Close the PDF object cleanly
+    p.showPage()
+    p.save()
+    
+    # FileResponse sets the Content-Disposition header so that browsers
+    # present the option to save the file.
+    buffer.seek(0)
+    response = HttpResponse(buffer, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="Real_Madrid_Tickets_{ticket_order.order_number}.pdf"'
+    
+    return response
+
+from django.shortcuts import redirect, get_object_or_404
+from .models import PlayerVideo, Player
+
+def process_player_video(request, video_id):
+    video = get_object_or_404(PlayerVideo, id=video_id)
+    success = video.process_video()
+    if success:
+        messages.success(request, "Video processed successfully!")
+    else:
+        messages.error(request, "Failed to process video")
+    return redirect('video_detail', video_id=video.id)
+
+def upload_player_video(request, player_id):
+    player = get_object_or_404(Player, id=player_id)
+    
+    if request.method == 'POST':
+        form = PlayerVideoForm(request.POST, request.FILES)
+        if form.is_valid():
+            video = form.save(commit=False)
+            video.player = player
+            video.save()
+            return redirect('player_detail', player_id=player.id)
+    else:
+        form = PlayerVideoForm()
+    
+    return render(request, 'upload_video.html', {'form': form, 'player': player})
+
+
+def trainer_assign_task(request):
+    if request.method == 'POST':
+        player_id = request.POST.get('player_id')
+        exercise_type = request.POST.get('exercise_type')
+        repetitions = request.POST.get('repetitions')
+        instructions = request.POST.get('instructions')
+        due_date = request.POST.get('due_date')
+        
+        player = get_object_or_404(Player, id=player_id)
+        
+        task = PlayerTask.objects.create(
+            player=player,
+            assigned_by=request.user,
+            exercise_type=exercise_type,
+            repetitions=repetitions,
+            instructions=instructions,
+            due_date=due_date
+        )
+        
+        messages.success(request, f"Task assigned to {player.player_name} successfully")
+        return redirect('trainer_dashboard')
+    
+    # Get all players for the dropdown
+    players = Player.objects.all().order_by('player_name')
+    
+    # Get recent assignments by this trainer
+    assigned_tasks = PlayerTask.objects.filter(assigned_by=request.user).order_by('-assigned_date')
+    
+    return render(request, 'trainer_assign_task.html', {
+        'players': players,
+        'assigned_tasks': assigned_tasks
+    })
+
+@login_required
+def player_dashboard(request):
+    # Check if user is a player
+    try:
+        player_credentials = PlayerCredentials.objects.get(user=request.user)
+        player = player_credentials.player
+        
+        # Get pending tasks for this player
+        pending_tasks = PlayerTask.objects.filter(
+            player=player, 
+            status__in=['pending', 'completed']
+        ).order_by('due_date')
+        
+        # Get completed tasks
+        completed_tasks = PlayerTask.objects.filter(
+            player=player,
+            status='evaluated'
+        ).order_by('-assigned_date')
+        
+        context = {
+            'player': player,
+            'pending_tasks': pending_tasks,
+            'completed_tasks': completed_tasks
+        }
+        
+        return render(request, 'player/dashboard.html', context)
+    except PlayerCredentials.DoesNotExist:
+        messages.error(request, "You don't have access to the player dashboard")
+        return redirect('home')
+
+def upload_task_video(request, task_id):
+    task = get_object_or_404(PlayerTask, id=task_id)
+    
+    # Check if user is the assigned player
+    try:
+        player_credentials = PlayerCredentials.objects.get(user=request.user)
+        if player_credentials.player != task.player:
+            messages.error(request, "You don't have permission to upload for this task")
+            return redirect('player_dashboard')
+    except PlayerCredentials.DoesNotExist:
+        messages.error(request, "You don't have permission to upload videos")
+        return redirect('home')
+    
+    if request.method == 'POST':
+        if 'video' in request.FILES:
+            video = request.FILES['video']
+            player_video = PlayerVideo.objects.create(
+                task=task,
+                video=video
+            )
+            
+            # Process the video asynchronously (in production, use a task queue like Celery)
+            player_video.process_video()
+            
+            messages.success(request, "Video uploaded successfully. It will be processed shortly.")
+            return redirect('player_dashboard')
+    
+    return render(request, 'player/upload_video.html', {'task': task})
+
+
+def review_task_videos(request, task_id):
+    task = get_object_or_404(PlayerTask, id=task_id)
+    videos = PlayerVideo.objects.filter(task=task).order_by('-upload_date')
+    
+    if request.method == 'POST':
+        video_id = request.POST.get('video_id')
+        comment = request.POST.get('comment')
+        mark_evaluated = request.POST.get('mark_evaluated', False)
+        
+        video = get_object_or_404(PlayerVideo, id=video_id)
+        video.trainer_comment = comment
+        video.save()
+        
+        if mark_evaluated:
+            task.status = 'evaluated'
+            task.save()
+            messages.success(request, "Task marked as evaluated")
+        
+        messages.success(request, "Comment saved successfully")
+        return redirect('review_task_videos', task_id=task_id)
+    
+    context = {
+        'task': task,
+        'videos': videos
+    }
+    return render(request, 'trainer/review_videos.html', context)
+
+def trainer_dashboard(request):
+    # Get tasks assigned by this trainer
+    tasks = PlayerTask.objects.filter(assigned_by=request.user).order_by('-assigned_date')
+    
+    # Group tasks by status
+    pending_tasks = tasks.filter(status='pending')
+    completed_tasks = tasks.filter(status='completed')
+    evaluated_tasks = tasks.filter(status='evaluated')
+    
+    context = {
+        'pending_tasks': pending_tasks,
+        'completed_tasks': completed_tasks,
+        'evaluated_tasks': evaluated_tasks
+    }
+    
+    return render(request, 'trainer/dashboard.html', context)
 
 

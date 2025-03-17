@@ -64,6 +64,24 @@
                     this.classList.add('active');
                 });
             });
+            
+            // Player search functionality
+            const playerSearch = document.getElementById('playerSearch');
+            if (playerSearch) {
+                playerSearch.addEventListener('input', function() {
+                    const searchTerm = this.value.toLowerCase();
+                    const playerLabels = document.querySelectorAll('.player-option');
+                    
+                    playerLabels.forEach(function(label) {
+                        const playerName = label.textContent.toLowerCase();
+                        if (playerName.includes(searchTerm)) {
+                            label.parentElement.style.display = 'flex';
+                        } else {
+                            label.parentElement.style.display = 'none';
+                        }
+                    });
+                });
+            }
         });
         
     
@@ -212,27 +230,45 @@
                 <form method="POST" id="taskForm" class="p-8 space-y-8">
                     {% csrf_token %}
                     
-                    <!-- Task Title -->
+                    <!-- Exercise Type Dropdown -->
                     <div class="group space-y-3">
-                        <label class="block text-sm font-semibold text-gray-700">Task Title</label>
+                        <label class="block text-sm font-semibold text-gray-700">Exercise Type</label>
                         <div class="relative">
-                            <input type="text" id="title" name="title" required
-                                   placeholder="Enter a descriptive title"
+                            <select id="exercise_type" name="exercise_type" required
+                                   class="w-full px-6 py-4 border-2 border-gray-200 rounded-xl focus:border-[#8A2BE2] focus:ring-0 transition-all duration-300 hover:border-purple-300">
+                                <option value="" disabled selected>Select an exercise type</option>
+                                <option value="pushup">Push-Ups</option>
+                                <option value="squat">Squats</option>
+                                <option value="jump">Jumps</option>
+                                <option value="sprint">Sprints</option>
+                                <option value="burpee">Burpees</option>
+                                <option value="lunge">Lunges</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Repetitions -->
+                    <div class="group space-y-3">
+                        <label class="block text-sm font-semibold text-gray-700">Repetitions</label>
+                        <div class="relative">
+                            <input type="number" id="repetitions" name="repetitions" required min="1"
+                                   placeholder="Number of repetitions to perform"
                                    class="w-full px-6 py-4 border-2 border-gray-200 rounded-xl focus:border-[#8A2BE2] focus:ring-0 transition-all duration-300 hover:border-purple-300">
                         </div>
                     </div>
 
-                    <!-- Task Description -->
+                    <!-- Instructions -->
                     <div class="group space-y-3">
-                        <label class="block text-sm font-semibold text-gray-700">Description</label>
+                        <label class="block text-sm font-semibold text-gray-700">Instructions</label>
                         <div class="relative">
-                            <textarea id="description" name="description" rows="4" required
-                                      placeholder="Provide detailed task instructions"
+                            <textarea id="instructions" name="instructions" rows="4"
+                                      placeholder="Provide detailed exercise instructions"
                                       class="w-full px-6 py-4 border-2 border-gray-200 rounded-xl focus:border-[#8A2BE2] focus:ring-0 transition-all duration-300 hover:border-purple-300"></textarea>
                         </div>
                     </div>
 
-                    <!-- Due Date and Video Toggle -->
+                    <!-- Due Date -->
                     <div class="flex flex-col sm:flex-row gap-6">
                         <div class="flex-1 space-y-3">
                             <label class="block text-sm font-semibold text-gray-700">
@@ -240,44 +276,28 @@
                                 Due Date
                             </label>
                             <div class="relative">
-                                <input type="datetime-local" id="due_date" name="due_date" required
+                                <input type="date" id="due_date" name="due_date" required
                                        class="w-full px-6 py-4 border-2 border-gray-200 rounded-xl focus:border-[#8A2BE2] focus:ring-0 transition-all duration-300 hover:border-purple-300">
-                            </div>
-                        </div>
-                        
-                        <div class="flex-1 space-y-3">
-                            <label class="block text-sm font-semibold text-gray-700">Submission Type</label>
-                            <div class="relative">
-                                <label class="flex items-center p-4 border-2 border-gray-200 rounded-xl hover:border-purple-300 transition-all duration-300 cursor-pointer bg-white">
-                                    <input type="checkbox" id="video_required" name="video_required" class="sr-only peer" checked>
-                                    <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#8A2BE2]"></div>
-                                    <span class="ml-3 text-sm font-medium text-gray-700">Video Required</span>
-                                </label>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Player Selection -->
+                    <!-- Player Selection Dropdown -->
                     <div class="group space-y-3">
                         <label class="block text-sm font-semibold text-gray-700">
                             <span class="material-symbols-outlined align-middle mr-1 text-purple-500">group</span>
-                            Select Players
+                            Select Player
                         </label>
-                        <div class="space-y-3">
-                            <div class="relative">
-                                <input type="text" id="playerSearch" placeholder="Type to search players..."
-                                       class="w-full px-6 py-4 border-2 border-gray-200 rounded-xl focus:border-[#8A2BE2] focus:ring-0 transition-all duration-300 hover:border-purple-300">
-                            </div>
-                            
-                            <div class="max-h-48 overflow-y-auto border-2 border-gray-200 rounded-xl divide-y divide-gray-100 custom-scrollbar">
+                        <div class="relative">
+                            <select id="player_id" name="player_id" required
+                                   class="w-full px-6 py-4 border-2 border-gray-200 rounded-xl focus:border-[#8A2BE2] focus:ring-0 transition-all duration-300 hover:border-purple-300">
+                                <option value="" disabled selected>Select a player</option>
                                 {% for player in players %}
-                                <label class="flex items-center px-6 py-4 hover:bg-purple-50 transition-all duration-200 cursor-pointer">
-                                    <input type="checkbox" id="player_{{ player.id }}" name="players" value="{{ player.id }}"
-                                           class="w-4 h-4 text-[#8A2BE2] border-gray-300 rounded focus:ring-purple-500">
-                                    <span class="ml-3 text-sm text-gray-700">{{ player.player_name }} - {{ player.position.name }}</span>
-                                </label>
+                                    <option value="{{ player.id }}">
+                                        {{ player.player_name }} - {{ player.player_position.position }}
+                                    </option>
                                 {% endfor %}
-                            </div>
+                            </select>
                         </div>
                     </div>
                 </form>
@@ -300,44 +320,46 @@
             {% for task in assigned_tasks %}
             <div class="bg-white rounded-xl shadow-lg p-6 transform transition-all duration-300 hover:-translate-y-1">
                 <div class="flex justify-between items-start mb-4">
-                    <h3 class="text-lg font-semibold text-[#0F2145]">{{ task.title }}</h3>
+                    <h3 class="text-lg font-semibold text-[#0F2145]">{{ task.get_exercise_type_display }} x{{ task.repetitions }}</h3>
                     <span class="px-3 py-1 rounded-full text-sm 
                         {% if task.status == 'completed' %}bg-green-100 text-green-800
-                        {% elif task.status == 'overdue' %}bg-red-100 text-red-800
+                        {% elif task.status == 'evaluated' %}bg-blue-100 text-blue-800
                         {% else %}bg-yellow-100 text-yellow-800{% endif %}">
-                        {{ task.status|title }}
+                        {{ task.get_status_display }}
                     </span>
                 </div>
                 
-                <p class="text-gray-600 mb-4">{{ task.description }}</p>
+                <p class="text-gray-600 mb-4">{{ task.instructions }}</p>
                 
                 <div class="flex items-center space-x-4 text-sm text-gray-500">
                     <div class="flex items-center">
                         <span class="material-symbols-outlined mr-1">schedule</span>
-                        Due: {{ task.due_date|date:"M d, Y H:i" }}
+                        Due: {{ task.due_date|date:"M d, Y" }}
                     </div>
                     <div class="flex items-center">
                         <span class="material-symbols-outlined mr-1">group</span>
-                        {{ task.assigned_players.count }} Players
+                        {{ task.player.player_name }}
                     </div>
-                    {% if task.video_required %}
-                    <div class="flex items-center text-[#8A2BE2]">
-                        <span class="material-symbols-outlined mr-1">videocam</span>
-                        Video Required
+                    <div class="flex items-center">
+                        <span class="material-symbols-outlined mr-1">fitness_center</span>
+                        {{ task.repetitions }} reps
                     </div>
-                    {% endif %}
                 </div>
 
-                <!-- Assigned Players -->
+                <!-- Task Videos -->
+                {% if task.videos.exists %}
                 <div class="mt-4">
+                    <h4 class="text-sm font-semibold text-gray-700 mb-2">Submitted Videos:</h4>
                     <div class="flex flex-wrap gap-2">
-                        {% for player in task.assigned_players.all %}
-                        <span class="px-3 py-1 bg-gray-100 rounded-full text-sm text-gray-700">
-                            {{ player.player_name }}
-                        </span>
+                        {% for video in task.videos.all %}
+                        <a href="{{ video.video.url }}" target="_blank" class="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm flex items-center">
+                            <span class="material-symbols-outlined mr-1">videocam</span>
+                            Video {{ forloop.counter }}
+                        </a>
                         {% endfor %}
                     </div>
                 </div>
+                {% endif %}
             </div>
             {% empty %}
             <div class="bg-white rounded-xl shadow-lg p-6 text-center">
