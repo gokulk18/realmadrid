@@ -1,0 +1,1526 @@
+<html lang="en"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+    <title>Real Madrid FC</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uikit@3.21.6/dist/css/uikit.min.css">
+
+    <!-- UIkit JS -->
+    <script src="https://cdn.jsdelivr.net/npm/uikit@3.21.6/dist/js/uikit.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/uikit@3.21.6/dist/js/uikit-icons.min.js"></script>
+    <script src="//unpkg.com/alpinejs" defer=""></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <style>
+        .hover-zoom:hover {
+            transform: scale(1.05);
+            transition: transform 0.3s ease-in-out;
+        }
+        .uk-slider-container .uk-slidenav {
+            color: white; /* Default color */
+            transition: color 0.3s ease; /* Smooth transition */
+        }
+    
+        .uk-slider-container .uk-slidenav:hover {
+            color: #3b82f6; /* Blue color on hover */
+        }
+        .rounded-lg {
+            border-radius: 1rem; /* Adjust radius as needed */
+            overflow: hidden; /* Ensures the image fits within the rounded corners */
+        }
+    
+        .hover\:scale-105:hover {
+            transform: scale(1.05); /* Zoom effect on hover */
+        }
+        a{
+            text-decoration: none !important;
+        }
+        .tile {
+            width: 100px; /* Fixed size for each tile */
+            height: 100px; /* Fixed size for each tile */
+            display: inline-block;
+            margin: 0; /* Remove margin to eliminate gaps */
+            border: 1px solid transparent; /* Optional: Add a border for better visibility */
+            position: relative; /* Position relative for absolute children */
+            overflow: hidden; /* Ensure content fits within the tile */
+        }
+
+        .jigsaw-tile {
+            width: 100%; /* Full width of the tile */
+            height: 100%; /* Full height of the tile */
+            background-size: cover; /* Cover the tile area */
+            background-position: center; /* Center the background image */
+            cursor: move; /* Change cursor to indicate draggable */
+            border-radius: 5px; /* Optional: Add rounded corners for a softer look */
+        }
+
+        #tiles-container {
+            display: grid; /* Use grid layout for a 3x3 arrangement */
+            grid-template-columns: repeat(3, 100px); /* Create 3 equal columns of fixed width */
+            grid-template-rows: repeat(3, 100px); /* Create 3 equal rows of fixed height */
+            gap: 0; /* Remove gap between tiles */
+            width: 300px; /* Set a fixed width for the container */
+            height: 300px; /* Set a fixed height for the container */
+            position: relative; /* Position relative for absolute children */
+        }
+        .field-3d {
+            transform-style: preserve-3d;
+            transition: transform 0.5s ease;
+        }
+
+        #preview-container {
+            transform-style: preserve-3d;
+            transition: transform 0.5s ease;
+        }
+
+        .stadium-atmosphere {
+            transform-style: preserve-3d;
+        }
+
+        .stands-3d {
+            transform-style: preserve-3d;
+        }
+
+        .stand {
+            transform-style: preserve-3d;
+            transition: opacity 0.3s ease;
+        }
+
+        .stadium-roof {
+            transform: rotateX(60deg);
+            transform-origin: top;
+        }
+
+        .crowd-section {
+            transition: all 0.3s ease;
+        }
+
+        .crowd-section > div {
+            transition: opacity 0.3s ease;
+            mix-blend-mode: multiply;
+        }
+    </style>
+<style>*, ::before, ::after{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }/* ! tailwindcss v3.4.16 | MIT License | https://tailwindcss.com */*,::after,::before{box-sizing:border-box;border-width:0;border-style:solid;border-color:#e5e7eb}::after,::before{--tw-content:''}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;tab-size:4;font-family:ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0;padding:0}legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]:where(:not([hidden=until-found])){display:none}.pointer-events-none{pointer-events:none}.fixed{position:fixed}.absolute{position:absolute}.relative{position:relative}.inset-0{inset:0px}.inset-24{inset:6rem}.inset-x-0{left:0px;right:0px}.inset-x-12{left:3rem;right:3rem}.inset-y-0{top:0px;bottom:0px}.inset-y-8{top:2rem;bottom:2rem}.top-0{top:0px}.bottom-0{bottom:0px}.bottom-24{bottom:6rem}.left-0{left:0px}.left-1\/2{left:50%}.right-0{right:0px}.top-1\/2{top:50%}.top-24{top:6rem}.z-20{z-index:20}.z-30{z-index:30}.z-50{z-index:50}.mx-auto{margin-left:auto;margin-right:auto}.mx-4{margin-left:1rem;margin-right:1rem}.ml-2{margin-left:0.5rem}.mb-2{margin-bottom:0.5rem}.mb-4{margin-bottom:1rem}.mb-8{margin-bottom:2rem}.mr-2{margin-right:0.5rem}.mt-4{margin-top:1rem}.mt-8{margin-top:2rem}.block{display:block}.flex{display:flex}.grid{display:grid}.hidden{display:none}.h-6{height:1.5rem}.h-16{height:4rem}.h-24{height:6rem}.h-32{height:8rem}.h-full{height:100%}.w-6{width:1.5rem}.w-auto{width:auto}.w-full{width:100%}.w-1{width:0.25rem}.w-16{width:4rem}.w-24{width:6rem}.w-32{width:8rem}.w-4{width:1rem}.max-w-4xl{max-width:56rem}.max-w-6xl{max-width:72rem}.max-w-md{max-width:28rem}.-translate-x-1\/2{--tw-translate-x:-50%;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.-translate-x-4{--tw-translate-x:-1rem;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.-translate-y-1\/2{--tw-translate-y:-50%;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.translate-x-4{--tw-translate-x:1rem;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.-translate-x-full{--tw-translate-x:-100%;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.transform{transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.cursor-pointer{cursor:pointer}.cursor-not-allowed{cursor:not-allowed}.list-disc{list-style-type:disc}.grid-cols-12{grid-template-columns:repeat(12, minmax(0, 1fr))}.grid-cols-2{grid-template-columns:repeat(2, minmax(0, 1fr))}.grid-cols-4{grid-template-columns:repeat(4, minmax(0, 1fr))}.grid-rows-8{grid-template-rows:repeat(8, minmax(0, 1fr))}.flex-col{flex-direction:column}.items-center{align-items:center}.justify-center{justify-content:center}.justify-between{justify-content:space-between}.gap-1{gap:0.25rem}.gap-4{gap:1rem}.gap-8{gap:2rem}.space-y-2 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.5rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.5rem * var(--tw-space-y-reverse))}.overflow-hidden{overflow:hidden}.rounded{border-radius:0.25rem}.rounded-\[50px\]{border-radius:50px}.rounded-full{border-radius:9999px}.rounded-lg{border-radius:0.5rem}.border-2{border-width:2px}.border-4{border-width:4px}.border-l-0{border-left-width:0px}.border-r-0{border-right-width:0px}.border-white{--tw-border-opacity:1;border-color:rgb(255 255 255 / var(--tw-border-opacity, 1))}.bg-\[\#f3f5f8\]{--tw-bg-opacity:1;background-color:rgb(243 245 248 / var(--tw-bg-opacity, 1))}.bg-white{--tw-bg-opacity:1;background-color:rgb(255 255 255 / var(--tw-bg-opacity, 1))}.bg-blue-500{--tw-bg-opacity:1;background-color:rgb(59 130 246 / var(--tw-bg-opacity, 1))}.bg-blue-600{--tw-bg-opacity:1;background-color:rgb(37 99 235 / var(--tw-bg-opacity, 1))}.bg-gray-100{--tw-bg-opacity:1;background-color:rgb(243 244 246 / var(--tw-bg-opacity, 1))}.bg-gray-200{--tw-bg-opacity:1;background-color:rgb(229 231 235 / var(--tw-bg-opacity, 1))}.bg-gray-300{--tw-bg-opacity:1;background-color:rgb(209 213 219 / var(--tw-bg-opacity, 1))}.bg-green-600{--tw-bg-opacity:1;background-color:rgb(22 163 74 / var(--tw-bg-opacity, 1))}.bg-red-500{--tw-bg-opacity:1;background-color:rgb(239 68 68 / var(--tw-bg-opacity, 1))}.bg-black{--tw-bg-opacity:1;background-color:rgb(0 0 0 / var(--tw-bg-opacity, 1))}.bg-opacity-20{--tw-bg-opacity:0.2}.bg-opacity-50{--tw-bg-opacity:0.5}.bg-\[linear-gradient\(90deg\2c transparent_0\%\2c transparent_50\%\2c rgba\(255\2c 255\2c 255\2c 0\.1\)_50\%\2c rgba\(255\2c 255\2c 255\2c 0\.1\)_100\%\)\]{background-image:linear-gradient(90deg,transparent 0%,transparent 50%,rgba(255,255,255,0.1) 50%,rgba(255,255,255,0.1) 100%)}.bg-\[url\(\'\/static\/madrid_images\/crowd\.jpg\'\)\]{background-image:url('/static/madrid_images/crowd.jpg')}.bg-gradient-to-b{background-image:linear-gradient(to bottom, var(--tw-gradient-stops))}.bg-gradient-to-l{background-image:linear-gradient(to left, var(--tw-gradient-stops))}.bg-gradient-to-r{background-image:linear-gradient(to right, var(--tw-gradient-stops))}.bg-gradient-to-t{background-image:linear-gradient(to top, var(--tw-gradient-stops))}.from-blue-400{--tw-gradient-from:#60a5fa var(--tw-gradient-from-position);--tw-gradient-to:rgb(96 165 250 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.from-gray-300{--tw-gradient-from:#d1d5db var(--tw-gradient-from-position);--tw-gradient-to:rgb(209 213 219 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.from-green-600{--tw-gradient-from:#16a34a var(--tw-gradient-from-position);--tw-gradient-to:rgb(22 163 74 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.to-blue-200{--tw-gradient-to:#bfdbfe var(--tw-gradient-to-position)}.to-gray-400{--tw-gradient-to:#9ca3af var(--tw-gradient-to-position)}.to-green-700{--tw-gradient-to:#15803d var(--tw-gradient-to-position)}.bg-\[length\:40px_100\%\]{background-size:40px 100%}.bg-cover{background-size:cover}.p-6{padding:1.5rem}.p-4{padding:1rem}.p-8{padding:2rem}.px-6{padding-left:1.5rem;padding-right:1.5rem}.py-4{padding-top:1rem;padding-bottom:1rem}.px-4{padding-left:1rem;padding-right:1rem}.py-2{padding-top:0.5rem;padding-bottom:0.5rem}.px-2{padding-left:0.5rem;padding-right:0.5rem}.py-1{padding-top:0.25rem;padding-bottom:0.25rem}.pt-24{padding-top:6rem}.pl-5{padding-left:1.25rem}.text-center{text-align:center}.text-3xl{font-size:1.875rem;line-height:2.25rem}.text-lg{font-size:1.125rem;line-height:1.75rem}.text-sm{font-size:0.875rem;line-height:1.25rem}.text-2xl{font-size:1.5rem;line-height:2rem}.font-bold{font-weight:700}.font-medium{font-weight:500}.text-\[\#43526e\]{--tw-text-opacity:1;color:rgb(67 82 110 / var(--tw-text-opacity, 1))}.text-gray-500{--tw-text-opacity:1;color:rgb(107 114 128 / var(--tw-text-opacity, 1))}.text-gray-600{--tw-text-opacity:1;color:rgb(75 85 99 / var(--tw-text-opacity, 1))}.text-white{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.text-green-500{--tw-text-opacity:1;color:rgb(34 197 94 / var(--tw-text-opacity, 1))}.opacity-30{opacity:0.3}.opacity-80{opacity:0.8}.opacity-0{opacity:0}.shadow-md{--tw-shadow:0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 4px 6px -1px var(--tw-shadow-color), 0 2px 4px -2px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-inner{--tw-shadow:inset 0 2px 4px 0 rgb(0 0 0 / 0.05);--tw-shadow-colored:inset 0 2px 4px 0 var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-lg{--tw-shadow:0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 10px 15px -3px var(--tw-shadow-color), 0 4px 6px -4px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.transition-all{transition-property:all;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.transition-transform{transition-property:transform;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.transition-colors{transition-property:color, background-color, border-color, fill, stroke, -webkit-text-decoration-color;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke, -webkit-text-decoration-color;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.duration-300{transition-duration:300ms}.ease-in-out{transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1)}.hover\:bg-blue-500:hover{--tw-bg-opacity:1;background-color:rgb(59 130 246 / var(--tw-bg-opacity, 1))}.hover\:bg-blue-700:hover{--tw-bg-opacity:1;background-color:rgb(29 78 216 / var(--tw-bg-opacity, 1))}.hover\:text-blue-500:hover{--tw-text-opacity:1;color:rgb(59 130 246 / var(--tw-text-opacity, 1))}.hover\:text-gray-600:hover{--tw-text-opacity:1;color:rgb(75 85 99 / var(--tw-text-opacity, 1))}.hover\:text-white:hover{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.focus\:text-gray-600:focus{--tw-text-opacity:1;color:rgb(75 85 99 / var(--tw-text-opacity, 1))}.focus\:outline-none:focus{outline:2px solid transparent;outline-offset:2px}@media (min-width: 640px){.sm\:h-7{height:1.75rem}}@media (min-width: 768px){.md\:grid-cols-4{grid-template-columns:repeat(4, minmax(0, 1fr))}}@media (min-width: 1024px){.lg\:relative{position:relative}.lg\:top-0{top:0px}.lg\:mx-6{margin-left:1.5rem;margin-right:1.5rem}.lg\:ml-6{margin-left:1.5rem}.lg\:mt-0{margin-top:0px}.lg\:flex{display:flex}.lg\:hidden{display:none}.lg\:w-auto{width:auto}.lg\:translate-x-0{--tw-translate-x:0px;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.lg\:flex-row{flex-direction:row}.lg\:items-center{align-items:center}.lg\:justify-between{justify-content:space-between}.lg\:space-x-4 > :not([hidden]) ~ :not([hidden]){--tw-space-x-reverse:0;margin-right:calc(1rem * var(--tw-space-x-reverse));margin-left:calc(1rem * calc(1 - var(--tw-space-x-reverse)))}.lg\:bg-transparent{background-color:transparent}.lg\:p-0{padding:0px}.lg\:opacity-100{opacity:1}.lg\:shadow-none{--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}}</style><meta id="__rzp-meta" name="theme-color" content="#3b82f6"></head>
+<body class="bg-[#f3f5f8]" style="overflow: hidden; contain: initial;">
+
+
+<!-- Navbar Section -->
+<section class="bg-white dark:bg-white-900">
+    <nav id="navbar" x-data="{ isOpen: false }" class="fixed inset-x-0 z-30 w-full p-6 mx-auto lg:flex lg:justify-between lg:items-center bg-white text-[#43526e] transition-transform duration-300 ease-in-out transform top-0" style="transform: translateY(-100%);">
+        <div class="flex items-center justify-between">
+            <a href="#" class="flex items-center">
+                <img class="w-auto h-6 sm:h-7" src="/static/madrid_images/real-madrid-logo.png" alt="Real Madrid Logo">
+                <span class="ml-2 lg:ml-6 hover:text-blue-500">REAL MADRID FC</span>
+            </a>
+
+            <!-- Mobile menu button -->
+            <div class="flex lg:hidden">
+                <button @click="isOpen = !isOpen" type="button" class="text-[#43526e] hover:text-gray-600 focus:outline-none focus:text-gray-600" aria-label="toggle menu">
+                    <svg x-show="!isOpen" xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 8h16M4 16h16"></path>
+                    </svg>
+
+                    <svg x-show="isOpen" xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="display: none;">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Menu open: "block", Menu closed: "hidden" -->
+            <div :class="[isOpen ? 'translate-x-0 opacity-100 ' : 'opacity-0 -translate-x-full']" class="absolute inset-x-0 z-20 w-full px-6 py-4 transition-all duration-300 ease-in-out bg-white shadow-md lg:bg-transparent lg:shadow-none lg:mt-0 lg:p-0 lg:top-0 lg:relative lg:w-auto lg:opacity-100 lg:translate-x-0 lg:flex lg:items-center text-[#43526e] opacity-0 -translate-x-full">
+                <div class="flex flex-col lg:flex-row lg:space-x-4">
+                    <a class="block lg:mx-6 hover:text-blue-500" href="/player_view">Madridstas</a>
+                    <a class="block lg:mx-6 hover:text-blue-500" href="/schedule/">Tickets</a>
+                    <a class="block lg:mx-6 hover:text-blue-500" href="/store/">Store</a>
+                    <a class="block lg:mx-6 hover:text-blue-500" href="/previous_results/">Results</a>
+                    <a class="block lg:mx-6 hover:text-blue-500" href="/gamezone/">Game Zone</a>
+
+                </div>
+
+            
+            <a href="/login" class="block lg:mx-6 hover:text-blue-500">Login</a>
+            
+        </div>
+    </nav>
+    <hr>
+</section>
+
+<script>
+    let lastScrollTop = 0;
+    const navbar = document.getElementById('navbar');
+
+    window.addEventListener('scroll', () => {
+        let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+        if (scrollTop > lastScrollTop) {
+            // Scroll down
+            navbar.style.transform = 'translateY(-100%)';
+        } else {
+            // Scroll up
+            navbar.style.transform = 'translateY(0)';
+        }
+        lastScrollTop = scrollTop;
+    });
+</script>
+
+<!-- Stadium Section -->
+<section class="pt-24 px-4">
+    <!-- Match Details -->
+    <div class="max-w-6xl mx-auto bg-white rounded-lg shadow-lg p-8">
+        <div class="mb-8 text-center">
+            <h2 class="text-3xl font-bold mb-4">Real Madrid CF vs CD Leganés</h2>
+            <p class="text-lg">Primera Division</p>
+            <div class="match-time">
+                March 30, 2025 01:30 AM IST
+            </div>
+            <p class="text-lg">Santiago Bernabéu</p>
+        </div>
+
+        <!-- Stadium Layout -->
+        <div class="stadium-container relative w-full max-w-4xl mx-auto">
+            <!-- North Stand -->
+            <div class="seating-section mb-4">
+                <h3 class="text-center mb-2">North Stand</h3>
+                <div class="grid grid-cols-12 gap-1">
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors selected" data-seat="N-1" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors selected" data-seat="N-2" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors selected" data-seat="N-3" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors selected" data-seat="N-4" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-5" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-6" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-7" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-8" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-9" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-10" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-11" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-12" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-13" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-14" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-15" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-16" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-17" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-18" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-19" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-20" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-21" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-22" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-23" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-24" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-25" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-26" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-27" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-28" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-29" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-30" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-31" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-32" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-33" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-34" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-35" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-36" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-37" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-38" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-39" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-40" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-41" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-42" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-43" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-44" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-45" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-46" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-47" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-48" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-49" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-50" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-51" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-52" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-53" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-54" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-55" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-56" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-57" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-58" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-59" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-60" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-61" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-62" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-63" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-64" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-65" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-66" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-67" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-68" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-69" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-70" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-71" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-72" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-73" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-74" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-75" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-76" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-77" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-78" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-79" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-80" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-81" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-82" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-83" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-84" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-85" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-86" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-87" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-88" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-89" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-90" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-91" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-92" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-93" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-94" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-95" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="N-96" onclick="selectSeat(this)">
+                        </div>
+                    
+                </div>
+            </div>
+
+            <!-- Side Stands and Field -->
+            <div class="flex justify-between">
+                <!-- West Stand -->
+                <div class="seating-section w-24">
+                    <h3 class="text-center mb-2">West Stand</h3>
+                    <div class="grid grid-rows-8 grid-cols-4 gap-1">
+                        
+                            <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="W-1" onclick="selectSeat(this)">
+                            </div>
+                        
+                            <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="W-2" onclick="selectSeat(this)">
+                            </div>
+                        
+                            <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="W-3" onclick="selectSeat(this)">
+                            </div>
+                        
+                            <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="W-4" onclick="selectSeat(this)">
+                            </div>
+                        
+                            <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="W-5" onclick="selectSeat(this)">
+                            </div>
+                        
+                            <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="W-6" onclick="selectSeat(this)">
+                            </div>
+                        
+                            <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="W-7" onclick="selectSeat(this)">
+                            </div>
+                        
+                            <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="W-8" onclick="selectSeat(this)">
+                            </div>
+                        
+                            <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="W-9" onclick="selectSeat(this)">
+                            </div>
+                        
+                            <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="W-10" onclick="selectSeat(this)">
+                            </div>
+                        
+                            <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="W-11" onclick="selectSeat(this)">
+                            </div>
+                        
+                            <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="W-12" onclick="selectSeat(this)">
+                            </div>
+                        
+                            <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="W-13" onclick="selectSeat(this)">
+                            </div>
+                        
+                            <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="W-14" onclick="selectSeat(this)">
+                            </div>
+                        
+                            <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="W-15" onclick="selectSeat(this)">
+                            </div>
+                        
+                            <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="W-16" onclick="selectSeat(this)">
+                            </div>
+                        
+                            <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="W-17" onclick="selectSeat(this)">
+                            </div>
+                        
+                            <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="W-18" onclick="selectSeat(this)">
+                            </div>
+                        
+                            <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="W-19" onclick="selectSeat(this)">
+                            </div>
+                        
+                            <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="W-20" onclick="selectSeat(this)">
+                            </div>
+                        
+                            <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="W-21" onclick="selectSeat(this)">
+                            </div>
+                        
+                            <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="W-22" onclick="selectSeat(this)">
+                            </div>
+                        
+                            <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="W-23" onclick="selectSeat(this)">
+                            </div>
+                        
+                            <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="W-24" onclick="selectSeat(this)">
+                            </div>
+                        
+                            <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="W-25" onclick="selectSeat(this)">
+                            </div>
+                        
+                            <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="W-26" onclick="selectSeat(this)">
+                            </div>
+                        
+                            <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="W-27" onclick="selectSeat(this)">
+                            </div>
+                        
+                            <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="W-28" onclick="selectSeat(this)">
+                            </div>
+                        
+                            <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="W-29" onclick="selectSeat(this)">
+                            </div>
+                        
+                            <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="W-30" onclick="selectSeat(this)">
+                            </div>
+                        
+                            <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="W-31" onclick="selectSeat(this)">
+                            </div>
+                        
+                            <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="W-32" onclick="selectSeat(this)">
+                            </div>
+                        
+                    </div>
+                </div>
+
+                <!-- Field -->
+                <div class="bg-green-600 rounded-lg relative mx-4" style="width: 40rem; height: 15rem; margin-top: 3%">
+                    <!-- Center line -->
+                    <div class="absolute inset-y-0 left-1/2 w-1 bg-white"></div>
+                    <!-- Center circle -->
+                    <div class="absolute w-24 h-24 border-2 border-white rounded-full top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
+                    
+                    <!-- Left Penalty Area -->
+                    <div class="absolute left-0 top-1/2 transform -translate-y-1/2 border-2 border-white" style="height: 120px; width: 60px;">
+                        <!-- Goal Area -->
+                        <div class="absolute left-0 top-1/2 transform -translate-y-1/2 border-2 border-white" style="height: 80px; width: 30px;"></div>
+                        <!-- Penalty Arc -->
+                       
+                    </div>
+
+                    <!-- Right Penalty Area -->
+                    <div class="absolute right-0 top-1/2 transform -translate-y-1/2 border-2 border-white" style="height: 120px; width: 60px;">
+                        <!-- Goal Area -->
+                        <div class="absolute right-0 top-1/2 transform -translate-y-1/2 border-2 border-white" style="height: 80px; width: 30px;"></div>
+                        <!-- Penalty Arc -->
+
+                    </div>
+
+                    <!-- Left Goalpost -->
+                    
+
+                    <!-- Right Goalpost -->
+                    
+                </div>
+
+                <!-- East Stand -->
+                <div class="seating-section w-24">
+                    <h3 class="text-center mb-2">East Stand</h3>
+                    <div class="grid grid-rows-8 grid-cols-4 gap-1">
+                        
+                            <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="E-1" onclick="selectSeat(this)">
+                            </div>
+                        
+                            <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="E-2" onclick="selectSeat(this)">
+                            </div>
+                        
+                            <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="E-3" onclick="selectSeat(this)">
+                            </div>
+                        
+                            <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="E-4" onclick="selectSeat(this)">
+                            </div>
+                        
+                            <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="E-5" onclick="selectSeat(this)">
+                            </div>
+                        
+                            <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="E-6" onclick="selectSeat(this)">
+                            </div>
+                        
+                            <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="E-7" onclick="selectSeat(this)">
+                            </div>
+                        
+                            <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="E-8" onclick="selectSeat(this)">
+                            </div>
+                        
+                            <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="E-9" onclick="selectSeat(this)">
+                            </div>
+                        
+                            <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="E-10" onclick="selectSeat(this)">
+                            </div>
+                        
+                            <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="E-11" onclick="selectSeat(this)">
+                            </div>
+                        
+                            <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="E-12" onclick="selectSeat(this)">
+                            </div>
+                        
+                            <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="E-13" onclick="selectSeat(this)">
+                            </div>
+                        
+                            <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="E-14" onclick="selectSeat(this)">
+                            </div>
+                        
+                            <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="E-15" onclick="selectSeat(this)">
+                            </div>
+                        
+                            <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="E-16" onclick="selectSeat(this)">
+                            </div>
+                        
+                            <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="E-17" onclick="selectSeat(this)">
+                            </div>
+                        
+                            <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="E-18" onclick="selectSeat(this)">
+                            </div>
+                        
+                            <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="E-19" onclick="selectSeat(this)">
+                            </div>
+                        
+                            <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="E-20" onclick="selectSeat(this)">
+                            </div>
+                        
+                            <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="E-21" onclick="selectSeat(this)">
+                            </div>
+                        
+                            <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="E-22" onclick="selectSeat(this)">
+                            </div>
+                        
+                            <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="E-23" onclick="selectSeat(this)">
+                            </div>
+                        
+                            <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="E-24" onclick="selectSeat(this)">
+                            </div>
+                        
+                            <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="E-25" onclick="selectSeat(this)">
+                            </div>
+                        
+                            <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="E-26" onclick="selectSeat(this)">
+                            </div>
+                        
+                            <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="E-27" onclick="selectSeat(this)">
+                            </div>
+                        
+                            <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="E-28" onclick="selectSeat(this)">
+                            </div>
+                        
+                            <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="E-29" onclick="selectSeat(this)">
+                            </div>
+                        
+                            <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="E-30" onclick="selectSeat(this)">
+                            </div>
+                        
+                            <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="E-31" onclick="selectSeat(this)">
+                            </div>
+                        
+                            <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="E-32" onclick="selectSeat(this)">
+                            </div>
+                        
+                    </div>
+                </div>
+            </div>
+
+            <!-- South Stand -->
+            <div class="seating-section mt-4">
+                <h3 class="text-center mb-2">South Stand</h3>
+                <div class="grid grid-cols-12 gap-1">
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded transition-colors booked bg-red-500 cursor-not-allowed" data-seat="S-1" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded transition-colors booked bg-red-500 cursor-not-allowed" data-seat="S-2" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-3" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-4" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-5" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-6" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-7" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-8" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-9" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-10" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-11" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-12" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-13" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-14" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-15" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-16" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-17" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-18" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-19" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-20" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-21" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-22" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-23" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-24" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-25" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-26" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-27" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-28" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-29" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-30" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-31" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-32" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-33" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-34" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-35" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-36" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-37" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-38" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-39" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-40" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-41" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-42" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-43" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-44" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-45" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-46" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-47" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-48" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-49" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-50" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-51" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-52" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-53" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-54" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-55" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-56" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-57" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-58" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-59" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-60" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-61" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-62" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-63" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-64" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-65" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-66" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-67" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-68" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-69" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-70" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-71" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-72" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-73" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-74" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-75" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-76" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-77" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-78" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-79" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-80" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-81" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-82" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-83" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-84" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-85" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-86" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-87" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-88" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-89" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-90" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-91" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-92" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-93" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-94" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-95" onclick="selectSeat(this)">
+                        </div>
+                    
+                        <div class="seat w-6 h-6 bg-gray-200 rounded cursor-pointer hover:bg-blue-500 transition-colors" data-seat="S-96" onclick="selectSeat(this)">
+                        </div>
+                    
+                </div>
+            </div>
+
+            <!-- Add Stand Prices before the Legend section -->
+            <div class="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4">
+                
+            </div>
+
+            <!-- Legend -->
+            <div class="mt-8 flex justify-center gap-8">
+                <div class="flex items-center">
+                    <div class="w-6 h-6 bg-gray-200 rounded mr-2"></div>
+                    <span>Available</span>
+                </div>
+                <div class="flex items-center">
+                    <div class="w-6 h-6 bg-blue-500 rounded mr-2"></div>
+                    <span>Selected</span>
+                </div>
+                <div class="flex items-center">
+                    <div class="w-6 h-6 bg-red-500 rounded mr-2"></div>
+                    <span>Booked</span>
+                </div>
+            </div>
+
+            <!-- Selected Seats Info -->
+            <div class="mt-8 p-4 bg-gray-100 rounded-lg">
+                <h3 class="font-bold mb-2">Selected Seats:</h3>
+                <div id="selected-seats" class="mb-4"><ul class="list-disc pl-5"><li class="flex items-center justify-between mb-2">
+                            <span>Seat N-1 - ₹300</span>
+                            <button onclick="updateSeatPreview('N-1')" class="ml-2 px-2 py-1 text-sm bg-gray-200 hover:bg-blue-500 hover:text-white rounded transition-colors">View</button>
+                         </li><li class="flex items-center justify-between mb-2">
+                            <span>Seat N-2 - ₹300</span>
+                            <button onclick="updateSeatPreview('N-2')" class="ml-2 px-2 py-1 text-sm bg-gray-200 hover:bg-blue-500 hover:text-white rounded transition-colors">View</button>
+                         </li><li class="flex items-center justify-between mb-2">
+                            <span>Seat N-3 - ₹300</span>
+                            <button onclick="updateSeatPreview('N-3')" class="ml-2 px-2 py-1 text-sm bg-gray-200 hover:bg-blue-500 hover:text-white rounded transition-colors">View</button>
+                         </li><li class="flex items-center justify-between mb-2">
+                            <span>Seat N-4 - ₹300</span>
+                            <button onclick="updateSeatPreview('N-4')" class="ml-2 px-2 py-1 text-sm bg-blue-500 text-white rounded transition-colors">View</button>
+                         </li></ul></div>
+                <div class="flex justify-between items-center">
+                    <div>
+                        <span class="font-bold">Total Amount: ₹</span>
+                        <span id="total-amount">1200</span>
+                    </div>
+                    <button class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors" onclick="proceedToBooking()">
+                        Proceed to Booking
+                    </button>
+                </div>
+            </div>
+
+            <!-- Seat View Preview -->
+            <div id="seat-preview" class="mt-8 p-4 bg-white rounded-lg shadow-lg">
+                <h3 class="text-lg font-bold mb-4">View from Selected Seat</h3>
+                <div class="relative w-full" style="height: 400px; perspective: 1500px;">
+                    <div id="preview-container" class="absolute inset-0" style="transform: rotateX(30deg) translateY(50px) scale(1.1);">
+                        <!-- Stadium Atmosphere -->
+                        <div class="stadium-atmosphere absolute inset-0 overflow-hidden rounded-lg">
+                            <!-- Sky -->
+                            <div class="absolute inset-0 bg-gradient-to-b from-blue-400 to-blue-200"></div>
+                            
+                            <!-- Stadium Roof -->
+                            <div class="stadium-roof absolute inset-x-0 top-0 h-16 bg-gray-300"></div>
+                        </div>
+
+                        <!-- Field View -->
+                        <div id="field-view" class="absolute inset-0">
+                            <div class="field-3d w-full h-full relative">
+                                <!-- Stadium Stands -->
+                                <div class="stands-3d absolute inset-0">
+                                    <!-- North Stand -->
+                                    <div class="stand north absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-gray-300 to-gray-400" style="opacity: 1;"></div>
+                                    <!-- South Stand -->
+                                    <div class="stand south absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-gray-300 to-gray-400" style="opacity: 1;"></div>
+                                    <!-- East Stand -->
+                                    <div class="stand east absolute top-24 bottom-24 right-0 w-24 bg-gradient-to-l from-gray-300 to-gray-400" style="opacity: 1;"></div>
+                                    <!-- West Stand -->
+                                    <div class="stand west absolute top-24 bottom-24 left-0 w-24 bg-gradient-to-r from-gray-300 to-gray-400" style="opacity: 1;"></div>
+                                </div>
+
+                                <!-- Green Field -->
+                                <div class="absolute inset-24 bg-gradient-to-b from-green-600 to-green-700 rounded-[50px] shadow-inner">
+                                    <!-- Field Markings -->
+                                    <div class="absolute inset-0 flex items-center justify-center">
+                                        <!-- Center Circle -->
+                                        <div class="w-24 h-24 border-4 border-white rounded-full"></div>
+                                        <!-- Center Line -->
+                                        <div class="absolute inset-y-0 left-1/2 w-1 bg-white"></div>
+                                        
+                                        <!-- Penalty Areas -->
+                                        <div class="absolute inset-x-12 inset-y-8 flex justify-between">
+                                            <!-- Left Penalty Area -->
+                                            <div class="relative w-32 h-full">
+                                                <div class="absolute inset-0 border-4 border-white"></div>
+                                                <div class="absolute left-0 top-1/2 transform -translate-y-1/2 w-16 h-32 border-4 border-l-0 border-white"></div>
+                                                <!-- Goal -->
+                                                <div class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-4 w-4 h-24 border-4 border-l-0 border-white bg-white bg-opacity-20"></div>
+                                            </div>
+                                            <!-- Right Penalty Area -->
+                                            <div class="relative w-32 h-full">
+                                                <div class="absolute inset-0 border-4 border-white"></div>
+                                                <div class="absolute right-0 top-1/2 transform -translate-y-1/2 w-16 h-32 border-4 border-r-0 border-white"></div>
+                                                <!-- Goal -->
+                                                <div class="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-4 w-4 h-24 border-4 border-r-0 border-white bg-white bg-opacity-20"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Field Patterns -->
+                                    <div class="absolute inset-0 opacity-30">
+                                        <div class="h-full bg-[linear-gradient(90deg,transparent_0%,transparent_50%,rgba(255,255,255,0.1)_50%,rgba(255,255,255,0.1)_100%)] bg-[length:40px_100%]"></div>
+                                    </div>
+                                </div>
+                        
+                                <!-- Crowd Overlay -->
+                                <div id="crowd-overlay" class="absolute inset-0 pointer-events-none">
+                                    <div class="crowd-section north absolute top-0 left-0 right-0 h-24">
+                                        <div class="w-full h-full bg-[url('/static/madrid_images/crowd.jpg')] bg-cover opacity-80" style="opacity: 0.8;"></div>
+                                    </div>
+                                    <div class="crowd-section south absolute bottom-0 left-0 right-0 h-24">
+                                        <div class="w-full h-full bg-[url('/static/madrid_images/crowd.jpg')] bg-cover opacity-80" style="opacity: 0.8;"></div>
+                                    </div>
+                                    <div class="crowd-section east absolute top-24 bottom-24 right-0 w-24">
+                                        <div class="w-full h-full bg-[url('/static/madrid_images/crowd.jpg')] bg-cover opacity-80" style="opacity: 0.8;"></div>
+                                    </div>
+                                    <div class="crowd-section west absolute top-24 bottom-24 left-0 w-24">
+                                        <div class="w-full h-full bg-[url('/static/madrid_images/crowd.jpg')] bg-cover opacity-80" style="opacity: 0.8;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-4 space-y-2">
+                    <p id="preview-info" class="text-center text-gray-600 font-medium">View from North Stand (Seat N-4)</p>
+                    <p id="preview-details" class="text-sm text-center text-gray-500">Perfect for watching attacking plays towards the south goal. You'll have an excellent view of the whole field and attacking formations.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    .seat.selected {
+        background-color: #3b82f6;
+    }
+    .seat.booked {
+        background-color: #ef4444;
+        cursor: not-allowed;
+    }
+    .seat:not(.booked):hover {
+        background-color: #60a5fa;
+    }
+</style>
+
+<script>
+    const bookedSeats = ['S-2', 'S-1'];
+    let currentPreviewSeat = null;
+
+    function isSeatBooked(seatNumber) {
+        return bookedSeats.includes(seatNumber);
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.seat').forEach(seat => {
+            const seatNumber = seat.getAttribute('data-seat');
+            if (isSeatBooked(seatNumber)) {
+                seat.classList.add('booked');
+                seat.classList.remove('cursor-pointer', 'hover:bg-blue-500');
+                seat.classList.add('bg-red-500', 'cursor-not-allowed');
+                seat.onclick = null;
+            }
+        });
+    });
+
+    let selectedSeats = [];
+    const maxSeats = 4;
+
+    function updateSeatPreview(seatNumber) {
+        const previewContainer = document.getElementById('preview-container');
+        const previewSection = document.getElementById('seat-preview');
+        const previewInfo = document.getElementById('preview-info');
+        const previewDetails = document.getElementById('preview-details');
+        const [stand, number] = seatNumber.split('-');
+        
+        previewSection.classList.remove('hidden');
+        
+        // Update current preview seat and refresh the display
+        currentPreviewSeat = seatNumber;
+        updateSelectedSeatsDisplay();
+        
+        // Reset transforms
+        previewContainer.style.transform = '';
+        
+        // Calculate perspective based on seat position
+        let perspective = '';
+        let info = '';
+        let details = '';
+        
+        switch(stand) {
+            case 'N':
+                perspective = 'rotateX(30deg) translateY(50px) scale(1.1)';
+                info = 'View from North Stand';
+                details = 'Perfect for watching attacking plays towards the south goal. You\'ll have an excellent view of the whole field and attacking formations.';
+                break;
+            case 'S':
+                perspective = 'rotateX(-30deg) translateY(-50px) scale(1.1)';
+                info = 'View from South Stand';
+                details = 'Great view of attacking plays towards the north goal. Ideal for watching goalkeeper actions and defensive strategies.';
+                break;
+            case 'E':
+                perspective = 'rotateY(-30deg) translateX(50px) scale(1.1)';
+                info = 'View from East Stand';
+                details = 'Excellent view of plays developing from the left side. Perfect for watching midfield battles and tactical formations.';
+                break;
+            case 'W':
+                perspective = 'rotateY(30deg) translateX(-50px) scale(1.1)';
+                info = 'View from West Stand';
+                details = 'Perfect view of plays developing from the right side. Great for following wing play and cross-field passes.';
+                break;
+        }
+        
+        // Apply the transform with animation
+        previewContainer.style.transform = perspective;
+        previewInfo.textContent = info + ` (Seat ${seatNumber})`;
+        previewDetails.textContent = details;
+        
+        // Update crowd overlay based on viewing position
+        const stands = document.querySelectorAll('.stand');
+        stands.forEach(section => {
+            section.style.opacity = '1';
+        });
+        
+        // Reduce opacity of the stand where the viewer is sitting
+        const viewerStand = document.querySelector(`.stand.${stand.toLowerCase()}`);
+        if (viewerStand) {
+            viewerStand.style.opacity = '0.3';
+        }
+        
+        // Update crowd sections
+        const crowdSections = document.querySelectorAll('.crowd-section > div');
+        crowdSections.forEach(section => {
+            section.style.opacity = '0.8';
+        });
+        
+        const viewerCrowdSection = document.querySelector(`.crowd-section.${stand.toLowerCase()} > div`);
+        if (viewerCrowdSection) {
+            viewerCrowdSection.style.opacity = '0.2';
+        }
+    }
+
+    function selectSeat(seatElement) {
+        if (seatElement.classList.contains('booked')) {
+            return;
+        }
+
+        const seatNumber = seatElement.dataset.seat;
+        
+        // Toggle seat selection
+        if (selectedSeats.includes(seatNumber)) {
+            selectedSeats.splice(selectedSeats.indexOf(seatNumber), 1);
+            seatElement.classList.remove('selected');
+            
+            // If this was the current preview seat, show preview of another selected seat if available
+            if (currentPreviewSeat === seatNumber) {
+                const nextSeat = selectedSeats[0];
+                if (nextSeat) {
+                    updateSeatPreview(nextSeat);
+                } else {
+                    document.getElementById('seat-preview').classList.add('hidden');
+                    currentPreviewSeat = null;
+                }
+            }
+        } else {
+            if (selectedSeats.length < maxSeats) {
+                selectedSeats.push(seatNumber);
+                seatElement.classList.add('selected');
+                updateSeatPreview(seatNumber);
+            } else {
+                alert('You can select a maximum of ' + maxSeats + ' seats.');
+            }
+        }
+        
+        updateSelectedSeatsDisplay();
+    }
+
+    function updateSelectedSeatsDisplay() {
+        const selectedSeatsDiv = document.getElementById('selected-seats');
+        const totalAmountSpan = document.getElementById('total-amount');
+        let totalAmount = 0;
+
+        if (selectedSeats.length === 0) {
+            selectedSeatsDiv.innerHTML = '<p>No seats selected</p>';
+            totalAmountSpan.textContent = '0';
+            return;
+        }
+
+        let seatsHtml = '<ul class="list-disc pl-5">';
+        selectedSeats.forEach(seat => {
+            const stand = seat.split('-')[0];
+            const price = 300; // Assuming price is 300 for all stands
+            totalAmount += price;
+            const isCurrentPreview = seat === currentPreviewSeat;
+            const previewButton = `<button onclick="updateSeatPreview('${seat}')" class="ml-2 px-2 py-1 text-sm ${isCurrentPreview ? 'bg-blue-500 text-white' : 'bg-gray-200 hover:bg-blue-500 hover:text-white'} rounded transition-colors">View</button>`;
+            seatsHtml += `<li class="flex items-center justify-between mb-2">
+                            <span>Seat ${seat} - ₹${price}</span>
+                            ${previewButton}
+                         </li>`;
+        });
+        seatsHtml += '</ul>';
+
+        selectedSeatsDiv.innerHTML = seatsHtml;
+        totalAmountSpan.textContent = totalAmount;
+    }
+
+    function proceedToBooking() {
+        if (selectedSeats.length === 0) {
+            alert('Please select at least one seat to proceed.');
+            return;
+        }
+
+        // Calculate total amount
+        const totalAmount = selectedSeats.length * 300; // Assuming ₹300 per seat
+        const bookingFee = Math.round(totalAmount * 0.05); // 5% booking fee
+        const finalAmount = totalAmount + bookingFee;
+
+        // Generate a unique booking ID
+        const bookingId = 'TKT-' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        
+        // Store booking data temporarily
+        const bookingData = {
+            match_id: '498900',
+            seats: selectedSeats,
+            amount: totalAmount,
+            booking_fee: bookingFee,
+            total_amount: finalAmount
+        };
+        
+        // Store in sessionStorage for retrieval after payment
+        sessionStorage.setItem('temp_booking_' + bookingId, JSON.stringify(bookingData));
+        
+        // Initialize Razorpay options
+        const options = {
+            key: 'rzp_test_7FTQA5xPrTVrqk', // Your Razorpay Key ID
+            amount: finalAmount * 100, // Amount in paise
+            currency: "INR",
+            name: "Real Madrid FC",
+            description: "Match Ticket Booking",
+            image: "/static/madrid_images/real-madrid-logo.png",
+            handler: function (response) {
+                // Payment successful - process booking
+                processSuccessfulPayment(response, bookingId);
+            },
+            prefill: {
+                name: "",
+                email: "",
+                contact: ""
+            },
+            notes: {
+                booking_id: bookingId,
+                match_id: "498900",
+                seats: selectedSeats.join(',')
+            },
+            theme: {
+                color: "#3b82f6"
+            },
+            modal: {
+                ondismiss: function() {
+                    console.log("Payment modal dismissed");
+                    // Clean up temporary data
+                    sessionStorage.removeItem('temp_booking_' + bookingId);
+                }
+            }
+        };
+        
+        // Create Razorpay instance and open payment modal
+        const rzp = new Razorpay(options);
+        rzp.open();
+        
+        // Handle payment failures
+        rzp.on('payment.failed', function (response) {
+            console.error("Payment failed:", response.error);
+            alert("Payment failed: " + response.error.description);
+            // Clean up temporary data
+            sessionStorage.removeItem('temp_booking_' + bookingId);
+        });
+    }
+
+    function processSuccessfulPayment(paymentResponse, bookingId) {
+        // Get the stored booking data
+        const bookingData = JSON.parse(sessionStorage.getItem('temp_booking_' + bookingId));
+        
+        if (!bookingData) {
+            alert('Booking data not found. Please try again.');
+            return;
+        }
+        
+        // Show loading indicator
+        const loadingHtml = `
+            <div id="payment-processing" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div class="bg-white p-6 rounded-lg shadow-lg text-center">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                    <p class="text-lg font-semibold">Processing your booking...</p>
+                    <p class="text-sm text-gray-600">Please do not close this window.</p>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', loadingHtml);
+        
+        // Prepare data for server
+        const serverData = {
+            razorpay_payment_id: paymentResponse.razorpay_payment_id,
+            razorpay_order_id: paymentResponse.razorpay_order_id || '',
+            razorpay_signature: paymentResponse.razorpay_signature || '',
+            booking_id: bookingId,
+            seats: bookingData.seats,
+            amount: bookingData.amount,
+            booking_fee: bookingData.booking_fee,
+            total_amount: bookingData.total_amount
+        };
+        
+        // Get CSRF token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        
+        // Send data to server to complete booking
+        fetch('/process-ticket-booking/498900/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify(serverData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Remove loading indicator
+            document.getElementById('payment-processing').remove();
+            
+            // Clean up temporary data
+            sessionStorage.removeItem('temp_booking_' + bookingId);
+            
+            if (data.success) {
+                // Show success message
+                const successHtml = `
+                    <div id="booking-success" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                        <div class="bg-white p-6 rounded-lg shadow-lg text-center max-w-md">
+                            <div class="text-green-500 mb-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                            </div>
+                            <h2 class="text-2xl font-bold mb-2">Booking Successful!</h2>
+                            <p class="mb-4">Your tickets have been booked successfully.</p>
+                            <p class="text-sm text-gray-600 mb-4">Order Number: ${data.order_number}</p>
+                            <button onclick="window.location.href='${data.redirect_url}'" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                                View Booking Details
+                            </button>
+                        </div>
+                    </div>
+                `;
+                document.body.insertAdjacentHTML('beforeend', successHtml);
+                
+                // Redirect after a short delay
+                setTimeout(() => {
+                    window.location.href = data.redirect_url;
+                }, 3000);
+            } else {
+                alert(data.error || 'An error occurred while processing your booking.');
+            }
+        })
+        .catch(error => {
+            // Remove loading indicator
+            document.getElementById('payment-processing').remove();
+            
+            console.error('Error:', error);
+            alert('An error occurred while processing your booking. Please contact support with your payment ID: ' + paymentResponse.razorpay_payment_id);
+        });
+    }
+</script>
+
+
+<div class="razorpay-container" style="z-index: 2147483647; position: fixed; top: 0px; display: block; left: 0px; height: 100%; width: 100%; max-height: 100dvh; backface-visibility: hidden; overflow-y: visible;"><style>@keyframes rzp-rot{to{transform: rotate(360deg);}}@-webkit-keyframes rzp-rot{to{-webkit-transform: rotate(360deg);}} .razorpay-container > iframe {min-height: 100%!important;}</style><div class="razorpay-backdrop" style="min-height: 100%; transition: 0.3s ease-out; position: fixed; top: 0px; left: 0px; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6);"><span style="text-decoration: none; background: rgb(214, 68, 68); border: 1px dashed white; padding: 3px; opacity: 1; transform: rotate(45deg); transition: opacity 0.3s ease-in; font-family: lato, ubuntu, helvetica, sans-serif; color: white; position: absolute; width: 200px; text-align: center; right: -50px; top: 50px;">Test Mode</span></div><iframe style="opacity: 1; height: 100%; position: relative; background: none; display: block; border: 0px none transparent; margin: 0px; padding: 0px; z-index: 2; width: 100%;" allowtransparency="true" frameborder="0" width="100%" height="100%" src="https://api.razorpay.com/v1/checkout/public?traffic_env=canary&amp;build=aaaba9bd71c14d5b21b39e85c4f51eeb3725c971&amp;build_v1=368703ca18df4bd6071ae944791cd8870683687b&amp;checkout_v2=1&amp;new_session=1" class="razorpay-checkout-frame" allow="otp-credentials; payment; clipboard-write; publickey-credentials-get https://api.razorpay.com; publickey-credentials-create 'self' https://api.razorpay.com; camera *"></iframe></div>
+                    <div id="booking-success" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                        <div class="bg-white p-6 rounded-lg shadow-lg text-center max-w-md">
+                            <div class="text-green-500 mb-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                            <h2 class="text-2xl font-bold mb-2">Booking Successful!</h2>
+                            <p class="mb-4">Your tickets have been booked successfully.</p>
+                            <p class="text-sm text-gray-600 mb-4">Order Number: TEST-TEST-iae5tu6s</p>
+                            <button id="view-booking-details-btn" onclick="window.location.href='/bookings/'" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                                View Booking Details
+                            </button>
+                        </div>
+                    </div>
+                </body></html>

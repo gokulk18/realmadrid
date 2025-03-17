@@ -88,4 +88,5 @@ urlpatterns = [
     path('player_detail/<int:player_id>/', views.player_detail, name='player_detail'),
     path('cancel-ticket/<int:order_id>/', views.cancel_ticket, name='cancel_ticket'),
     path('confirm-cancel-ticket/<int:order_id>/', views.confirm_cancel_ticket, name='confirm_cancel_ticket'),
+    
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

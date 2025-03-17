@@ -3562,4 +3562,3 @@ def cancel_temp_booking(request):
         return JsonResponse({'success': False, 'error': str(e)})
 
 
-
