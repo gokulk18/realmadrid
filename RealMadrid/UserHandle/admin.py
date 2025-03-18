@@ -4,7 +4,7 @@ from .models import (
     Cart, CartItem, Wishlist, WishlistItem, Order, OrderItem, Payment, Shipping,
     Stand, Section, Match, TicketOrder, TicketItem, TicketPayment, QuizQuestion,
     UploadedImage, IdentifyPlayer, PlayerCredentials, PlayerTask, PlayerAchievement,
-    PlayerHistory, SeasonStats
+    PlayerHistory, SeasonStats, PlayerVideo
 )
 
 class UsersAdmin(admin.ModelAdmin):
@@ -232,10 +232,10 @@ class PlayerTaskAdmin(admin.ModelAdmin):
     list_filter = ('exercise_type', 'status', 'assigned_date')
     search_fields = ('player__player_name', 'exercise_type', 'instructions')
     readonly_fields = ('assigned_date',)
-    raw_id_fields = ('player', 'assigned_by')
+    raw_id_fields = ('player',)
     fieldsets = (
         (None, {
-            'fields': ('player', 'assigned_by', 'exercise_type', 'repetitions')
+            'fields': ('player',  'exercise_type', 'repetitions')
         }),
         ('Details', {
             'fields': ('instructions', 'due_date', 'status')
@@ -264,6 +264,37 @@ class SeasonStatsAdmin(admin.ModelAdmin):
     
     class Meta:
         unique_together = ('player', 'season', 'competition')
+
+@admin.register(PlayerVideo)
+class PlayerVideoAdmin(admin.ModelAdmin):
+    list_display = ['player', 'task', 'uploaded_at', 'processed_at']
+    list_filter = ['player', 'task', 'uploaded_at', 'processed_at']
+    
+    # Update readonly_fields to match actual model fields
+    readonly_fields = [
+        'uploaded_at',
+        'processed_at',
+        'processed_video',
+        'evaluation_data',
+        'trainer_comment'
+    ]
+    
+    search_fields = ['player__player_name', 'task__exercise_type']
+    
+    fieldsets = (
+        ('Basic Information', {
+            'fields': ('player', 'task', 'video')
+        }),
+        ('Processing Information', {
+            'fields': (
+                'processed_video',
+                'uploaded_at',
+                'processed_at',
+                'trainer_comment',
+                'evaluation_data'
+            )
+        })
+    )
 
 # Register the models with the admin site
 admin.site.register(Users, UsersAdmin)

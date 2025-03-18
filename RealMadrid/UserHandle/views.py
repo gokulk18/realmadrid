@@ -91,6 +91,8 @@ from datetime import timedelta
 import json
 from collections import defaultdict
 from .models import PlayerVideo, Player
+from django.contrib.auth.decorators import login_required
+from .models import Player, PlayerTask
 
 
 def is_admin(user):
@@ -3222,28 +3224,69 @@ def player_dashboard(request):
         print(f"Error fetching next match: {e}")
         next_match = None
 
-    # Fetch tasks assigned to the player
+    # Fetch tasks assigned to the player using the direct relationship
     player = Player.objects.get(id=request.session['user_id'])
     assigned_tasks = PlayerTask.objects.filter(
-        assigned_players=player
-    ).order_by('-created_at')
+        player=player
+    ).order_by('-assigned_date')
 
-    # Update task status based on due date
+    # Get video submissions for tasks
+    task_videos = {}
     for task in assigned_tasks:
-        if task.status == 'pending' and task.due_date < current_time:
-            task.status = 'overdue'
-            task.save()
+        video = PlayerVideo.objects.filter(task=task).first()
+        if video:
+            task_videos[task.id] = {
+                'video_url': video.video.url if video.video else None,
+                'processed_video_url': video.processed_video.url if video.processed_video else None,
+                'trainer_comment': video.trainer_comment,
+                'processed_at': video.processed_at
+            }
 
+    pending_tasks_count = assigned_tasks.filter(status='pending').count()
+    completed_tasks_count = len(assigned_tasks) - pending_tasks_count
+    
     context = {
         'next_match': next_match,
         'assigned_tasks': assigned_tasks,
-        'pending_tasks_count': assigned_tasks.filter(status='pending').count()
+        'task_videos': task_videos,
+        'pending_tasks_count': pending_tasks_count,
+        'completed_tasks_count': completed_tasks_count,
     }
     
     return render(request, 'player_dashboard.html', context)
 
-# def trainer_assign_task(request):
-#     return render(request, 'trainer_assign_task.html')
+def trainer_assign_task(request):
+    if request.method == 'POST':
+        player_id = request.POST.get('player')
+        exercise_type = request.POST.get('exercise_type')
+        instructions = request.POST.get('instructions')
+        repetitions = request.POST.get('repetitions')
+        due_date = request.POST.get('due_date')
+
+        try:
+            player = Player.objects.get(id=player_id)
+            task = PlayerTask.objects.create(
+                player=player,
+                exercise_type=exercise_type,
+                instructions=instructions,
+                repetitions=repetitions,
+                due_date=due_date,
+                status='pending'
+            )
+            messages.success(request, f'Task assigned successfully to {player.player_name}!')
+            return redirect('trainer_assign_task')
+        except Exception as e:
+            messages.error(request, f'Error assigning task: {str(e)}')
+
+    # Get recent tasks for display
+    recent_tasks = PlayerTask.objects.select_related('player').order_by('-assigned_date')[:5]
+    
+    context = {
+        'players': Player.objects.all(),
+        'exercise_types': PlayerTask.EXERCISE_TYPES,
+        'recent_tasks': recent_tasks,
+    }
+    return render(request, 'trainer_assign_task.html', context)
 
 @csrf_exempt
 def process_ticket_booking(request, match_id):
@@ -4059,125 +4102,38 @@ def upload_player_video(request, player_id):
     return render(request, 'upload_video.html', {'form': form, 'player': player})
 
 
-def trainer_assign_task(request):
-    if request.method == 'POST':
-        player_id = request.POST.get('player_id')
-        exercise_type = request.POST.get('exercise_type')
-        repetitions = request.POST.get('repetitions')
-        instructions = request.POST.get('instructions')
-        due_date = request.POST.get('due_date')
-        
-        player = get_object_or_404(Player, id=player_id)
-        
-        task = PlayerTask.objects.create(
-            player=player,
-            assigned_by=request.user,
-            exercise_type=exercise_type,
-            repetitions=repetitions,
-            instructions=instructions,
-            due_date=due_date
-        )
-        
-        messages.success(request, f"Task assigned to {player.player_name} successfully")
-        return redirect('trainer_dashboard')
-    
-    # Get all players for the dropdown
-    players = Player.objects.all().order_by('player_name')
-    
-    # Get recent assignments by this trainer
-    assigned_tasks = PlayerTask.objects.filter(assigned_by=request.user).order_by('-assigned_date')
-    
-    return render(request, 'trainer_assign_task.html', {
-        'players': players,
-        'assigned_tasks': assigned_tasks
-    })
-
-@login_required
-def player_dashboard(request):
-    # Check if user is a player
-    try:
-        player_credentials = PlayerCredentials.objects.get(user=request.user)
-        player = player_credentials.player
-        
-        # Get pending tasks for this player
-        pending_tasks = PlayerTask.objects.filter(
-            player=player, 
-            status__in=['pending', 'completed']
-        ).order_by('due_date')
-        
-        # Get completed tasks
-        completed_tasks = PlayerTask.objects.filter(
-            player=player,
-            status='evaluated'
-        ).order_by('-assigned_date')
-        
-        context = {
-            'player': player,
-            'pending_tasks': pending_tasks,
-            'completed_tasks': completed_tasks
-        }
-        
-        return render(request, 'player/dashboard.html', context)
-    except PlayerCredentials.DoesNotExist:
-        messages.error(request, "You don't have access to the player dashboard")
-        return redirect('home')
-
 def upload_task_video(request, task_id):
     task = get_object_or_404(PlayerTask, id=task_id)
     
-    # Check if user is the assigned player
-    try:
-        player_credentials = PlayerCredentials.objects.get(user=request.user)
-        if player_credentials.player != task.player:
-            messages.error(request, "You don't have permission to upload for this task")
-            return redirect('player_dashboard')
-    except PlayerCredentials.DoesNotExist:
-        messages.error(request, "You don't have permission to upload videos")
-        return redirect('home')
-    
-    if request.method == 'POST':
-        if 'video' in request.FILES:
-            video = request.FILES['video']
+    if request.method == 'POST' and request.FILES.get('video'):
+        try:
+            # Create new PlayerVideo instance
             player_video = PlayerVideo.objects.create(
                 task=task,
-                video=video
+                player=task.player,
+                video=request.FILES['video'],
+                status='uploaded'  # Initial status when video is just uploaded
             )
             
-            # Process the video asynchronously (in production, use a task queue like Celery)
-            player_video.process_video()
+            # Return immediately after upload with video ID
+            return JsonResponse({
+                'success': True,
+                'video_id': player_video.id,
+                'message': 'Video uploaded successfully. Processing will continue in background.',
+                'redirect_url': reverse('player_dashboard')  # Add URL to redirect to after upload
+            })
             
-            messages.success(request, "Video uploaded successfully. It will be processed shortly.")
-            return redirect('player_dashboard')
-    
-    return render(request, 'player/upload_video.html', {'task': task})
+        except Exception as e:
+            logger.error(f"Error uploading video: {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            })
 
-
-def review_task_videos(request, task_id):
-    task = get_object_or_404(PlayerTask, id=task_id)
-    videos = PlayerVideo.objects.filter(task=task).order_by('-upload_date')
-    
-    if request.method == 'POST':
-        video_id = request.POST.get('video_id')
-        comment = request.POST.get('comment')
-        mark_evaluated = request.POST.get('mark_evaluated', False)
-        
-        video = get_object_or_404(PlayerVideo, id=video_id)
-        video.trainer_comment = comment
-        video.save()
-        
-        if mark_evaluated:
-            task.status = 'evaluated'
-            task.save()
-            messages.success(request, "Task marked as evaluated")
-        
-        messages.success(request, "Comment saved successfully")
-        return redirect('review_task_videos', task_id=task_id)
-    
-    context = {
-        'task': task,
-        'videos': videos
-    }
-    return render(request, 'trainer/review_videos.html', context)
+    return JsonResponse({
+        'success': False,
+        'error': 'No video provided'
+    })
 
 def trainer_dashboard(request):
     # Get tasks assigned by this trainer
@@ -4195,5 +4151,33 @@ def trainer_dashboard(request):
     }
     
     return render(request, 'trainer/dashboard.html', context)
+
+
+def trainer_show_task(request):
+    tasks = PlayerTask.objects.select_related('player', 'player__player_position').all()
+    
+    context = {
+        'tasks': tasks,
+        'tasks_stats': {
+            'pending': tasks.filter(status='pending').count(),
+            'completed': tasks.filter(status='completed').count(),
+            'all': tasks.count(),
+        }
+    }
+    return render(request, 'trainer_show_task.html', context)
+
+from django.http import JsonResponse
+
+def video_status(request, video_id):
+    video = get_object_or_404(PlayerVideo, id=video_id)
+    return JsonResponse({
+        'status': video.status,
+        'error': None if video.status != 'failed' else 'Processing failed',
+        'data': {
+            'processed_at': video.processed_at.isoformat() if video.processed_at else None,
+            'trainer_comment': video.trainer_comment,
+            'evaluation_data': video.evaluation_data
+        } if video.status == 'completed' else None
+    })
 
 

@@ -90,7 +90,10 @@ urlpatterns = [
     path('generate-ticket-pdf/<int:order_id>/', views.generate_ticket_pdf, name='generate_ticket_pdf'),
     path('trainer/dashboard/', views.trainer_dashboard, name='trainer_dashboard'),
     # path('trainer/assign-task/', views.assign_player_task, name='assign_player_task'),
-    path('trainer/review-task/<int:task_id>/', views.review_task_videos, name='review_task_videos'),
-    path('player/upload-task-video/<int:task_id>/', views.upload_task_video, name='upload_task_video'),
-    path('trainer_assign_task/', views.trainer_assign_task, name='trainer_assign_task'),   
+    # path('trainer/review-task/<int:task_id>/', views.review_task_videos, name='review_task_videos'),
+    path('trainer_assign_task/', views.trainer_assign_task, name='trainer_assign_task'),  
+    path('trainer_show_task/', views.trainer_show_task, name='trainer_show_task'),
+    path('task/<int:task_id>/upload-video/', views.upload_task_video, name='upload_task_video'),
+    path('api/video-status/<int:video_id>/', views.video_status, name='video_status'),
+
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

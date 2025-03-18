@@ -5,6 +5,8 @@ from django.core.validators import MinValueValidator
 from django.utils import timezone
 import json
 from django.conf import settings
+from .utils import VideoProcessor  # Import your existing ML utilities
+import os
 
 class Users(AbstractUser):
     name = models.CharField(max_length=255)
@@ -426,16 +428,18 @@ class PlayerTask(models.Model):
     )
     
     player = models.ForeignKey(Player, related_name='tasks', on_delete=models.CASCADE)
-    assigned_by = models.ForeignKey(Users, related_name='assigned_tasks', on_delete=models.CASCADE)
-    exercise_type = models.CharField(max_length=20, choices=EXERCISE_TYPES)
-    repetitions = models.IntegerField(help_text="Number of repetitions to perform")
-    instructions = models.TextField(blank=True)
-    due_date = models.DateField()
-    assigned_date = models.DateTimeField(auto_now_add=True)
+    exercise_type = models.CharField(max_length=20, choices=EXERCISE_TYPES, default='other')
+    repetitions = models.IntegerField(help_text="Number of repetitions to perform", default=0)
+    instructions = models.TextField(blank=True, null=True)
+    due_date = models.DateField(default=timezone.now)
+    assigned_date = models.DateTimeField(default=timezone.now)
     status = models.CharField(max_length=20, choices=TASK_STATUS, default='pending')
     
     def __str__(self):
         return f"{self.player.player_name} - {self.get_exercise_type_display()} x{self.repetitions}"
+
+    class Meta:
+        ordering = ['-assigned_date']
 
 class PlayerAchievement(models.Model):
     player = models.ForeignKey(Player, related_name='achievements', on_delete=models.CASCADE)
@@ -473,35 +477,84 @@ class SeasonStats(models.Model):
         return f"{self.player.player_name} - {self.season} {self.competition}"
 
 class PlayerVideo(models.Model):
-    task = models.ForeignKey(PlayerTask, related_name='videos', on_delete=models.CASCADE)
+    STATUS_CHOICES = (
+        ('pending', 'Pending'),
+        ('processing', 'Processing'),
+        ('completed', 'Completed'),
+        ('failed', 'Failed')
+    )
+    
+    task = models.ForeignKey('PlayerTask', on_delete=models.CASCADE, related_name='videos')
+    player = models.ForeignKey(
+        'Player', 
+        on_delete=models.CASCADE, 
+        related_name='videos',
+        null=True,  # Temporarily allow null
+        blank=True
+    )
     video = models.FileField(upload_to='player_videos/')
     processed_video = models.FileField(upload_to='processed_videos/', null=True, blank=True)
-    pose_data = models.JSONField(null=True, blank=True)
-    upload_date = models.DateTimeField(auto_now_add=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True,null=True, blank=True)
     processed_at = models.DateTimeField(null=True, blank=True)
-    trainer_comment = models.TextField(blank=True)
-    
+    trainer_comment = models.TextField(null=True, blank=True)
+    evaluation_data = models.JSONField(null=True, blank=True)
+    status = models.CharField(
+        max_length=20, 
+        choices=STATUS_CHOICES,
+        default='pending'
+    )
+
+    class Meta:
+        ordering = ['-uploaded_at']
+        get_latest_by = 'uploaded_at'
+
     def __str__(self):
-        return f"{self.task.player.player_name} - {self.task.get_exercise_type_display()}"
-    
-    def process_video(self):
-        from .utils import detect_pose
-        import os
-        from django.utils import timezone
-        
-        video_path = os.path.join(settings.MEDIA_ROOT, self.video.name)
-        result = detect_pose(video_path)
-        
-        if result:
-            relative_path = os.path.relpath(result['processed_video'], settings.MEDIA_ROOT)
-            self.processed_video = relative_path
-            self.pose_data = result['pose_data']
-            self.processed_at = timezone.now()
+        return f"Video by {self.player.player_name if self.player else 'Unknown'} for {self.task}"
+
+    def evaluate_video(self):
+        try:
+            if not self.video:
+                return {
+                    'success': False,
+                    'error': 'No video file found'
+                }
+
+            video_path = self.video.path
             
-            # Update task status
-            self.task.status = 'completed'
-            self.task.save()
-            
-            self.save()
-            return True
-        return False
+            # Get exercise type from task
+            exercise_type = self.task.exercise_type if hasattr(self.task, 'exercise_type') else 'general'
+            target_reps = self.task.repetitions if hasattr(self.task, 'repetitions') else 0
+
+            # Import your video processor
+            from .utils import VideoProcessor
+            processor = VideoProcessor()
+
+            # Process based on exercise type
+            if exercise_type == 'pushup':
+                result = processor.evaluate_pushup(video_path, target_reps)
+            elif exercise_type == 'squat':
+                result = processor.evaluate_squat(video_path, target_reps)
+            elif exercise_type == 'running':
+                result = processor.evaluate_running(video_path)
+            else:
+                result = processor.evaluate_general_movement(video_path)
+
+            if not result:
+                return {
+                    'success': False,
+                    'error': 'Video processing failed'
+                }
+
+            return {
+                'success': True,
+                'processed_video_path': result.get('processed_video_path'),
+                'evaluation_data': result.get('metrics'),
+                'feedback': result.get('metrics', {}).get('recommendations', ['Exercise completed'])[0]
+            }
+
+        except Exception as e:
+            logger.error(f"Video evaluation error: {str(e)}")
+            return {
+                'success': False,
+                'error': str(e)
+            }
