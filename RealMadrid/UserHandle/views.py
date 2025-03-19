@@ -93,6 +93,12 @@ from collections import defaultdict
 from .models import PlayerVideo, Player
 from django.contrib.auth.decorators import login_required
 from .models import Player, PlayerTask
+from django.views.decorators.http import require_POST
+import cv2
+import numpy as np
+from django.core.files.base import ContentFile
+import tempfile
+import os
 
 
 def is_admin(user):
@@ -4074,32 +4080,6 @@ def generate_ticket_pdf(request, order_id):
     
     return response
 
-from django.shortcuts import redirect, get_object_or_404
-from .models import PlayerVideo, Player
-
-def process_player_video(request, video_id):
-    video = get_object_or_404(PlayerVideo, id=video_id)
-    success = video.process_video()
-    if success:
-        messages.success(request, "Video processed successfully!")
-    else:
-        messages.error(request, "Failed to process video")
-    return redirect('video_detail', video_id=video.id)
-
-def upload_player_video(request, player_id):
-    player = get_object_or_404(Player, id=player_id)
-    
-    if request.method == 'POST':
-        form = PlayerVideoForm(request.POST, request.FILES)
-        if form.is_valid():
-            video = form.save(commit=False)
-            video.player = player
-            video.save()
-            return redirect('player_detail', player_id=player.id)
-    else:
-        form = PlayerVideoForm()
-    
-    return render(request, 'upload_video.html', {'form': form, 'player': player})
 
 
 def upload_task_video(request, task_id):
@@ -4164,53 +4144,6 @@ def trainer_show_task(request):
     }
     return render(request, 'trainer_show_task.html', context)
 
-from django.http import JsonResponse
 
-def video_status(request, video_id):
-    video = get_object_or_404(PlayerVideo, id=video_id)
-    return JsonResponse({
-        'status': video.status,
-        'error': None if video.status != 'failed' else 'Processing failed',
-        'data': {
-            'processed_at': video.processed_at.isoformat() if video.processed_at else None,
-            'trainer_comment': video.trainer_comment,
-            'evaluation_data': video.evaluation_data
-        } if video.status == 'completed' else None
-    })
-
-def review_task_videos(request, task_id):
-    task = get_object_or_404(PlayerTask, id=task_id)
-    videos = PlayerVideo.objects.filter(task=task).order_by('-uploaded_at')
-
-    if request.method == 'POST':
-        try:
-            video_id = request.POST.get('video_id')
-            comment = request.POST.get('comment')
-            evaluation = request.POST.get('evaluation')
-            
-            video = PlayerVideo.objects.get(id=video_id)
-            video.trainer_comment = comment
-            video.evaluation_data = evaluation
-            video.status = 'completed'
-            video.processed_at = timezone.now()
-            video.save()
-
-            # Update task status if needed
-            task.status = 'evaluated'
-            task.save()
-
-            messages.success(request, 'Video review submitted successfully!')
-            return redirect('trainer_dashboard')
-
-        except Exception as e:
-            messages.error(request, f'Error submitting review: {str(e)}')
-            return redirect('review_task_videos', task_id=task_id)
-
-    context = {
-        'task': task,
-        'videos': videos,
-        'player': task.player,
-    }
-    return render(request, 'trainer/review_task.html', context)
 
 

@@ -18,6 +18,7 @@
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
         <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     </head>
     <style>
     .tabs {
@@ -340,9 +341,9 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <div class="flex space-x-2">
-                                <button onclick="viewTask({{ task.id }})" 
+                                <button onclick="viewTaskVideo({{ task.id }})" 
                                         class="p-2 text-blue-600 hover:bg-blue-50 rounded-full transition-colors duration-200">
-                                    <span class="material-symbols-outlined">visibility</span>
+                                    <i class="fas fa-eye"></i>
                                 </button>
                                 {% if task.status == 'completed' %}
                                 <button onclick="evaluateTask({{ task.id }})" 
@@ -403,8 +404,53 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function viewTask(taskId) {
-    // Implement view task details
-    console.log('Viewing task:', taskId);
+    // Show modal
+    document.getElementById('taskModal').classList.remove('hidden');
+    
+    // Reset containers
+    document.getElementById('videoContainer').classList.add('hidden');
+    document.getElementById('noVideoMessage').classList.add('hidden');
+    
+    // Update the URL to match your Django URL pattern
+    fetch(`/get_task/${taskId}/`)  // Changed from /api/tasks/ to /get_task/
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(task => {
+            // Update task details in modal
+            document.getElementById('taskTitle').textContent = 
+                `${task.exercise_type} - ${task.player_name}`;
+            document.getElementById('taskInstructions').textContent = 
+                `Instructions: ${task.instructions}`;
+            document.getElementById('taskRepetitions').textContent = 
+                `Required Repetitions: ${task.repetitions}`;
+            document.getElementById('taskDueDate').textContent = 
+                `Due: ${task.due_date}`;
+            document.getElementById('taskStatus').textContent = 
+                `Status: ${task.status}`;
+            
+            if (task.video_url) {
+                // Show video container
+                const videoContainer = document.getElementById('videoContainer');
+                videoContainer.classList.remove('hidden');
+                
+                // Set video source
+                const video = document.getElementById('taskVideo');
+                video.src = task.video_url;
+                video.dataset.taskId = taskId;
+            } else {
+                // Show no video message
+                document.getElementById('noVideoMessage').classList.remove('hidden');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to load task details');
+            closeModal();
+        });
 }
 
 function evaluateTask(taskId) {
@@ -450,5 +496,124 @@ function getCookie(name) {
         }
     }
     return cookieValue;
+}
+</script>
+
+<!-- Add this modal HTML just before the closing </body> tag -->
+<div id="taskModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4">
+        <!-- Overlay -->
+        <div class="fixed inset-0 bg-black opacity-50"></div>
+        
+        <!-- Modal content -->
+        <div class="relative bg-white rounded-lg max-w-4xl w-full mx-auto z-50">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-semibold">Task Details</h3>
+                    <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+                
+                <!-- Video container - shown when video exists -->
+                <div id="videoContainer" class="mb-4 hidden">
+                    <video id="taskVideo" class="w-full rounded-lg" controls>
+                        Your browser does not support the video tag.
+                    </video>
+                    <div class="flex justify-end space-x-3 mt-4">
+                        <button id="analyzeButton" 
+                                onclick="analyzeVideo()"
+                                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center">
+                            <span class="material-symbols-outlined mr-2">analytics</span>
+                            Analyze Exercise
+                        </button>
+                        <button onclick="closeModal()" 
+                                class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">
+                            Close
+                        </button>
+                    </div>
+                </div>
+
+                <!-- No video message - shown when no video exists -->
+                <div id="noVideoMessage" class="hidden">
+                    <div class="text-center py-12">
+                        <span class="material-symbols-outlined text-gray-400 text-6xl mb-4">videocam_off</span>
+                        <h3 class="text-xl font-medium text-gray-900 mb-2">No Video Uploaded</h3>
+                        <p class="text-gray-500">This task doesn't have any video submission yet.</p>
+                    </div>
+                    <div class="flex justify-end">
+                        <button onclick="closeModal()" 
+                                class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">
+                            Close
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ... existing code ...
+
+function closeModal() {
+    document.getElementById('taskModal').classList.add('hidden');
+    const video = document.getElementById('taskVideo');
+    if (video) {
+        video.pause();
+        video.src = '';
+    }
+}
+
+function analyzeVideo() {
+    const video = document.getElementById('taskVideo');
+    const taskId = video.dataset.taskId;
+    const analyzeButton = document.getElementById('analyzeButton');
+    
+    // Disable button and show loading state
+    analyzeButton.disabled = true;
+    analyzeButton.innerHTML = `
+        <svg class="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        Analyzing...
+    `;
+    
+    // Update the URL to match your Django URL pattern
+    fetch(`/analyze_task/${taskId}/`, {  // Changed from /api/tasks/analyze/ to /analyze_task/
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        }
+    })
+    .then(response => response.json())
+    .then(result => {
+        // Re-enable button
+        analyzeButton.disabled = false;
+        analyzeButton.innerHTML = `
+            <span class="material-symbols-outlined mr-2">analytics</span>
+            Analyze Exercise
+        `;
+        
+        // Show analysis result
+        alert(result.message);
+        
+        // Reload page if analysis updated the task status
+        if (result.status_updated) {
+            window.location.reload();
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to analyze video');
+        
+        // Reset button state
+        analyzeButton.disabled = false;
+        analyzeButton.innerHTML = `
+            <span class="material-symbols-outlined mr-2">analytics</span>
+            Analyze Exercise
+        `;
+    });
 }
 </script>

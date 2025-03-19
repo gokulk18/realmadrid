@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.utils.crypto import get_random_string
-from django.core.validators import MinValueValidator
+from django.core.validators import MinValueValidator, FileExtensionValidator
 from django.utils import timezone
 import json
 from django.conf import settings
@@ -438,6 +438,14 @@ class PlayerTask(models.Model):
     def __str__(self):
         return f"{self.player.player_name} - {self.get_exercise_type_display()} x{self.repetitions}"
 
+    def get_latest_video(self):
+        """Get the most recent video submission for this task"""
+        return self.videos.order_by('-uploaded_at').first()
+
+    def has_video(self):
+        """Check if this task has any video submissions"""
+        return self.videos.exists()
+
     class Meta:
         ordering = ['-assigned_date']
 
@@ -484,20 +492,31 @@ class PlayerVideo(models.Model):
         ('failed', 'Failed')
     )
     
-    task = models.ForeignKey('PlayerTask', on_delete=models.CASCADE, related_name='videos')
+    task = models.ForeignKey(PlayerTask, on_delete=models.CASCADE, related_name='videos')
     player = models.ForeignKey(
-        'Player', 
+        Player, 
         on_delete=models.CASCADE, 
-        related_name='videos',
-        null=True,  # Temporarily allow null
+        related_name='videos'
+    )
+    video = models.FileField(
+        upload_to='player_videos/',
+        validators=[
+            FileExtensionValidator(
+                allowed_extensions=['mp4', 'avi', 'mov', 'wmv']
+            )
+        ]
+    )
+    processed_video = models.FileField(
+        upload_to='processed_videos/', 
+        null=True, 
         blank=True
     )
-    video = models.FileField(upload_to='player_videos/')
-    processed_video = models.FileField(upload_to='processed_videos/', null=True, blank=True)
-    uploaded_at = models.DateTimeField(auto_now_add=True,null=True, blank=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
     processed_at = models.DateTimeField(null=True, blank=True)
     trainer_comment = models.TextField(null=True, blank=True)
-    evaluation_data = models.JSONField(null=True, blank=True)
+    processing_progress = models.FloatField(default=0)
+    error_message = models.TextField(blank=True, null=True)
+    evaluation_data = models.JSONField(default=dict, blank=True)
     status = models.CharField(
         max_length=20, 
         choices=STATUS_CHOICES,
@@ -509,7 +528,31 @@ class PlayerVideo(models.Model):
         get_latest_by = 'uploaded_at'
 
     def __str__(self):
-        return f"Video by {self.player.player_name if self.player else 'Unknown'} for {self.task}"
+        return f"Video by {self.player.player_name} for {self.task}"
+
+    def get_video_url(self):
+        """Get the appropriate video URL (processed if available, otherwise original)"""
+        if self.processed_video:
+            return self.processed_video.url
+        return self.video.url if self.video else None
+
+    def get_duration(self):
+        """Get video duration in seconds (requires installing moviepy)"""
+        try:
+            from moviepy.editor import VideoFileClip
+            clip = VideoFileClip(self.video.path)
+            duration = clip.duration
+            clip.close()
+            return duration
+        except Exception as e:
+            return None
+
+    def get_file_size(self):
+        """Get video file size in MB"""
+        try:
+            return round(self.video.size / (1024 * 1024), 2)
+        except Exception as e:
+            return None
 
     def evaluate_video(self):
         try:
