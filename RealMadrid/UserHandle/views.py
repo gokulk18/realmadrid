@@ -99,6 +99,14 @@ import numpy as np
 from django.core.files.base import ContentFile
 import tempfile
 import os
+from django.core.files.storage import default_storage
+from django.conf import settings
+import os
+from celery import shared_task
+import cv2
+import numpy as np
+import mediapipe as mp
+from datetime import datetime
 
 
 def is_admin(user):
@@ -4092,26 +4100,182 @@ def upload_task_video(request, task_id):
                 task=task,
                 player=task.player,
                 video=request.FILES['video'],
-                status='uploaded'
+                status='pending',
+                uploaded_at=timezone.now()
             )
             
-            return JsonResponse({
-                'success': True,
-                'video_id': player_video.id,
-                'message': 'Video uploaded successfully. Processing will continue in background.',
-                'redirect_url': reverse('player_dashboard')
-            })
+            # Process video immediately
+            try:
+                logger.info(f"Starting video processing for video_id: {player_video.id}")
+                process_exercise_video(player_video.id)
+                return JsonResponse({
+                    'success': True,
+                    'video_id': player_video.id,
+                    'message': 'Video uploaded and processing started.'
+                })
+            except Exception as e:
+                logger.error(f"Processing error: {str(e)}")
+                player_video.status = 'failed'
+                player_video.error_message = str(e)
+                player_video.save()
+                return JsonResponse({
+                    'success': False,
+                    'error': f"Processing failed: {str(e)}"
+                })
             
         except Exception as e:
+            logger.error(f"Upload error: {str(e)}")
             return JsonResponse({
                 'success': False,
-                'error': str(e)
+                'error': f"Upload failed: {str(e)}"
             })
 
     return JsonResponse({
         'success': False,
         'error': 'Invalid request'
     })
+
+def process_exercise_video(video_id):
+    """Process exercise video with MediaPipe pose detection"""
+    video = PlayerVideo.objects.get(id=video_id)
+    video.status = 'processing'
+    video.save()
+
+    try:
+        logger.info(f"Starting video processing for video ID: {video_id}")
+        
+        # Initialize MediaPipe
+        logger.info("Initializing MediaPipe Pose")
+        mp_pose = mp.solutions.pose
+        mp_drawing = mp.solutions.drawing_utils
+        pose = mp_pose.Pose(
+            min_detection_confidence=0.5,
+            min_tracking_confidence=0.5
+        )
+
+        # Open video file
+        video_path = os.path.join(settings.MEDIA_ROOT, str(video.video))
+        logger.info(f"Opening video file: {video_path}")
+        
+        if not os.path.exists(video_path):
+            raise FileNotFoundError(f"Video file not found at {video_path}")
+            
+        cap = cv2.VideoCapture(video_path)
+        if not cap.isOpened():
+            raise Exception("Failed to open video file")
+
+        # Get video properties
+        fps = int(cap.get(cv2.CAP_PROP_FPS))
+        frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        
+        logger.info(f"Video properties - FPS: {fps}, Width: {frame_width}, Height: {frame_height}, Total Frames: {total_frames}")
+
+        # Create output video writer
+        output_filename = f'processed_video_{video.id}.mp4'
+        output_path = os.path.join(settings.MEDIA_ROOT, 'processed_videos', output_filename)
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        
+        logger.info(f"Creating output video file: {output_path}")
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        out = cv2.VideoWriter(output_path, fourcc, fps, (frame_width, frame_height))
+
+        # Initialize exercise tracking
+        exercise_counter = 0
+        form_scores = []
+        stage = None
+        processed_frames = 0
+
+        logger.info("Starting frame processing loop")
+        while cap.isOpened():
+            ret, frame = cap.read()
+            if not ret:
+                break
+
+            processed_frames += 1
+            
+            # Log progress every 100 frames
+            if processed_frames % 100 == 0:
+                progress = int((processed_frames / total_frames) * 100)
+                logger.info(f"Processing progress: {progress}% ({processed_frames}/{total_frames} frames)")
+                video.processing_progress = progress
+                video.save()
+
+            # Process frame with MediaPipe
+            rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            results = pose.process(rgb_frame)
+
+            if results.pose_landmarks:
+                # Draw pose landmarks
+                mp_drawing.draw_landmarks(
+                    frame,
+                    results.pose_landmarks,
+                    mp_pose.POSE_CONNECTIONS
+                )
+
+                # Get landmarks and analyze exercise
+                landmarks = results.pose_landmarks.landmark
+                exercise_type = video.task.exercise_type.lower()
+                
+                try:
+                    if exercise_type == 'pushup':
+                        form_score, rep_completed, stage = analyze_pushup(landmarks, stage)
+                        if rep_completed:
+                            logger.info(f"Pushup rep detected! Count: {exercise_counter + 1}")
+                    # ... other exercise types ...
+
+                    if rep_completed:
+                        exercise_counter += 1
+                        logger.info(f"Exercise rep completed. Total count: {exercise_counter}")
+
+                    if form_score is not None:
+                        form_scores.append(form_score)
+
+                except Exception as e:
+                    logger.error(f"Error analyzing frame {processed_frames}: {str(e)}")
+                    continue
+
+            # Write processed frame
+            out.write(frame)
+
+        logger.info(f"Frame processing complete. Total frames processed: {processed_frames}")
+
+        # Cleanup
+        cap.release()
+        out.release()
+        pose.close()
+
+        # Calculate final metrics
+        avg_form_score = np.mean(form_scores) if form_scores else 0
+        completion_percentage = (exercise_counter / video.task.repetitions) * 100 if video.task.repetitions > 0 else 0
+
+        metrics = {
+            'total_repetitions': exercise_counter,
+            'target_repetitions': video.task.repetitions,
+            'completion_percentage': float(completion_percentage),
+            'average_form_score': float(avg_form_score),
+            'frames_processed': processed_frames
+        }
+        
+        logger.info(f"Processing complete. Final metrics: {metrics}")
+
+        # Update video record
+        video.processed_video = f'processed_videos/{output_filename}'
+        video.status = 'completed'
+        video.processed_at = timezone.now()
+        video.evaluation_data = metrics
+        video.save()
+
+        logger.info(f"Video {video_id} processed successfully")
+        return True
+
+    except Exception as e:
+        logger.error(f"Error processing video {video_id}: {str(e)}")
+        video.status = 'failed'
+        video.error_message = str(e)
+        video.save()
+        raise
 
 def trainer_dashboard(request):
     # Get tasks assigned by this trainer
@@ -4143,6 +4307,338 @@ def trainer_show_task(request):
         }
     }
     return render(request, 'trainer_show_task.html', context)
+
+
+
+from django.core.files.storage import default_storage
+from django.conf import settings
+import os
+from celery import shared_task
+import cv2
+import numpy as np
+import mediapipe as mp
+from datetime import datetime
+
+@shared_task
+def process_video(video_id):
+    """
+    Background task to process video for exercise analysis
+    """
+    try:
+        logger.info(f"Starting video processing for video_id: {video_id}")
+        video = PlayerVideo.objects.get(id=video_id)
+        video.status = 'processing'
+        video.save()
+
+        logger.info("Initializing MediaPipe Pose")
+        mp_pose = mp.solutions.pose
+        mp_drawing = mp.solutions.drawing_utils
+        pose = mp_pose.Pose(
+            min_detection_confidence=0.5,
+            min_tracking_confidence=0.5
+        )
+
+        # Get video path and open
+        video_path = os.path.join(settings.MEDIA_ROOT, str(video.video))
+        logger.info(f"Opening video file: {video_path}")
+        cap = cv2.VideoCapture(video_path)
+        
+        # Video properties
+        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        processed_frames = 0
+        logger.info(f"Total frames to process: {total_frames}")
+
+        while cap.isOpened():
+            ret, frame = cap.read()
+            if not ret:
+                break
+
+            processed_frames += 1
+            if processed_frames % 30 == 0:  # Log every 30 frames
+                logger.info(f"Processing frame {processed_frames}/{total_frames}")
+                # Update progress
+                progress = int((processed_frames / total_frames) * 100)
+                video.processing_progress = progress
+                video.save()
+
+            # Process frame
+            rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            results = pose.process(rgb_frame)
+
+            if results.pose_landmarks:
+                # Your existing processing code...
+                pass
+
+        logger.info("Video processing completed successfully")
+        video.status = 'completed'
+        video.save()
+
+    except Exception as e:
+        logger.error(f"Error processing video {video_id}: {str(e)}")
+        video.status = 'failed'
+        video.error_message = str(e)
+        video.save()
+
+def analyze_exercise(exercise_type, landmarks, prev_landmarks, current_stage):
+    """
+    Analyze form for specific exercises
+    Returns: (form_score, rep_completed, new_stage)
+    """
+    if exercise_type == 'pushup':
+        return analyze_pushup(landmarks, current_stage)
+    elif exercise_type == 'squat':
+        return analyze_squat(landmarks, current_stage)
+    elif exercise_type == 'jump':
+        return analyze_jump(landmarks, prev_landmarks)
+    elif exercise_type == 'sprint':
+        return analyze_sprint(landmarks, prev_landmarks)
+    elif exercise_type == 'burpee':
+        return analyze_burpee(landmarks, current_stage)
+    elif exercise_type == 'lunge':
+        return analyze_lunge(landmarks, current_stage)
+    else:
+        return analyze_general_movement(landmarks, prev_landmarks)
+
+def analyze_pushup(landmarks, current_stage):
+    """Analyze pushup form"""
+    # Get relevant landmarks
+    shoulder = landmarks[mp.solutions.pose.PoseLandmark.LEFT_SHOULDER]
+    elbow = landmarks[mp.solutions.pose.PoseLandmark.LEFT_ELBOW]
+    wrist = landmarks[mp.solutions.pose.PoseLandmark.LEFT_WRIST]
+    hip = landmarks[mp.solutions.pose.PoseLandmark.LEFT_HIP]
+
+    # Calculate angle between arm and body
+    arm_angle = calculate_angle(shoulder, elbow, wrist)
+    body_angle = calculate_angle(shoulder, hip, landmarks[mp.solutions.pose.PoseLandmark.LEFT_KNEE])
+
+    # Determine pushup stage
+    rep_completed = False
+    if arm_angle > 160 and current_stage != 'up':
+        current_stage = 'up'
+        rep_completed = True
+    elif arm_angle < 90:
+        current_stage = 'down'
+
+    # Calculate form score (0-100)
+    form_score = 100
+    # Deduct points for improper form
+    if body_angle < 160:  # body not straight
+        form_score -= 20
+    if arm_angle < 80:  # too deep
+        form_score -= 10
+
+    return form_score, rep_completed, current_stage
+
+def analyze_squat(landmarks, current_stage):
+    """Analyze squat form"""
+    hip = landmarks[mp.solutions.pose.PoseLandmark.LEFT_HIP]
+    knee = landmarks[mp.solutions.pose.PoseLandmark.LEFT_KNEE]
+    ankle = landmarks[mp.solutions.pose.PoseLandmark.LEFT_ANKLE]
+    
+    # Calculate knee angle
+    knee_angle = calculate_angle(hip, knee, ankle)
+    
+    rep_completed = False
+    if knee_angle > 160 and current_stage != 'up':
+        current_stage = 'up'
+        rep_completed = True
+    elif knee_angle < 90:
+        current_stage = 'down'
+
+    # Form scoring
+    form_score = 100
+    if knee_angle < 70:  # too deep
+        form_score -= 15
+    if knee.x < ankle.x:  # knee over toes
+        form_score -= 20
+
+    return form_score, rep_completed, current_stage
+
+def analyze_jump(landmarks, prev_landmarks):
+    """Analyze jump form"""
+    if not prev_landmarks:
+        return 100, False, None
+
+    hip = landmarks[mp.solutions.pose.PoseLandmark.LEFT_HIP]
+    prev_hip = prev_landmarks[mp.solutions.pose.PoseLandmark.LEFT_HIP]
+    
+    # Detect jump by vertical movement
+    vertical_movement = prev_hip.y - hip.y
+    rep_completed = vertical_movement > 0.15  # Threshold for jump detection
+    
+    form_score = 100
+    # Check landing form
+    if rep_completed:
+        knee = landmarks[mp.solutions.pose.PoseLandmark.LEFT_KNEE]
+        ankle = landmarks[mp.solutions.pose.PoseLandmark.LEFT_ANKLE]
+        if knee.x < ankle.x:  # knee position on landing
+            form_score -= 20
+
+    return form_score, rep_completed, None
+
+def analyze_sprint(landmarks, prev_landmarks):
+    """Analyze sprint form"""
+    if not prev_landmarks:
+        return 100, False, None
+
+    # Calculate knee drive and arm movement
+    knee_height = landmarks[mp.solutions.pose.PoseLandmark.LEFT_KNEE].y
+    hip_height = landmarks[mp.solutions.pose.PoseLandmark.LEFT_HIP].y
+    
+    form_score = 100
+    knee_drive_score = min(100, (hip_height - knee_height) * 200)
+    form_score = knee_drive_score
+
+    # Detect stride completion
+    stride_completed = False
+    if prev_landmarks:
+        prev_knee = prev_landmarks[mp.solutions.pose.PoseLandmark.LEFT_KNEE]
+        current_knee = landmarks[mp.solutions.pose.PoseLandmark.LEFT_KNEE]
+        stride_completed = (prev_knee.y > current_knee.y) and (knee_height < hip_height)
+
+    return form_score, stride_completed, None
+
+def analyze_burpee(landmarks, current_stage):
+    """Analyze burpee form"""
+    hip = landmarks[mp.solutions.pose.PoseLandmark.LEFT_HIP]
+    shoulder = landmarks[mp.solutions.pose.PoseLandmark.LEFT_SHOULDER]
+    ankle = landmarks[mp.solutions.pose.PoseLandmark.LEFT_ANKLE]
+
+    # Calculate vertical positions
+    hip_height = hip.y
+    shoulder_height = shoulder.y
+    
+    form_score = 100
+    rep_completed = False
+
+    # State machine for burpee stages
+    if current_stage == None or current_stage == 'up':
+        if hip_height > 0.7:  # Person is low (in plank or pushup position)
+            current_stage = 'down'
+    elif current_stage == 'down':
+        if hip_height < 0.3:  # Person has jumped up
+            current_stage = 'up'
+            rep_completed = True
+            
+    # Form scoring
+    if shoulder_height > hip_height:  # Poor plank position
+        form_score -= 20
+
+    return form_score, rep_completed, current_stage
+
+def analyze_lunge(landmarks, current_stage):
+    """Analyze lunge form"""
+    left_knee = landmarks[mp.solutions.pose.PoseLandmark.LEFT_KNEE]
+    right_knee = landmarks[mp.solutions.pose.PoseLandmark.RIGHT_KNEE]
+    left_ankle = landmarks[mp.solutions.pose.PoseLandmark.LEFT_ANKLE]
+    right_ankle = landmarks[mp.solutions.pose.PoseLandmark.RIGHT_ANKLE]
+
+    # Calculate knee angles
+    left_knee_angle = calculate_angle(
+        landmarks[mp.solutions.pose.PoseLandmark.LEFT_HIP],
+        left_knee,
+        left_ankle
+    )
+    
+    form_score = 100
+    rep_completed = False
+
+    if current_stage == None or current_stage == 'up':
+        if left_knee_angle < 90:  # In lunge position
+            current_stage = 'down'
+    elif current_stage == 'down':
+        if left_knee_angle > 160:  # Back to standing
+            current_stage = 'up'
+            rep_completed = True
+
+    # Form scoring
+    if abs(left_knee.x - left_ankle.x) > 0.1:  # Knee alignment
+        form_score -= 20
+
+    return form_score, rep_completed, current_stage
+
+def analyze_general_movement(landmarks, prev_landmarks):
+    """Analyze general movement patterns"""
+    if not prev_landmarks:
+        return 100, False, None
+
+    # Calculate overall movement intensity
+    movement = sum(
+        abs(landmarks[i].y - prev_landmarks[i].y)
+        for i in range(33)  # MediaPipe provides 33 landmarks
+    )
+    
+    form_score = 100
+    significant_movement = movement > 0.1
+
+    return form_score, significant_movement, None
+
+def calculate_angle(point1, point2, point3):
+    """Calculate angle between three points"""
+    a = np.array([point1.x, point1.y])
+    b = np.array([point2.x, point2.y])
+    c = np.array([point3.x, point3.y])
+    
+    ba = a - b
+    bc = c - b
+    
+    cosine_angle = np.dot(ba, bc) / (np.linalg.norm(ba) * np.linalg.norm(bc))
+    angle = np.arccos(cosine_angle)
+
+    return np.degrees(angle)
+
+def add_exercise_overlay(frame, exercise_type, rep_count, form_score, stage, target_reps):
+    """Add exercise information overlay to frame"""
+    # Background for text
+    cv2.rectangle(frame, (10, 10), (300, 130), (0, 0, 0), -1)
+    
+    # Exercise info
+    cv2.putText(frame, f"Exercise: {exercise_type.title()}", (15, 30),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+    cv2.putText(frame, f"Reps: {rep_count}/{target_reps}", (15, 60),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+    cv2.putText(frame, f"Form Score: {form_score:.1f}%", (15, 90),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+    if stage:
+        cv2.putText(frame, f"Stage: {stage.title()}", (15, 120),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+
+from django.shortcuts import get_object_or_404
+from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+from .models import PlayerVideo
+
+@login_required
+def get_video_status(request, video_id):
+    """Check the processing status of an uploaded video"""
+    try:
+        video = get_object_or_404(PlayerVideo, id=video_id)
+        
+        response_data = {
+            'status': video.status,
+            'progress': getattr(video, 'processing_progress', 0)
+        }
+        
+        if video.status == 'completed':
+            response_data.update({
+                'processed_video_url': video.processed_video.url if video.processed_video else None,
+                'evaluation_data': video.evaluation_data or {}
+            })
+        elif video.status == 'failed':
+            response_data['error_message'] = video.error_message
+            
+        return JsonResponse(response_data)
+        
+    except PlayerVideo.DoesNotExist:
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Video not found'
+        }, status=404)
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=500)
 
 
 

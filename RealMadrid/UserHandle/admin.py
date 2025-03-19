@@ -267,32 +267,26 @@ class SeasonStatsAdmin(admin.ModelAdmin):
 
 @admin.register(PlayerVideo)
 class PlayerVideoAdmin(admin.ModelAdmin):
-    list_display = ['player', 'task', 'uploaded_at', 'processed_at']
-    list_filter = ['player', 'task', 'uploaded_at', 'processed_at']
-    
-    # Update readonly_fields to match actual model fields
-    readonly_fields = [
-        'uploaded_at',
-        'processed_at',
-        'processed_video',
-        'evaluation_data',
-        'trainer_comment'
-    ]
-    
-    search_fields = ['player__player_name', 'task__exercise_type']
-    
+    list_display = ('player', 'task', 'status', 'uploaded_at', 'processed_at')
+    list_filter = ('status', 'uploaded_at', 'player')
+    search_fields = ('player__player_name', 'task__exercise_type')
+    readonly_fields = ('uploaded_at', 'processed_at', 'processing_progress')
     fieldsets = (
         ('Basic Information', {
-            'fields': ('player', 'task', 'video')
+            'fields': ('player', 'task', 'status')
         }),
-        ('Processing Information', {
-            'fields': (
-                'processed_video',
-                'uploaded_at',
-                'processed_at',
-                'trainer_comment',
-                'evaluation_data'
-            )
+        ('Video Files', {
+            'fields': ('video', 'processed_video')
+        }),
+        ('Processing Details', {
+            'fields': ('processing_progress', 'error_message', 'evaluation_data')
+        }),
+        ('Feedback', {
+            'fields': ('trainer_comment',)
+        }),
+        ('Timestamps', {
+            'fields': ('uploaded_at', 'processed_at'),
+            'classes': ('collapse',)
         })
     )
 
