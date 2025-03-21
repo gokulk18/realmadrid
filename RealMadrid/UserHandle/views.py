@@ -107,6 +107,8 @@ import cv2
 import numpy as np
 import mediapipe as mp
 from datetime import datetime
+from django.http import JsonResponse
+from django.views.decorators.http import require_GET
 
 
 def is_admin(user):
@@ -3200,6 +3202,27 @@ def player_dashboard(request):
     if request.session.get('user_type') != 'player':
         return redirect('login')
     
+    # Get the player object
+    player = Player.objects.get(id=request.session['user_id'])
+    
+    # Calculate task counts based on video status
+    tasks_with_videos = PlayerTask.objects.filter(
+        player=player
+    ).prefetch_related('videos')
+
+    pending_tasks_count = 0
+    completed_tasks_count = 0
+
+    for task in tasks_with_videos:
+        latest_video = task.videos.order_by('-uploaded_at').first()
+        if not latest_video or latest_video.status in ['failed', 'pending']:
+            pending_tasks_count += 1
+        elif latest_video.status == 'completed':
+            completed_tasks_count += 1
+        # If video status is 'processing', it's still considered pending
+        elif latest_video.status == 'processing':
+            pending_tasks_count += 1
+
     # Fetch fixtures from the football-data.org API
     api_key = 'dc93cd61f7a04a67be5652fc72195459'
     url = 'https://api.football-data.org/v4/teams/86/matches'  # Real Madrid's ID is 86
@@ -3238,8 +3261,7 @@ def player_dashboard(request):
         print(f"Error fetching next match: {e}")
         next_match = None
 
-    # Fetch tasks assigned to the player using the direct relationship
-    player = Player.objects.get(id=request.session['user_id'])
+    # Fetch tasks assigned to the player
     assigned_tasks = PlayerTask.objects.filter(
         player=player
     ).order_by('-assigned_date')
@@ -3256,9 +3278,6 @@ def player_dashboard(request):
                 'processed_at': video.processed_at
             }
 
-    pending_tasks_count = assigned_tasks.filter(status='pending').count()
-    completed_tasks_count = len(assigned_tasks) - pending_tasks_count
-    
     context = {
         'next_match': next_match,
         'assigned_tasks': assigned_tasks,
@@ -4346,6 +4365,15 @@ def process_video(video_id):
         # Video properties
         total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
         processed_frames = 0
+        exercise_type = video.task.exercise_type
+        target_reps = video.task.repetitions
+        
+        # Analysis metrics
+        rep_count = 0
+        form_scores = []
+        current_stage = None
+        prev_landmarks = None
+
         logger.info(f"Total frames to process: {total_frames}")
 
         while cap.isOpened():
@@ -4354,30 +4382,195 @@ def process_video(video_id):
                 break
 
             processed_frames += 1
-            if processed_frames % 30 == 0:  # Log every 30 frames
+            if processed_frames % 30 == 0:
                 logger.info(f"Processing frame {processed_frames}/{total_frames}")
-                # Update progress
                 progress = int((processed_frames / total_frames) * 100)
                 video.processing_progress = progress
                 video.save()
 
-            # Process frame
             rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             results = pose.process(rgb_frame)
 
             if results.pose_landmarks:
-                # Your existing processing code...
-                pass
+                form_score, rep_completed, current_stage = analyze_exercise(
+                    exercise_type,
+                    results.pose_landmarks.landmark,
+                    prev_landmarks,
+                    current_stage
+                )
+                
+                if rep_completed:
+                    rep_count += 1
+                form_scores.append(form_score)
+                prev_landmarks = results.pose_landmarks.landmark
 
-        logger.info("Video processing completed successfully")
+        # Calculate final metrics
+        raw_form_score = sum(form_scores) / len(form_scores) if form_scores else 0
+        completion_percentage = (rep_count / target_reps * 100) if target_reps > 0 else 0
+        
+        # First, calculate base form score with initial completion penalty
+        if completion_percentage < 30:
+            # Severe penalty for very low completion
+            base_score = raw_form_score * 0.3  # Maximum 30% of raw score
+        elif completion_percentage < 50:
+            # Major penalty for low completion
+            base_score = raw_form_score * 0.5  # Maximum 50% of raw score
+        elif completion_percentage < 75:
+            # Moderate penalty for partial completion
+            base_score = raw_form_score * 0.75  # Maximum 75% of raw score
+        elif completion_percentage < 90:
+            # Minor penalty for near completion
+            base_score = raw_form_score * 0.9  # Maximum 90% of raw score
+        else:
+            # No penalty for high completion
+            base_score = raw_form_score
+
+        # Now apply weighted scoring between form and completion
+        form_weight = 0.6
+        completion_weight = 0.4
+        
+        # Calculate weighted score
+        avg_form_score = (
+            (base_score * form_weight) +  # Form component (already penalized)
+            (completion_percentage * completion_weight)  # Completion component
+        )
+        
+        # Apply final scaling based on completion percentage
+        completion_scaling = (completion_percentage / 100) ** 1.2  # Exponential scaling
+        avg_form_score = avg_form_score * completion_scaling
+        
+        # Ensure the score cannot exceed completion percentage
+        avg_form_score = min(avg_form_score, completion_percentage)
+        
+        # Set minimum score based on completion
+        min_score = completion_percentage * 0.4  # Minimum score is 40% of completion rate
+        avg_form_score = max(min_score, avg_form_score)
+
+        # Round the final score
+        avg_form_score = round(avg_form_score, 1)
+
+        # Generate evaluation data with detailed breakdown
+        evaluation_data = {
+            'Repetitions Completed': rep_count,
+            'Target Repetitions': target_reps,
+            'Completion Rate': f"{round(completion_percentage, 1)}%",
+            'Raw Form Score': f"{round(raw_form_score, 1)}%",
+            'Base Score After Completion Penalty': f"{round(base_score, 1)}%",
+            'Final Form Score': f"{round(avg_form_score, 1)}%",
+            'Completion Impact': f"{round(completion_percentage, 1)}%"
+        }
+
+        # Generate automated feedback
+        feedback = []
+
+        # Completion feedback
+        if completion_percentage >= 100:
+            feedback.append("Excellent work! You've completed all required repetitions.")
+        elif completion_percentage >= 75:
+            feedback.append(f"Good effort! You completed {rep_count} out of {target_reps} repetitions.")
+        else:
+            feedback.append(f"Keep working! You completed {rep_count} out of {target_reps} repetitions.")
+
+        # Form feedback based on exercise type
+        if exercise_type == 'pushup':
+            if avg_form_score >= 90:
+                feedback.append("Your pushup form was excellent! Great body alignment and control.")
+            elif avg_form_score >= 70:
+                feedback.append("Good pushup form. Focus on keeping your core tight and maintaining a straight back.")
+            else:
+                feedback.append("Work on your pushup form. Keep your body straight and control the movement.")
+        elif exercise_type == 'squat':
+            if avg_form_score >= 90:
+                feedback.append("Perfect squat depth and form! Your knee alignment was excellent.")
+            elif avg_form_score >= 70:
+                feedback.append("Good squat form. Try to maintain consistent depth and keep your knees aligned.")
+            else:
+                feedback.append("Focus on squat depth and keeping your knees aligned with your toes.")
+        elif exercise_type == 'sprint':
+            if avg_form_score >= 90:
+                feedback.append("Excellent running form! Great knee drive and arm movement.")
+            elif avg_form_score >= 70:
+                feedback.append("Good running technique. Focus on maintaining consistent arm swing.")
+            else:
+                feedback.append("Work on your running form. Keep your arms relaxed and drive your knees.")
+
+        # Add improvement suggestions
+        if avg_form_score < 85:
+            feedback.append("Areas for improvement:")
+            if min(form_scores) < 70:
+                feedback.append("- Pay attention to maintaining consistent form throughout the exercise")
+            if completion_percentage < 90:
+                feedback.append("- Build endurance to complete all repetitions")
+
+        # Add encouragement
+        feedback.append("\nKeep up the great work! Regular practice will lead to improvement. 💪")
+
+        # Save results
         video.status = 'completed'
+        video.processed_at = timezone.now()
+        video.evaluation_data = evaluation_data
+        video.trainer_comment = "\n".join(feedback)
         video.save()
+
+        # Cleanup
+        cap.release()
+        pose.close()
+
+        logger.info(f"Video {video_id} processed successfully")
+        return True
 
     except Exception as e:
         logger.error(f"Error processing video {video_id}: {str(e)}")
         video.status = 'failed'
         video.error_message = str(e)
         video.save()
+        raise
+
+def generate_exercise_feedback(exercise_type, reps_completed, target_reps, avg_form_score, form_scores):
+    """Generate automated feedback based on exercise performance"""
+    feedback_parts = []
+    
+    # Completion feedback
+    completion_percentage = (reps_completed / target_reps * 100) if target_reps > 0 else 0
+    feedback_parts.append(f"You completed {reps_completed} out of {target_reps} repetitions.")
+    
+    # Form quality feedback
+    if avg_form_score >= 90:
+        feedback_parts.append("Your form was excellent throughout the exercise!")
+    elif avg_form_score >= 75:
+        feedback_parts.append("You maintained good form overall, with some room for improvement.")
+    else:
+        feedback_parts.append("Focus on maintaining proper form throughout the exercise.")
+
+    # Exercise-specific feedback
+    if exercise_type == 'pushup':
+        if min(form_scores) < 70:
+            feedback_parts.append("Keep your body straight and elbows close to your body during pushups.")
+    elif exercise_type == 'squat':
+        if min(form_scores) < 70:
+            feedback_parts.append("Focus on keeping your knees aligned with your toes and maintain proper depth.")
+    elif exercise_type == 'burpee':
+        if min(form_scores) < 70:
+            feedback_parts.append("Ensure smooth transitions between positions and maintain proper plank form.")
+    elif exercise_type == 'lunge':
+        if min(form_scores) < 70:
+            feedback_parts.append("Keep your front knee aligned and maintain balance throughout the movement.")
+    elif exercise_type == 'sprint':
+        if avg_form_score < 80:
+            feedback_parts.append("Focus on proper arm movement and knee drive for better running efficiency.")
+    elif exercise_type == 'jump':
+        if avg_form_score < 80:
+            feedback_parts.append("Land softly with proper knee alignment and maintain balance.")
+
+    # Progress encouragement
+    if completion_percentage >= 100:
+        feedback_parts.append("Great job completing all repetitions! Keep up the excellent work! 💪")
+    elif completion_percentage >= 75:
+        feedback_parts.append("Good effort! You're making progress. Keep pushing to reach your targets! 💪")
+    else:
+        feedback_parts.append("Keep practicing to build strength and endurance. You've got this! 💪")
+
+    return " ".join(feedback_parts)
 
 def analyze_exercise(exercise_type, landmarks, prev_landmarks, current_stage):
     """
@@ -4603,12 +4796,6 @@ def add_exercise_overlay(frame, exercise_type, rep_count, form_score, stage, tar
         cv2.putText(frame, f"Stage: {stage.title()}", (15, 120),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
 
-from django.shortcuts import get_object_or_404
-from django.http import JsonResponse
-from django.contrib.auth.decorators import login_required
-from .models import PlayerVideo
-
-@login_required
 def get_video_status(request, video_id):
     """Check the processing status of an uploaded video"""
     try:
@@ -4621,24 +4808,27 @@ def get_video_status(request, video_id):
         
         if video.status == 'completed':
             response_data.update({
-                'processed_video_url': video.processed_video.url if video.processed_video else None,
-                'evaluation_data': video.evaluation_data or {}
+                'trainer_comment': video.trainer_comment,
+                'evaluation_data': video.evaluation_data,
+                'processed_video_url': video.processed_video.url if video.processed_video else None
             })
+            
+            # Ensure trainer_comment is not None
+            if response_data['trainer_comment'] is None:
+                response_data['trainer_comment'] = 'No feedback available yet.'
+                
         elif video.status == 'failed':
             response_data['error_message'] = video.error_message
             
         return JsonResponse(response_data)
         
-    except PlayerVideo.DoesNotExist:
-        return JsonResponse({
-            'status': 'error',
-            'message': 'Video not found'
-        }, status=404)
     except Exception as e:
         return JsonResponse({
             'status': 'error',
             'message': str(e)
         }, status=500)
+
+
 
 
 
