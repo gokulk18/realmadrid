@@ -425,6 +425,45 @@
 
 
 
+<!-- Add this where you want the button to appear -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5>Visual Search Setup</h5>
+    </div>
+    <div class="card-body">
+        <h6>Generate Embeddings for Product Images</h6>
+        <p>Current Status: <span id="embedding-status">Checking...</span></p>
+        
+        <form action="{% url 'generate_embeddings' %}" method="POST">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary">Generate Embeddings</button>
+        </form>
+        
+        <!-- Status check button -->
+        <button onclick="checkEmbeddingStatus()" class="btn btn-info mt-2">
+            Check Status
+        </button>
+    </div>
+</div>
+
+<!-- Add this JavaScript at the bottom of your template -->
+<script>
+function checkEmbeddingStatus() {
+    fetch('{% url "check_embedding_status" %}')
+        .then(response => response.json())
+        .then(data => {
+            const statusElement = document.getElementById('embedding-status');
+            statusElement.textContent = `${data.items_with_embeddings} of ${data.total_items} items processed (${data.completion_percentage.toFixed(1)}%)`;
+        })
+        .catch(error => console.error('Error:', error));
+}
+
+// Check status when page loads
+checkEmbeddingStatus();
+</script>
+
+
+
 
 
 

@@ -92,4 +92,7 @@ urlpatterns = [
     path('player/upload-task-video/<int:task_id>/', views.upload_task_video, name='upload_task_video'),
     path('trainer_assign_task/', views.trainer_assign_task, name='trainer_assign_task'),
     path('trainer/tasks/', views.trainer_show_task, name='trainer_show_task'),
+    path('visual-search/', views.visual_search, name='visual_search'),
+    path('generate-embeddings/', views.generate_embeddings, name='generate_embeddings'),
+    path('check-embedding-status/', views.check_embedding_status, name='check_embedding_status'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

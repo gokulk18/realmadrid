@@ -109,6 +109,13 @@ import mediapipe as mp
 from datetime import datetime
 from django.http import JsonResponse
 from django.views.decorators.http import require_GET
+from PIL import Image
+import torch
+from torchvision import transforms
+from torchvision.models import resnet50, ResNet50_Weights
+from scipy.spatial.distance import cosine
+from django.views.decorators.http import require_http_methods
+from .models import ItemVisualEmbedding  # Add this import
 
 
 def is_admin(user):
@@ -4828,8 +4835,138 @@ def get_video_status(request, video_id):
             'message': str(e)
         }, status=500)
 
+def get_image_embedding(image_path):
+    try:
+        # Load model with latest weights
+        weights = ResNet50_Weights.DEFAULT
+        model = resnet50(weights=weights)
+        model.eval()
+        
+        # Remove the last classification layer
+        model = torch.nn.Sequential(*list(model.children())[:-1])
+        
+        # Image preprocessing using the model's transforms
+        preprocess = weights.transforms()
+        
+        # Load and transform image
+        img = Image.open(image_path).convert('RGB')
+        img_tensor = preprocess(img).unsqueeze(0)  # Add batch dimension
+        
+        # Get embedding
+        with torch.no_grad():
+            embedding = model(img_tensor)
+            
+        return embedding.squeeze().numpy()
+        
+    except Exception as e:
+        print(f"Error in get_image_embedding: {str(e)}")
+        raise
 
+@require_http_methods(["POST"])
+def visual_search(request):
+    if 'image' not in request.FILES:
+        return JsonResponse({'error': 'No image provided'}, status=400)
+    
+    # Save uploaded image temporarily
+    image = request.FILES['image']
+    temp_path = default_storage.save('temp/search.jpg', ContentFile(image.read()))
+    temp_full_path = os.path.join(settings.MEDIA_ROOT, temp_path)
+    
+    try:
+        # Get embedding for uploaded image
+        query_embedding = get_image_embedding(temp_full_path)
+        
+        # Find similar items
+        similar_items = []
+        embeddings = ItemVisualEmbedding.objects.all()
+        
+        # Debug print
+        print(f"Found {embeddings.count()} items with embeddings")
+        
+        for embedding in embeddings:
+            try:
+                item_embedding = embedding.get_embedding_array()
+                similarity = 1 - cosine(query_embedding, item_embedding)
+                
+                # Debug print
+                print(f"Item: {embedding.item.name}, Similarity: {similarity}")
+                
+                # Lower the threshold to see more results
+                if similarity > 0.5:  # Changed from 0.7 to 0.5
+                    similar_items.append({
+                        'id': embedding.item.id,
+                        'name': embedding.item.name,
+                        'category_id': embedding.item.category.id,
+                        'price': str(embedding.item.price),
+                        'main_image': embedding.item.main_image.url if embedding.item.main_image else '',
+                        'similarity': float(similarity)
+                    })
+            except Exception as e:
+                print(f"Error processing item {embedding.item.name}: {str(e)}")
+                continue
+        
+        # Sort by similarity
+        similar_items.sort(key=lambda x: x['similarity'], reverse=True)
+        
+        # Debug print
+        print(f"Found {len(similar_items)} similar items")
+        
+        return JsonResponse({'items': similar_items[:6]})  # Return top 6 matches
+        
+    except Exception as e:
+        print(f"Error in visual search: {str(e)}")
+        return JsonResponse({'error': str(e)}, status=500)
+    finally:
+        # Clean up temporary file
+        if os.path.exists(temp_full_path):
+            default_storage.delete(temp_path)
 
+def generate_embeddings(request):
+    """Admin view to generate embeddings for all items"""
+    if request.method == 'POST':
+        try:
+            items = Item.objects.filter(
+                main_image__isnull=False  # Only items with images
+            ).exclude(
+                visual_embedding__isnull=False  # Exclude items that already have embeddings
+            )
+            
+            processed = 0
+            errors = 0
+            
+            for item in items:
+                try:
+                    # Generate embedding for the item's main image
+                    embedding = get_image_embedding(item.main_image.path)
+                    
+                    # Create new embedding record
+                    visual_embedding = ItemVisualEmbedding(item=item)
+                    visual_embedding.set_embedding_array(embedding)
+                    visual_embedding.save()
+                    
+                    processed += 1
+                    print(f"Successfully processed {item.name}")
+                    
+                except Exception as e:
+                    errors += 1
+                    print(f"Error processing {item.name}: {e}")
+            
+            messages.success(request, f'Successfully processed {processed} items. {errors} errors.')
+            
+        except Exception as e:
+            messages.error(request, f'Error generating embeddings: {str(e)}')
+        
+        return redirect('admin_dashboard')
+        
+    return redirect('admin_dashboard')
 
-
-
+def check_embedding_status(request):
+    """Check the status of embedding generation"""
+    total_items = Item.objects.filter(main_image__isnull=False).count()
+    items_with_embeddings = ItemVisualEmbedding.objects.count()
+    
+    return JsonResponse({
+        'total_items': total_items,
+        'items_with_embeddings': items_with_embeddings,
+        'completion_percentage': (items_with_embeddings/total_items*100) if total_items > 0 else 0
+    })

@@ -7,6 +7,7 @@ import json
 from django.conf import settings
 from .utils import VideoProcessor  # Import your existing ML utilities
 import os
+import numpy as np
 
 class Users(AbstractUser):
     name = models.CharField(max_length=255)
@@ -601,3 +602,18 @@ class PlayerVideo(models.Model):
                 'success': False,
                 'error': str(e)
             }
+
+class ItemVisualEmbedding(models.Model):
+    item = models.OneToOneField(Item, on_delete=models.CASCADE, related_name='visual_embedding')
+    embedding = models.BinaryField()  # Store the image embedding as binary data
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def get_embedding_array(self):
+        return np.frombuffer(self.embedding, dtype=np.float32)
+
+    def set_embedding_array(self, array):
+        self.embedding = array.astype(np.float32).tobytes()
+
+    def __str__(self):
+        return f"Visual embedding for {self.item.name}"

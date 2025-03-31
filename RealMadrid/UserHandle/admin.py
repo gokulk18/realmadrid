@@ -4,7 +4,7 @@ from .models import (
     Cart, CartItem, Wishlist, WishlistItem, Order, OrderItem, Payment, Shipping,
     Stand, Section, Match, TicketOrder, TicketItem, TicketPayment, QuizQuestion,
     UploadedImage, IdentifyPlayer, PlayerCredentials, PlayerTask, PlayerAchievement,
-    PlayerHistory, SeasonStats, PlayerVideo
+    PlayerHistory, SeasonStats, PlayerVideo, ItemVisualEmbedding
 )
 
 class UsersAdmin(admin.ModelAdmin):
@@ -290,6 +290,39 @@ class PlayerVideoAdmin(admin.ModelAdmin):
         })
     )
 
+class ItemVisualEmbeddingAdmin(admin.ModelAdmin):
+    list_display = ('item', 'created_at', 'updated_at', 'has_embedding')
+    search_fields = ('item__name',)
+    list_filter = ('created_at', 'updated_at')
+    readonly_fields = ('created_at', 'updated_at', 'embedding_size')
+    
+    def has_embedding(self, obj):
+        """Display whether the item has an embedding"""
+        return bool(obj.embedding)
+    has_embedding.boolean = True
+    has_embedding.short_description = 'Has Embedding'
+    
+    def embedding_size(self, obj):
+        """Display the size of the embedding in bytes"""
+        if obj.embedding:
+            return f"{len(obj.embedding)} bytes"
+        return "No embedding"
+    embedding_size.short_description = 'Embedding Size'
+    
+    fieldsets = (
+        ('Item Information', {
+            'fields': ('item',)
+        }),
+        ('Embedding Details', {
+            'fields': ('embedding', 'embedding_size'),
+            'classes': ('collapse',)
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        })
+    )
+
 # Register the models with the admin site
 admin.site.register(Users, UsersAdmin)
 admin.site.register(Position, PositionAdmin)
@@ -322,3 +355,4 @@ admin.site.register(PlayerTask, PlayerTaskAdmin)  # Register the PlayerTask mode
 admin.site.register(PlayerAchievement, PlayerAchievementAdmin)
 admin.site.register(PlayerHistory, PlayerHistoryAdmin)
 admin.site.register(SeasonStats, SeasonStatsAdmin)
+admin.site.register(ItemVisualEmbedding, ItemVisualEmbeddingAdmin)  # Register the ItemVisualEmbedding model
